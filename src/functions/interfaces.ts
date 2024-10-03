@@ -8,6 +8,7 @@ export interface WebTestFunctionCall {
   expectElementVisible(selector: string, visible: boolean): Promise<boolean>;
   expectElementText(selector: string, text: string): Promise<boolean>;
   getCurrentUrl(): Promise<string>;
+  getInputValue(selector: string): Promise<string>;
   closeBrowser(): Promise<void>;
   appendWebTestFunctionCall(call: string): void;
   displayWebTestFunctionCalls(): void;

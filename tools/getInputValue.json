@@ -1,0 +1,24 @@
+{
+    "type": "function",
+    "function": {
+        "name": "getInputValue",
+        "description": "Gets the value of an input field identified by the given selector",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "selector": {
+                    "type": "string",
+                    "description": "The CSS selector of the input field"
+                }
+            },
+            "required": [
+                "selector"
+            ],
+            "additionalProperties": false
+        },
+        "returns": {
+            "type": "string",
+            "description": "The value of the input field"
+        }
+    }
+}

@@ -1,6 +1,6 @@
 import puppeteer, { Browser, Page } from "puppeteer";
 import { WebTestFunctionCall } from "../functions/interfaces";
-import { readFileString, writeFileString } from "../helpers/helpers";
+import { readFileString, sleep, writeFileString } from "../helpers/helpers";
 
 class PuppeteerWebTest implements WebTestFunctionCall {
   private browser: Browser | null = null;
@@ -11,19 +11,18 @@ class PuppeteerWebTest implements WebTestFunctionCall {
     this.browser = await puppeteer.launch({
       headless: false,
       // start in maximized window
-      defaultViewport: null,
-      args: ["--start-maximized"],
+      // defaultViewport: null,
+      // args: ["--start-maximized"],
     });
     this.page = await this.browser.newPage();
-    // await sleep(2000);
+    await sleep(2000);
   }
 
   async navigateTo(url: string): Promise<void> {
-    // console.log("--- Navigating to", url);
     if (this.page) {
       await this.page.goto(url);
+      await sleep(2000);
     }
-    // process.exit(0);
   }
 
   async getHtmlSource(): Promise<string> {
@@ -45,6 +44,7 @@ class PuppeteerWebTest implements WebTestFunctionCall {
   async clickElement(selector: string): Promise<void> {
     if (this.page) {
       await this.page.click(selector);
+      await sleep(2000);
     }
   }
 
@@ -94,6 +94,15 @@ class PuppeteerWebTest implements WebTestFunctionCall {
     return "";
   }
 
+  async getInputValue(selector: string): Promise<string> {
+    if (this.page) {
+      return this.page
+        .$eval(selector, (el) => (el as HTMLInputElement).value)
+        .catch(() => "");
+    }
+    return "";
+  }
+
   async closeBrowser(): Promise<void> {
     if (this.browser) {
       await this.browser.close();
@@ -101,12 +110,13 @@ class PuppeteerWebTest implements WebTestFunctionCall {
   }
 
   appendWebTestFunctionCall(call: string): void {
-    if (call.startsWith("expect")) {
-      this.functionCalls.push(`const expectResult = await browser.${call}`);
-      this.functionCalls.push("console.log(expectResult);");
-    } else {
-      this.functionCalls.push(`await browser.${call}`);
-    }
+    // if (call.startsWith("expect")) {
+    //   this.functionCalls.push(`const expectResult = await browser.${call}`);
+    //   this.functionCalls.push("console.log(expectResult);");
+    // } else {
+    //   this.functionCalls.push(`await browser.${call}`);
+    // }
+    this.functionCalls.push(`await browser.${call}`);
   }
 
   displayWebTestFunctionCalls(): void {

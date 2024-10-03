@@ -15,7 +15,7 @@ async function main() {
 
   const EXAMPLE_1 = await readFileString("prompts/example1.txt");
 
-  const LOOP_HARD_LIMIT = 35;
+  const LOOP_HARD_LIMIT = 30;
 
   const openai = new OpenAI();
 
@@ -67,7 +67,7 @@ async function main() {
           const functionName = toolCall.function.name;
           const functionArguments = JSON.parse(toolCall.function.arguments);
 
-          console.log(`Function call detected: ${functionName}`);
+          console.log(`Function call: ${functionName}`);
           // console.log(`Function arguments: ${functionArguments}`);
 
           try {
@@ -78,22 +78,23 @@ async function main() {
             // Invoke the function with the extracted arguments
             const result = await (engine as any)[functionName](...args);
 
-            const resultString = JSON.stringify(
-              result === undefined ? {} : result
-            );
-            const trimmedResult =
-              resultString.length > 500
-                ? resultString.substring(0, 500) + "..."
-                : resultString;
-            console.log("Result", trimmedResult);
-
-            // push the result back to the messages
-
+            // push the result to the messages
             messages.push({
               role: "tool",
-              content: JSON.stringify(result === undefined ? {} : result),
+              content: JSON.stringify(
+                result === undefined || result === null
+                  ? "no return value from function"
+                  : result
+              ),
               tool_call_id: toolCall.id,
             });
+
+            // log the result
+            if (typeof result === "string" && result.length > 100) {
+              console.log("Result", result.slice(0, 100));
+            } else {
+              console.log("Result", result);
+            }
           } catch (e) {
             const error = e as Error;
 
@@ -112,6 +113,8 @@ async function main() {
             break loop_hard_limit;
           }
         }
+      } else {
+        console.log(choice.message.content);
       }
 
       // await sleep(1000);
@@ -121,6 +124,9 @@ async function main() {
       console.error(error.message);
       // dump the messages
       console.log(messages);
+    } else if (error instanceof Error) {
+      console.error(error);
+      console.error(error.stack);
     } else {
       console.error(error);
     }
