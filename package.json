@@ -1,0 +1,16 @@
+{
+  "name": "ai_to_testcase",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "wuttinanhi <42175957+wuttinanhi@users.noreply.github.com>",
+  "license": "MIT",
+  "dependencies": {
+    "openai": "^4.67.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.1"
+  },
+  "scripts": {
+    "start": "tsx src/main.ts"
+  }
+}
