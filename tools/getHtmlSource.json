@@ -1,0 +1,13 @@
+{
+  "type": "function",
+  "function": {
+    "name": "getHtmlSource",
+    "description": "Retrieves the HTML source of the current page",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  }
+}

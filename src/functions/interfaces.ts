@@ -5,7 +5,11 @@ export interface WebTestFunctionCall {
   validateElement(selector: string): Promise<boolean>;
   clickElement(selector: string): Promise<void>;
   typeText(selector: string, text: string): Promise<void>;
-  expectElementVisible(selector: string, visible: boolean): Promise<void>;
-  expectElementText(selector: string, text: string): Promise<void>;
+  expectElementVisible(selector: string, visible: boolean): Promise<boolean>;
+  expectElementText(selector: string, text: string): Promise<boolean>;
+  getCurrentUrl(): Promise<string>;
   closeBrowser(): Promise<void>;
+  appendWebTestFunctionCall(call: string): void;
+  displayWebTestFunctionCalls(): void;
+  complete(): void;
 }

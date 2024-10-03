@@ -1,0 +1,13 @@
+{
+    "type": "function",
+    "function": {
+        "name": "complete",
+        "description": "Marks the end of the web test process",
+        "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+        }
+    }
+}

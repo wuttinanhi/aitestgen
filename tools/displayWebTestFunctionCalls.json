@@ -1,0 +1,13 @@
+{
+    "type": "function",
+    "function": {
+        "name": "displayWebTestFunctionCalls",
+        "description": "Displays the list of all appended web test function calls",
+        "parameters": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+        }
+    }
+}

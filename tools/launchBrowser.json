@@ -1,0 +1,13 @@
+{
+  "type": "function",
+  "function": {
+    "name": "launchBrowser",
+    "description": "Launches a browser and returns a promise that resolves when the browser is launched",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  }
+}

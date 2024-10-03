@@ -1,0 +1,20 @@
+{
+  "type": "function",
+  "function": {
+    "name": "navigateTo",
+    "description": "Navigates to a given URL",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "The URL to navigate to"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

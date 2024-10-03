@@ -1,9 +1,6 @@
-1. navigate to https://todomvc.com/
-2. click on react example
-3. write "prepare for interview" in the input field
-4. press enter
-5. validate that the task is added to the list
-6. click on the checkbox to mark the task as completed
-7. validate that the task is marked as completed
-8. click on the clear completed button
-9. validate that the task is removed from the list
+1. Navigate to "https://stripe-checkout-next-js-demo.vercel.app/"
+2. Set Quantity to 10
+3. Click buy
+4. complete the stripe checkout form with card number "4242 4242 4242 4242"
+5. Click pay
+6. Expect the success message to be visible

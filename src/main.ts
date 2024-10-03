@@ -1,89 +1,132 @@
-import OpenAI from "openai";
+import OpenAI, { BadRequestError } from "openai";
+import PuppeteerWebTest from "./engines/puppeteer";
+import { readFileString } from "./helpers/helpers";
+import { loadTools } from "./helpers/tools";
 
 async function main() {
+  const toolsDefinition = (await loadTools(
+    "./tools"
+  )) as Array<OpenAI.ChatCompletionTool>;
+  // for (const tool of toolsDefinition) {
+  //   console.log(tool);
+  // }
+
+  const systemInstruction = await readFileString("prompts/instruction.txt");
+
+  const EXAMPLE_1 = await readFileString("prompts/example1.txt");
+
+  const LOOP_HARD_LIMIT = 35;
+
   const openai = new OpenAI();
 
-  const tools: Array<OpenAI.ChatCompletionTool> = [
-    {
-      type: "function",
-      function: {
-        name: "get_delivery_date",
-        description:
-          "Get the delivery date for a customer's order. Call this whenever you need to know the delivery date, for example when a customer asks 'Where is my package'",
-        parameters: {
-          type: "object",
-          properties: {
-            order_id: {
-              type: "string",
-              description: "The customer's order ID.",
-            },
-          },
-          required: ["order_id"],
-          additionalProperties: false,
-        },
-      },
-    },
-  ];
+  const engine = new PuppeteerWebTest();
 
   const messages: Array<OpenAI.ChatCompletionMessageParam> = [];
+
   messages.push({
     role: "system",
-    content:
-      "You are a helpful customer support assistant. Use the supplied tools to assist the user.",
+    content: systemInstruction,
   });
   messages.push({
     role: "user",
-    content: "Hi, can you tell me the delivery date for my order?",
+    content: EXAMPLE_1,
   });
-  messages.push({
-    role: "assistant",
-    content:
-      "Hi there! I can help with that. Can you please provide your order ID?",
-  });
-  messages.push({ role: "user", content: "i think it is order_12345" });
 
-  function get_delivery_date(
-    response: OpenAI.Chat.Completions.ChatCompletion,
-    orderID: string
-  ): OpenAI.ChatCompletionMessageParam {
-    return {
-      role: "tool",
-      content: JSON.stringify({
-        order_id: orderID,
-        delivery_date: "2024-01-10 13:45:00",
-      }),
-      tool_call_id: response.choices[0].message.tool_calls![0].id,
-    };
+  // const response = await openai.chat.completions.create({
+  //   model: "gpt-4o-mini",
+  //   messages: messages,
+  //   tools: toolsDefinition,
+  // });
+
+  // const choice = response.choices[0];
+
+  // messages.push(choice.message);
+  // console.log(choice.message);
+
+  try {
+    loop_hard_limit: for (let i = 0; i < LOOP_HARD_LIMIT; i++) {
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: messages,
+        tools: toolsDefinition,
+      });
+
+      console.log(`\n\nLoop: ${i}`);
+
+      const choice = response.choices[0];
+
+      // console.log("choice", choice.message);
+
+      // push the message to the messages
+      messages.push(choice.message);
+
+      // if it is function call, execute it
+      if (choice.message.tool_calls && choice.message.tool_calls.length > 0) {
+        // loop through the tool calls and execute them
+        for (const toolCall of choice.message.tool_calls) {
+          const functionName = toolCall.function.name;
+          const functionArguments = JSON.parse(toolCall.function.arguments);
+
+          console.log(`Function call detected: ${functionName}`);
+          // console.log(`Function arguments: ${functionArguments}`);
+
+          try {
+            // Extract values from the functionArguments object
+            const args = Object.values(functionArguments);
+            console.log("Args", args);
+
+            // Invoke the function with the extracted arguments
+            const result = await (engine as any)[functionName](...args);
+
+            const resultString = JSON.stringify(
+              result === undefined ? {} : result
+            );
+            const trimmedResult =
+              resultString.length > 500
+                ? resultString.substring(0, 500) + "..."
+                : resultString;
+            console.log("Result", trimmedResult);
+
+            // push the result back to the messages
+
+            messages.push({
+              role: "tool",
+              content: JSON.stringify(result === undefined ? {} : result),
+              tool_call_id: toolCall.id,
+            });
+          } catch (e) {
+            const error = e as Error;
+
+            console.error("error in invoking function", error);
+
+            // push the error back to the messages
+            messages.push({
+              role: "tool",
+              content: error.message,
+              tool_call_id: toolCall.id,
+            });
+          }
+
+          // if function name is complete, then break the loop
+          if (functionName === "complete") {
+            break loop_hard_limit;
+          }
+        }
+      }
+
+      // await sleep(1000);
+    }
+  } catch (error) {
+    if (error instanceof BadRequestError) {
+      console.error(error.message);
+      // dump the messages
+      console.log(messages);
+    } else {
+      console.error(error);
+    }
+  } finally {
+    await engine.closeBrowser();
   }
-
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: messages,
-    tools: tools,
-  });
-
-  messages.push(response.choices[0].message);
-  console.log(response.choices[0].message);
-
-  if (response.choices[0].message.tool_calls) {
-    const toolCall = response.choices[0].message.tool_calls[0];
-    const args = JSON.parse(toolCall.function.arguments);
-
-    const order_id = args.order_id;
-
-    // Call the get_delivery_date function with the extracted order_id
-    const delivery_date = get_delivery_date(response, order_id);
-
-    messages.push(delivery_date);
-  }
-
-  const response2 = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: messages,
-    tools: tools,
-  });
-
-  console.log(response2.choices[0].message);
 }
 
 main();

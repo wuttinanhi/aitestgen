@@ -1,0 +1,10 @@
+1. Open the URL "https://todomvc.com/"
+2. Click on the "React" example link
+3. Enter "prepare for interview" in the input field
+4. Press the "Enter" key to submit the task
+5. Verify that the task "prepare for interview" is added to the list
+
+Note: The task list will not be visible until a task is added.
+Note on previous mistakes: 
+- you should press the "Enter" key to submit the task, not click on the input field. and there is no button to click to submit the task.
+- you should type the text "prepare for interview" into the input field only once.

@@ -1,0 +1,20 @@
+{
+  "type": "function",
+  "function": {
+    "name": "appendWebTestFunctionCall",
+    "description": "Appends a function call to the web test function call sequence",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "call": {
+          "type": "string",
+          "description": "The function call to append to the sequence"
+        }
+      },
+      "required": [
+        "call"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

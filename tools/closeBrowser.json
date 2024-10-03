@@ -1,0 +1,13 @@
+{
+  "type": "function",
+  "function": {
+    "name": "closeBrowser",
+    "description": "Closes the current browser session",
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    }
+  }
+}
