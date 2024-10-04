@@ -6,7 +6,8 @@
   "license": "MIT",
   "dependencies": {
     "openai": "^4.67.1",
-    "puppeteer": "^23.5.0"
+    "puppeteer": "^23.5.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "tsx": "^4.19.1"

@@ -48,3 +48,19 @@ export async function listFilesInDirectory(
 export async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+export function stripScriptTags(text: string) {
+  const scriptRegex = /<script[^>]*>[\s\S]*?<\/script>/g;
+  return text.replace(scriptRegex, "");
+}
+
+export function stripPathD(text: string) {
+  const pathDRegex = /d="[^"]*"/g;
+  return text.replace(pathDRegex, "");
+}
+
+export function stripWrapper(text: string) {
+  let out = stripScriptTags(text);
+  out = stripPathD(out);
+  return out;
+}
