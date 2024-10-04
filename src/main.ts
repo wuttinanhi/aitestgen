@@ -53,7 +53,7 @@ async function main() {
 
   const assistant = await openai.beta.assistants.create({
     name: "AI web page selector extractor",
-    instructions: "You are a AI tool to extract selectors from html code.",
+    instructions: `You are a AI tool to extract selectors from html code.`,
     tools: [{ type: "file_search" }],
     model: "gpt-4o-mini",
   });
@@ -89,7 +89,7 @@ async function main() {
             tools: [{ type: "file_search" }],
           },
         ],
-        content: `stripe blue pay button`,
+        content: `credit card form submit button`,
       }
     );
     console.log(fileMessage);
@@ -102,8 +102,11 @@ async function main() {
 
     let run = await openai.beta.threads.runs.createAndPoll(tempThread.id, {
       assistant_id: assistant.id,
-      instructions:
-        "Extract element CSS selector, XPath, and full XPath from the HTML file.",
+      // instructions: `
+      // Extract element CSS selector, XPath, and full XPath from the HTML file.
+      //   - on Stripe checkout page, there will be more buttons, please extract exactly what user asked for.
+      // `,
+      instructions: `Extract element CSS selector, XPath, and full XPath from the HTML file.`,
       model: "gpt-4o-mini",
       tools: [
         {
