@@ -38,7 +38,7 @@
 **Tips:**
 - Don't forget to use `launchBrowser()` and `closeBrowser()` at the start and end of the process.
 - You should always append a successful action by using `createStep()` to save the action in the step history.
-- You should always append `launchBrowser()` first in the step history.
-- You should always append `closeBrowser()` last in the step history.
+- You should always append `launchBrowser()` first in the step history. (IMPORTANT! you always miss this step)
+- You should always append `closeBrowser()` last in the step history. (IMPORTANT! you always miss this step)
 - Use `listSteps()` to check the current steps generated.
 - You should finalize the steps using `chooseWantedSteps()` once you finish generating the test case.

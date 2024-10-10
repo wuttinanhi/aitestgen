@@ -41,7 +41,7 @@ export class StepHistory {
    * generateTestOnSelectedStep
    */
   public async generateTestOnSelectedStep(selectedStepIndex: number[]) {
-    console.log("generating test on selected steps", selectedStepIndex);
+    console.log("generating test on selected steps", ...selectedStepIndex);
 
     const selectedSteps = this.steps.filter((_, index) =>
       selectedStepIndex.includes(index)
@@ -49,9 +49,20 @@ export class StepHistory {
     // console.log("selectedSteps length", selectedSteps.length);
 
     // append `browser.` to each method name
+    let expectVariableIndex = 1;
     const browserSelectedSteps = selectedSteps.map((step) => {
       const parsedArgs = argsArrayToStringParse(step.methodArguments);
-      return `await browser.${step.methodName}(${parsedArgs});`;
+      const codeLine = `await browser.${step.methodName}(${parsedArgs});`;
+
+      // if contains expect
+      // then create variable name
+      if (step.methodName.includes("expect")) {
+        const variableName = `expect_${expectVariableIndex++}`;
+        const variableCodeLine = `const ${variableName} = ${codeLine}\nconsole.log(${variableName});\n`;
+        return variableCodeLine;
+      }
+
+      return codeLine;
     });
 
     // console.log("browserSelectedSteps length", browserSelectedSteps.length);
@@ -59,7 +70,7 @@ export class StepHistory {
       console.log(codeLine);
     }
 
-    const templateFile = await readFileString("src/templates/template.ts");
+    const templateFile = await readFileString("src/template.ts");
 
     // replace `// <REPLACE TEST STEPS> ` with browserSelectedSteps.join("\n")
     const replaced = templateFile.replace(
