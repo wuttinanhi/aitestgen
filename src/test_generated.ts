@@ -4,17 +4,19 @@ async function generated() {
   const browser = new PuppeteerWebTest();
 
   await browser.launchBrowser();
-await browser.navigateTo(`http://localhost:3000`);
-await browser.setInputValue(`#name`, `John Doe`);
-await browser.setInputValue(`#email`, `john@example.com`);
-await browser.setInputValue(`#message`, `Hello, I am interested in your services.`);
+await browser.navigateTo(`https://stripe-checkout-next-js-demo.vercel.app/`);
+await browser.setInputValue(`input[type='number']`, `1`);
+await browser.clickElement(`#__next > div > main > div.shadow-lg.border.rounded.p-2 > button`);
+await browser.setInputValue(`input#email`, `john@example.com`);
+await browser.setInputValue(`input#cardNumber`, `4242 4242 4242 4242`);
+await browser.setInputValue(`input#cardExpiry`, `12/30`);
+await browser.setInputValue(`input#cardCvc`, `123`);
+await browser.setInputValue(`input#billingName`, `John Doe`);
 await browser.clickElement(`button[type='submit']`);
-const expect_1 = await browser.expectElementVisible(`h1`, true);
+const expect_1 = await browser.expectElementVisible(`.bg-green-100`, true);
 console.log(expect_1);
 
-const expect_2 = await browser.expectElementText(`h1`, `Thank you for your message!`);
-console.log(expect_2);
-
+await browser.closeBrowser();
 
   await browser.closeBrowser();
 }
