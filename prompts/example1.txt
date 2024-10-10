@@ -1,5 +1,9 @@
-1. Open the URL "https://todomvc.com/"
-2. Click on the "React" example link
-3. Enter "Prepare for interview" in the input field
-4. Press the "Enter" key to submit the task
-5. Verify that the task "prepare for interview" is added to the list
+Generate testcase for fill contact form.
+
+1. Go to http://localhost:3000
+2. fill the form with the following details:
+    - Name: John Doe
+    - Email: john@example.com
+    - Message: Hello, I am interested in your services.
+3. Submit the form.
+4. Expect to see a success message.

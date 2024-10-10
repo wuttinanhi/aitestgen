@@ -1,6 +1,8 @@
 import puppeteer, { Browser, Page } from "puppeteer";
 import { WebTestFunctionCall } from "../functions/interfaces";
-import { readFileString, sleep, writeFileString } from "../helpers/helpers";
+import { readFileString, writeFileString } from "../helpers/files";
+import { HTMLStripNonDisplayTags } from "../helpers/html";
+import { sleep } from "../helpers/utils";
 
 class PuppeteerWebTest implements WebTestFunctionCall {
   private browser: Browser | null = null;
@@ -10,6 +12,10 @@ class PuppeteerWebTest implements WebTestFunctionCall {
   async launchBrowser(): Promise<void> {
     this.browser = await puppeteer.launch({
       headless: false,
+      defaultViewport: {
+        width: 1280,
+        height: 720,
+      },
       // start in maximized window
       // defaultViewport: null,
       // args: ["--start-maximized"],
@@ -21,14 +27,26 @@ class PuppeteerWebTest implements WebTestFunctionCall {
   async navigateTo(url: string): Promise<void> {
     if (this.page) {
       await this.page.goto(url);
-      await sleep(2000);
+      try {
+        await Promise.race([
+          this.page.waitForNavigation({
+            waitUntil: "networkidle0",
+            timeout: 10000,
+          }),
+          this.page.waitForNetworkIdle({
+            timeout: 10000,
+          }),
+          sleep(12000),
+        ]);
+      } catch (error) {}
     }
   }
 
   async getHtmlSource(): Promise<string> {
     if (this.page) {
       const content = await this.page.content();
-      return content;
+      const htmlSmall = HTMLStripNonDisplayTags(content);
+      return htmlSmall;
     }
     return "";
   }
@@ -41,16 +59,68 @@ class PuppeteerWebTest implements WebTestFunctionCall {
     return false;
   }
 
-  async clickElement(selector: string): Promise<void> {
+  async clickElement(selector: string): Promise<any> {
     if (this.page) {
-      await this.page.click(selector);
-      await sleep(2000);
+      const selectedElement = await this.page.$(selector);
+      if (selectedElement) {
+        const beforeURL = this.page.url();
+
+        await selectedElement.click();
+
+        // wait either network idle or page change or wait a bit
+        try {
+          await Promise.race([
+            this.page.waitForNavigation({
+              waitUntil: "networkidle0",
+              timeout: 10000,
+            }),
+            this.page.waitForNetworkIdle({
+              timeout: 10000,
+            }),
+            sleep(12000),
+          ]);
+        } catch (error) {}
+
+        const afterURL = this.page.url();
+        const pageChanged = beforeURL !== afterURL;
+        return {
+          status: "success",
+          pageChanged,
+          beforeURL,
+          afterURL,
+        };
+      } else {
+        return {
+          status: "error",
+          message: "Element not found",
+        };
+      }
     }
   }
 
   async typeText(selector: string, text: string): Promise<void> {
     if (this.page) {
       await this.page.type(selector, text);
+    }
+  }
+
+  async setInputValue(selector: string, value: any): Promise<any> {
+    if (this.page) {
+      const selectedElement = await this.page.$(selector);
+      if (selectedElement) {
+        // set input to empty first
+        await selectedElement.evaluate((el) => {
+          (el as HTMLInputElement).value = "";
+        });
+
+        // type the value
+        await selectedElement.type(value);
+      } else {
+        return {
+          status: "error",
+          message: "Element not found",
+        };
+      }
     }
   }
 
@@ -70,12 +140,13 @@ class PuppeteerWebTest implements WebTestFunctionCall {
   async expectElementText(selector: string, text: string): Promise<boolean> {
     if (this.page) {
       const element = await this.page.$(selector);
+
       if (element) {
-        const elementText = await this.page.evaluate(
-          (el) => el.textContent,
-          element
-        );
+        const elementText = await element.evaluate((el) => el.textContent);
+
         return elementText === text;
+      } else {
+        return false;
       }
     }
     return false;

@@ -1,8 +1,8 @@
 {
     "type": "function",
     "function": {
-        "name": "complete",
-        "description": "Marks the end of the web test process",
+        "name": "listSteps",
+        "description": "Lists all steps in the step history",
         "parameters": {
             "type": "object",
             "properties": {},

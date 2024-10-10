@@ -1,0 +1,23 @@
+{
+    "type": "function",
+    "function": {
+        "name": "bulkDeleteSteps",
+        "description": "Deletes multiple steps from the step history based on their indexes",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "stepIndexes": {
+                    "type": "array",
+                    "description": "An array of indexes of the steps to delete",
+                    "items": {
+                        "type": "number"
+                    }
+                }
+            },
+            "required": [
+                "stepIndexes"
+            ],
+            "additionalProperties": false
+        }
+    }
+}

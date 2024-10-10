@@ -12,6 +12,7 @@
     "tsx": "^4.19.1"
   },
   "scripts": {
-    "start": "tsx src/main.ts"
+    "start": "tsx src/main.ts",
+    "test_generated": "tsx src/test_generated.ts"
   }
 }

@@ -1,0 +1,38 @@
+{
+    "type": "function",
+    "function": {
+        "name": "createStep",
+        "description": "Creates a new step by adding it to the step history",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "step": {
+                    "type": "object",
+                    "description": "The step object to be created",
+                    "properties": {
+                        "methodName": {
+                            "type": "string",
+                            "description": "The name of the method for the step"
+                        },
+                        "methodArguments": {
+                            "type": "array",
+                            "description": "The arguments for the method",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "required": [
+                        "methodName",
+                        "methodArguments"
+                    ],
+                    "additionalProperties": false
+                }
+            },
+            "required": [
+                "step"
+            ],
+            "additionalProperties": false
+        }
+    }
+}

@@ -1,4 +1,4 @@
-import { listFilesInDirectory, readFileString } from "./helpers";
+import { listFilesInDirectory, readFileString } from "./files";
 
 export async function loadTools(directoryPath: string): Promise<object[]> {
   try {
