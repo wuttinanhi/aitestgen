@@ -4,14 +4,11 @@ async function generated() {
   const browser = new PuppeteerWebTest();
 
   await browser.launchBrowser();
-await browser.navigateTo(`https://www.youtube.com`);
-await browser.setInputValue(`input#search`, `rickroll`);
-await browser.clickElement(`#search-icon-legacy`);
-await browser.clickElement(`ytd-thumbnail.ytd-video-renderer`);
-const expect_1 = await browser.expectElementText(`h1.title.ytd-video-primary-info-renderer`, `Rick Astley - Never Gonna Give You Up (Official Music Video)`);
+await browser.navigateTo(`https://sveltekit-demo-psi.vercel.app/`);
+await browser.clickElement(`button[aria-label='Delete Todo']`);
+const expect_1 = await browser.expectElementText(`div.flex-1.px-2.py-3.text-base-content`, `0 of 0 remaining`);
 console.log(expect_1);
 
-await browser.closeBrowser();
 
   await browser.closeBrowser();
 }

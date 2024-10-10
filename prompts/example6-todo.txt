@@ -1,0 +1,4 @@
+1. visit https://sveltekit-demo-psi.vercel.app/
+2. add new todo "learn SvelteKit"
+3. click on plus button
+4. expect to see "learn SvelteKit" in the list
