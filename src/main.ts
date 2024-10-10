@@ -15,7 +15,8 @@ async function main() {
 
   const systemInstruction = await readFileString("prompts/instruction.txt");
 
-  const USER_PROMPT = await readFileString("prompts/example5-stripe.txt");
+  const userPromptFilePath = process.argv[2];
+  const USER_PROMPT = await readFileString(userPromptFilePath);
   // const USER_PROMPT = await readFileString("prompts/example1.txt");
 
   const LOOP_HARD_LIMIT = 30;
