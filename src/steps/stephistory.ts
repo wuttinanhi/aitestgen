@@ -1,4 +1,5 @@
 import { readFileString, writeFileString } from "../helpers/files";
+import { formatCode } from "../helpers/formatter";
 import { argsArrayToStringParse } from "../helpers/utils";
 import { IStep } from "../interfaces/step";
 
@@ -48,6 +49,28 @@ export class StepHistory {
     );
     // console.log("selectedSteps length", selectedSteps.length);
 
+    // check if first step is launchBrowser if not add as first step
+    if (
+      selectedSteps.length === 0 ||
+      selectedSteps[0].methodName !== "launchBrowser"
+    ) {
+      selectedSteps.unshift({
+        methodName: "launchBrowser",
+        methodArguments: [],
+      });
+    }
+
+    // check if last step is closeBrowser if not add as last step
+    if (
+      selectedSteps.length === 0 ||
+      selectedSteps[selectedSteps.length - 1].methodName !== "closeBrowser"
+    ) {
+      selectedSteps.push({
+        methodName: "closeBrowser",
+        methodArguments: [],
+      });
+    }
+
     // append `browser.` to each method name
     let expectVariableIndex = 1;
     const browserSelectedSteps = selectedSteps.map((step) => {
@@ -78,7 +101,9 @@ export class StepHistory {
       browserSelectedSteps.join("\n")
     );
 
+    const formattedCode = await formatCode(replaced);
+
     // write the replaced content to src/test_generated.ts
-    await writeFileString("src/test_generated.ts", replaced);
+    await writeFileString("src/test_generated.ts", formattedCode);
   }
 }

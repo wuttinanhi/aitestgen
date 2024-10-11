@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import PuppeteerWebTest from "./engines/puppeteer";
+import { PuppeteerWebTest } from "./engines/puppeteer";
 import { readFileString } from "./helpers/files";
 import { loadTools } from "./helpers/tools";
 import { sleep } from "./helpers/utils";
@@ -50,6 +50,8 @@ async function main() {
   });
 
   try {
+    await engine.launchBrowser();
+
     loop_hard_limit: for (let i = 0; i < LOOP_HARD_LIMIT; i++) {
       const response = await openai.chat.completions.create({
         model: "gpt-4o-mini",
@@ -96,9 +98,10 @@ async function main() {
             } as OpenAI.ChatCompletionMessageParam;
             messages.push(toolCallResponse);
 
+            console.log("Tool Result Length", result.length);
+
             // log the result limited to 100 characters
             if (typeof result === "string" && result.length > 100) {
-              console.log("Tool Result Length", result.length);
               console.log("Tool Result", result.slice(0, 100));
             } else {
               console.log("Tool Result", result);
@@ -109,9 +112,8 @@ async function main() {
             try {
               // Basic function invocation
               // Invoke the function with the extracted arguments
-              let result = await (engine as any)[functionName](
-                ...functionArgsValue
-              );
+              // prettier-ignore
+              let result = await (engine as any)[functionName](...functionArgsValue);
 
               if (result === undefined || result === null) {
                 result = {
@@ -127,13 +129,9 @@ async function main() {
               console.error("error in invoking function", error);
 
               // push the error back to the messages
-              messages.push({
-                role: "tool",
-                content: JSON.stringify({
-                  status: "error",
-                  message: error.message,
-                }),
-                tool_call_id: toolCall.id,
+              toolCallResponse(toolCall.id, {
+                status: "error",
+                message: error.message,
               });
             }
           }

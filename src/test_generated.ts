@@ -4,11 +4,20 @@ async function generated() {
   const browser = new PuppeteerWebTest();
 
   await browser.launchBrowser();
-await browser.navigateTo(`https://sveltekit-demo-psi.vercel.app/`);
-await browser.clickElement(`button[aria-label='Delete Todo']`);
-const expect_1 = await browser.expectElementText(`div.flex-1.px-2.py-3.text-base-content`, `0 of 0 remaining`);
-console.log(expect_1);
+  await browser.setInputValue(`input[name='name']`, `John Doe`);
+  await browser.setInputValue(`input[name='email']`, `john@example.com`);
+  await browser.setInputValue(
+    `textarea[name='message']`,
+    `Hello, I am interested in your services.`
+  );
+  await browser.clickElement(`button[type='submit']`);
+  const expect_1 = await browser.expectElementText(
+    `h1`,
+    `Thank you for your message!`
+  );
+  console.log(expect_1);
 
+  await browser.closeBrowser();
 
   await browser.closeBrowser();
 }

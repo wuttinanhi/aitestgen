@@ -1,13 +1,68 @@
 import puppeteer, { Browser, Page } from "puppeteer";
-import { WebTestFunctionCall } from "../functions/interfaces";
-import { readFileString, writeFileString } from "../helpers/files";
 import { HTMLStripNonDisplayTags } from "../helpers/html";
 import { sleep } from "../helpers/utils";
+import { WebTestFunctionCall } from "./interfaces";
 
-class PuppeteerWebTest implements WebTestFunctionCall {
+export class PageNotFoundError extends Error {
+  constructor() {
+    super("Active page not found");
+  }
+}
+
+export class ElementNotFoundError extends Error {
+  constructor() {
+    super("Element not found");
+  }
+}
+
+export class PuppeteerWebTest implements WebTestFunctionCall {
   private browser: Browser | null = null;
-  private page: Page | null = null;
-  private functionCalls: string[] = [];
+  private activePage: Page | null = null;
+
+  async newPage() {
+    this.activePage = await this.browser!.newPage();
+  }
+
+  async getPages() {
+    const pages = await this.browser!.pages();
+    return pages.map((page, index) => {
+      return {
+        index,
+        url: page.url(),
+      };
+    });
+  }
+
+  async setActivePageByIndex(index: number) {
+    const pages = await this.browser!.pages();
+    pages[index].bringToFront();
+    this.activePage = pages[index];
+  }
+
+  async deletePage(index: number) {
+    const pages = await this.browser!.pages();
+    await pages[index].close();
+    this.activePage = pages.at(-1)!;
+  }
+
+  getActivePage() {
+    const page = this.activePage;
+    if (!page) throw new PageNotFoundError();
+    return page;
+  }
+
+  async waitForPageLoad() {
+    return Promise.race([
+      this.getActivePage().waitForNavigation({
+        waitUntil: "networkidle0",
+        timeout: 10000,
+      }),
+      this.getActivePage().waitForNetworkIdle({
+        timeout: 10000,
+      }),
+      sleep(12000),
+    ]);
+  }
 
   async launchBrowser(): Promise<void> {
     this.browser = await puppeteer.launch({
@@ -20,196 +75,106 @@ class PuppeteerWebTest implements WebTestFunctionCall {
       // defaultViewport: null,
       // args: ["--start-maximized"],
     });
-    this.page = await this.browser.newPage();
-    await sleep(2000);
+    await this.newPage();
   }
 
   async navigateTo(url: string): Promise<void> {
-    if (this.page) {
-      await this.page.goto(url);
-      try {
-        await Promise.race([
-          this.page.waitForNavigation({
-            waitUntil: "networkidle0",
-            timeout: 10000,
-          }),
-          this.page.waitForNetworkIdle({
-            timeout: 10000,
-          }),
-          sleep(12000),
-        ]);
-      } catch (error) {}
-    }
+    await this.getActivePage().goto(url);
   }
 
-  async getHtmlSource(): Promise<string> {
-    if (this.page) {
-      const content = await this.page.content();
-      const htmlSmall = HTMLStripNonDisplayTags(content);
-      return htmlSmall;
-    }
-    return "";
+  async getHtmlSource(): Promise<any> {
+    const content = await this.getActivePage().content();
+    const htmlSmall = HTMLStripNonDisplayTags(content);
+    return {
+      url: this.getActivePage().url(),
+      html: htmlSmall,
+    };
   }
 
   async validateElement(selector: string): Promise<boolean> {
-    if (this.page) {
-      const element = await this.page.$(selector);
-      return element !== null;
-    }
-    return false;
+    const element = await this.getActivePage().$(selector);
+    return element !== null;
   }
 
   async clickElement(selector: string): Promise<any> {
-    if (this.page) {
-      const selectedElement = await this.page.$(selector);
-      if (selectedElement) {
-        const beforeURL = this.page.url();
-
-        await selectedElement.click();
-
-        // wait either network idle or page change or wait a bit
-        try {
-          await Promise.race([
-            this.page.waitForNavigation({
-              waitUntil: "networkidle0",
-              timeout: 10000,
-            }),
-            this.page.waitForNetworkIdle({
-              timeout: 10000,
-            }),
-            sleep(12000),
-          ]);
-        } catch (error) {}
-
-        const afterURL = this.page.url();
-        const pageChanged = beforeURL !== afterURL;
-        return {
-          status: "success",
-          pageChanged,
-          beforeURL,
-          afterURL,
-        };
-      } else {
-        return {
-          status: "error",
-          message: "Element not found",
-        };
-      }
+    const selectedElement = await this.getActivePage().$(selector);
+    if (!selectedElement) {
+      throw new ElementNotFoundError();
     }
+
+    const beforeURL = this.getActivePage().url();
+
+    await selectedElement.click();
+
+    // wait either network idle or page change or wait a bit
+    await this.waitForPageLoad();
+
+    const afterURL = this.getActivePage().url();
+    const pageChanged = beforeURL !== afterURL;
+    return {
+      pageChanged,
+      beforeURL,
+      afterURL,
+    };
   }
 
   async typeText(selector: string, text: string): Promise<void> {
-    if (this.page) {
-      await this.page.type(selector, text);
-    }
+    await this.getActivePage().type(selector, text);
   }
 
   async setInputValue(selector: string, value: any): Promise<any> {
-    if (this.page) {
-      const selectedElement = await this.page.$(selector);
-      if (selectedElement) {
-        // set input to empty first
-        await selectedElement.evaluate((el) => {
-          (el as HTMLInputElement).value = "";
-        });
-
-        // type the value
-        await selectedElement.type(value);
-      } else {
-        return {
-          status: "error",
-          message: "Element not found",
-        };
-      }
+    const selectedElement = await this.getActivePage().$(selector);
+    if (!selectedElement) {
+      throw new ElementNotFoundError();
     }
+
+    // set input to empty first
+    await selectedElement.evaluate((el) => {
+      (el as HTMLInputElement).value = "";
+    });
+
+    // type the value
+    await selectedElement.type(value);
   }
 
   async expectElementVisible(
     selector: string,
     visible: boolean
   ): Promise<boolean> {
-    if (this.page) {
-      const element = await this.page.$(selector);
-      const isVisible =
-        element !== null && (await element.boundingBox()) !== null;
-      return isVisible === visible;
-    }
-    return false;
+    const element = await this.getActivePage().$(selector);
+    const isVisible =
+      element !== null && (await element.boundingBox()) !== null;
+    return isVisible === visible;
   }
 
-  async expectElementText(selector: string, text: string): Promise<boolean> {
-    if (this.page) {
-      const element = await this.page.$(selector);
-
-      if (element) {
-        const elementText = await element.evaluate((el) => el.textContent);
-
-        return elementText === text;
-      } else {
-        return false;
-      }
+  async expectElementText(selector: string, text: string) {
+    const selectedElement = await this.getActivePage().$(selector);
+    if (!selectedElement) {
+      throw new ElementNotFoundError();
     }
-    return false;
+
+    const elementText = await selectedElement.evaluate((el) => el.textContent);
+
+    return {
+      result: elementText === text,
+    };
   }
 
   async pressKey(key: string): Promise<void> {
-    if (this.page) {
-      await this.page.keyboard.press(key as any);
-    }
+    await this.getActivePage().keyboard.press(key as any);
   }
 
   async getCurrentUrl(): Promise<string> {
-    if (this.page) {
-      return this.page.url();
-    }
-    return "";
+    return this.getActivePage().url();
   }
 
   async getInputValue(selector: string): Promise<string> {
-    if (this.page) {
-      return this.page
-        .$eval(selector, (el) => (el as HTMLInputElement).value)
-        .catch(() => "");
-    }
-    return "";
+    return this.getActivePage()
+      .$eval(selector, (el) => (el as HTMLInputElement).value)
+      .catch(() => "");
   }
 
   async closeBrowser(): Promise<void> {
-    if (this.browser) {
-      await this.browser.close();
-    }
-  }
-
-  appendWebTestFunctionCall(call: string): void {
-    // if (call.startsWith("expect")) {
-    //   this.functionCalls.push(`const expectResult = await browser.${call}`);
-    //   this.functionCalls.push("console.log(expectResult);");
-    // } else {
-    //   this.functionCalls.push(`await browser.${call}`);
-    // }
-    this.functionCalls.push(`await browser.${call}`);
-  }
-
-  displayWebTestFunctionCalls(): void {
-    console.log(this.functionCalls.join("\n"));
-  }
-
-  async complete(): Promise<void> {
-    this.appendWebTestFunctionCall("closeBrowser()");
-    this.displayWebTestFunctionCalls();
-
-    // read file at src/templates/template.ts
-    const template = await readFileString("src/templates/template.ts");
-
-    // replace `// <REPLACE TEST STEPS>` with this.functionCalls.join("\n")
-    const replaced = template.replace(
-      "// <REPLACE TEST STEPS>",
-      this.functionCalls.join("\n")
-    );
-
-    // write the replaced content to src/generated.ts
-    await writeFileString("src/generated.ts", replaced);
+    await this.browser!.close();
   }
 }
-
-export default PuppeteerWebTest;
