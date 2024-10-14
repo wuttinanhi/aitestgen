@@ -27,9 +27,10 @@
   },
   "scripts": {
     "start": "tsx src/main.ts",
-    "devgen": "tsx src/testgen.ts",
+    "gen": "tsx src/main.ts",
     "devrun": "tsx src/main.ts prompts/example1.txt",
-    "devtest": "jest --coverage",
+    "devgen": "tsx src/testgen.ts",
+    "devtest": "jest --coverage --verbose --silent=false",
     "test": "echo 'if you mean to test generated testcases, use 'devtest'!'"
   }
 }

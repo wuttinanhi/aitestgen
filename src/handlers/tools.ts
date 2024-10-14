@@ -53,6 +53,16 @@ export async function handleToolCalls(
       }
     }
 
+    if (functionName === "reset") {
+      await engine.reset();
+      stepBuffer.reset();
+      uniqueVariableNamesBuffer.length = 0;
+      return toolCallResponse(messageBuffer, toolCall.id, {
+        status: "success",
+        message: "Reset browser successfully",
+      });
+    }
+
     // Basic function invocation
     // Invoke the function with the extracted arguments
     // prettier-ignore

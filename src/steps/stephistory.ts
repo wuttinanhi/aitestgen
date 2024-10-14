@@ -39,6 +39,13 @@ export class StepHistory {
   }
 
   /**
+   * reset
+   */
+  public reset() {
+    this.steps = [];
+  }
+
+  /**
    * generateTestOnSelectedStep
    */
   public async generateTestOnSelectedStep(selectedStepIndex: number[]) {

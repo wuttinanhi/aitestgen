@@ -1,0 +1,8 @@
+URL: https://microsoftedge.github.io/Demos/demo-to-do/
+
+Tasks:
+- Feed the dog
+- Learn to code
+- Cook dinner
+
+Prompt: Add the tasks to the list and verify their successful addition.

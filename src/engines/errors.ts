@@ -9,3 +9,9 @@ export class ElementNotFoundError extends Error {
     super("Element not found");
   }
 }
+
+export class BrowserAlreadyLaunchedError extends Error {
+  constructor() {
+    super("Browser already launched");
+  }
+}

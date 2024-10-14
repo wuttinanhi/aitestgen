@@ -6,18 +6,21 @@ export class PuppeteerTestGen {
   private templateCode: string;
   private browserVar: string;
   private pageVar: string = "page";
+  private templatePlaceholder: string = "{{GENERATED_CODE}}";
   private generatedCode: string = ``;
 
   constructor(
     steps: IStep[],
     templateCode: string,
     templatePuppeteerLaunchVariableName: string,
-    templatePuppeteerPageVariableName: string
+    templatePuppeteerPageVariableName: string,
+    templatePlaceholder: string
   ) {
     this.steps = steps;
     this.templateCode = templateCode;
     this.browserVar = templatePuppeteerLaunchVariableName;
     this.pageVar = templatePuppeteerPageVariableName;
+    this.templatePlaceholder = templatePlaceholder;
 
     this.sanitizeSteps();
   }
@@ -44,7 +47,11 @@ export class PuppeteerTestGen {
       this.generatedCode += line + "\n";
       // console.log(line);
     }
-    return this.templateCode.replace("{{GENERATED_CODE}}", this.generatedCode);
+
+    return this.templateCode.replace(
+      this.templatePlaceholder,
+      this.generatedCode
+    );
   }
 
   protected generateStep(step: IStep) {
@@ -76,12 +83,10 @@ expect(${varName0}).not.toBeNull();
 await ${varName0}!.click();`;
       case "setInputValue":
         return `
-var inputElement = await page.$("${arg0}");
-if (!inputElement) {
-  throw new Error(\`Element not found: \$\{"${arg0}"\}\`);
-}
+var ${varName0} = await page.$("${arg0}");
+expect(${varName0}).not.toBeNull();
 
-await inputElement.type("${arg1}");`;
+await ${varName0}!.type("${arg1}");`;
       case "getInputValue":
         return `const inputValue = await ${this.pageVar}.getInputValue(${stepArgs});`;
       case "setOptionValue":
@@ -91,13 +96,13 @@ await inputElement.type("${arg1}");`;
           return `
 var ${varName0} = await page.$("${arg0}");
 expect(${varName0}).not.toBeNull();
-// console.log(\`✅ Expect element visible: \$\{"${arg0}"\} is correct\`);
+console.log(\`✅ Expect element visible: \$\{"${arg0}"\} is correct\`);
 `;
         } else {
           return `
 var ${varName0} = await page.$("${arg0}");
 expect(${varName0}).toBeNull();
-// console.log(\`✅ Expect element not visible: \$\{"${arg0}"\} is correct\`);
+console.log(\`✅ Expect element not visible: \$\{"${arg0}"\} is correct\`);
 `;
         }
       case "expectElementText":
@@ -107,10 +112,11 @@ expect(${varName0}).not.toBeNull();
 
 const ${varName0}_text = await ${varName0}!.evaluate((e) => e.textContent);
 expect(${varName0}_text).toBe("${arg1}");
-// console.log(\`✅ Expect text element: (\$\{"${arg0}"\}\) to be ${arg1} is correct\`);    
+console.log(\`✅ Expect text element: (\$\{"${arg0}"\}\) to be ${arg1} is correct\`);    
 `;
       case "waitForPageLoad":
         return `
+  // wait for page load
   await Promise.race([
     ${this.pageVar}.waitForNavigation({
       waitUntil: "networkidle0",

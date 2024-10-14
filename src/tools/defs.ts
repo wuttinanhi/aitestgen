@@ -8,22 +8,6 @@ export const launchBrowserTool = zodFunction({
   description: "Launch the browser",
 });
 
-export const getTabsParams = z.object({});
-export const getTabsTool = zodFunction({
-  name: "getTabs",
-  parameters: getTabsParams,
-  description: "Get all the tabs data in the browser",
-});
-
-export const switchTabParams = z.object({
-  tabId: z.number().describe("The ID of the tab to switch to"),
-});
-export const switchTabTool = zodFunction({
-  name: "switchTab",
-  parameters: switchTabParams,
-  description: "Switch to the tab with the given ID",
-});
-
 export const navigateToParams = z.object({
   url: z.string().describe("The URL to navigate to"),
 });
@@ -59,6 +43,11 @@ export const setInputValueParams = z.object({
     .string()
     .describe("The selector of the element to set the value of"),
   value: z.string().describe("The value to set"),
+  varName: z
+    .string()
+    .describe(
+      "The variable name to store the element in (should be the element name like writing javascript puppeteer test and every variable name should be unique in entire test)"
+    ),
 });
 export const setInputValueTool = zodFunction({
   name: "setInputValue",
@@ -157,6 +146,29 @@ export const completeTool = zodFunction({
   description: "Call this when the test generation is completed.",
 });
 
+export const getTabsParams = z.object({});
+export const getTabsTool = zodFunction({
+  name: "getTabs",
+  parameters: getTabsParams,
+  description: "Get all the tabs data in the browser",
+});
+
+export const switchTabParams = z.object({
+  tabId: z.number().describe("The ID of the tab to switch to"),
+});
+export const switchTabTool = zodFunction({
+  name: "switchTab",
+  parameters: switchTabParams,
+  description: "Switch to the tab with the given ID",
+});
+
+export const resetParams = z.object({});
+export const resetTool = zodFunction({
+  name: "reset",
+  parameters: resetParams,
+  description: "Relaunch the browser and reset the state.",
+});
+
 export const WebTestFunctionToolsCollection = [
   launchBrowserTool,
   navigateToTool,
@@ -171,4 +183,7 @@ export const WebTestFunctionToolsCollection = [
   getCurrentUrlTool,
   closeBrowserTool,
   completeTool,
+  getTabsTool,
+  switchTabTool,
+  resetTool,
 ];

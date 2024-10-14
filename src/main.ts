@@ -23,7 +23,9 @@ async function main() {
 
   const messageBuffer: Array<OpenAI.ChatCompletionMessageParam> = [];
 
-  const uniqueVariableNames: string[] = [];
+  let uniqueVariableNames: string[] = [];
+
+  let TOTAL_TOKENS = 0;
 
   messageBuffer.push({
     role: "system",
@@ -44,6 +46,7 @@ async function main() {
         messages: messageBuffer,
         tools: WebTestFunctionToolsCollection,
         max_tokens: 500,
+        temperature: 0.0,
       });
 
       console.log(`\n\nLoop: ${i}`);
@@ -52,6 +55,8 @@ async function main() {
 
       // push the ai response to the messages
       messageBuffer.push(choice.message);
+
+      TOTAL_TOKENS += response.usage?.total_tokens || 0;
 
       // if it is function call, execute it
       if (choice.message.tool_calls && choice.message.tool_calls.length > 0) {
@@ -91,6 +96,8 @@ async function main() {
     console.log("Steps JSON", stepsJSON);
 
     await writeFileString("generated/out.steps.json", stepsJSON);
+
+    console.log("Total Tokens Used:", TOTAL_TOKENS);
   }
 }
 

@@ -3,22 +3,27 @@ import { formatTSCode } from "./helpers/formatter";
 import { PuppeteerTestGen } from "./testgens/puppeteer.gen";
 
 async function testgen() {
-  const stepOut = await readFileString("generated/out.steps.json");
-  const stepOutJSON = JSON.parse(stepOut);
+  const OUT_STEP_PATH = "generated/out.steps.json";
+  const TEMPLATE_PATH = "src/templates/puppeteer_template.ts";
+  const OUT_GENTEST_PATH = "generated/app.test.ts";
 
-  const templateCode = await readFileString("src/puppeteer_template.ts");
+  const stepOut = await readFileString(OUT_STEP_PATH);
+  const stepOutJSON = JSON.parse(stepOut);
+  const templateCode = await readFileString(TEMPLATE_PATH);
 
   const puppeteerTestGen = new PuppeteerTestGen(
     stepOutJSON,
     templateCode,
     "browser",
-    "page"
+    "page",
+    "// {{GENERATED_CODE}}"
   );
 
   let generatedTestCode = puppeteerTestGen.generate();
-  generatedTestCode = await formatTSCode(generatedTestCode);
+  await writeFileString(OUT_GENTEST_PATH, generatedTestCode);
 
-  await writeFileString("generated/app.test.ts", generatedTestCode);
+  let formattedCode = await formatTSCode(generatedTestCode);
+  await writeFileString(OUT_GENTEST_PATH, formattedCode);
 }
 
 testgen();

@@ -20,53 +20,34 @@ describe("TESTSUITE", () => {
   it("TESTCASE_1", async () => {
     let page = await browser.newPage();
 
-    //
+    await page.goto("https://microsoftedge.github.io/Demos/demo-to-do/");
 
-    await page.goto("http://localhost:3000");
+    var firstTaskInput = await page.$("#new-task");
+    expect(firstTaskInput).not.toBeNull();
 
-    var inputElement = await page.$("#name");
-    if (!inputElement) {
-      throw new Error(`Element not found: ${"#name"}`);
-    }
+    await firstTaskInput!.type("Feed the dog");
 
-    await inputElement.type("John Doe");
-
-    var inputElement = await page.$("#email");
-    if (!inputElement) {
-      throw new Error(`Element not found: ${"#email"}`);
-    }
-
-    await inputElement.type("john@example.com");
-
-    var inputElement = await page.$("#message");
-    if (!inputElement) {
-      throw new Error(`Element not found: ${"#message"}`);
-    }
-
-    await inputElement.type(
-      "Hello, I would like to know more about your services!",
-    );
-
-    var submitButton = await page.$("button[type='submit']");
+    var submitButton = await page.$("input[type='submit']");
     expect(submitButton).not.toBeNull();
     await submitButton!.click();
 
-    await Promise.race([
-      page.waitForNavigation({
-        waitUntil: "networkidle0",
-        timeout: 10000,
-      }),
-      page.waitForNetworkIdle({
-        timeout: 10000,
-      }),
-    ]);
+    var secondTaskInput = await page.$("#new-task");
+    expect(secondTaskInput).not.toBeNull();
 
-    var successText = await page.$("h1");
-    expect(successText).not.toBeNull();
+    await secondTaskInput!.type("Learn to code");
 
-    const successText_text = await successText!.evaluate((e) => e.textContent);
-    expect(successText_text).toBe("Thank you for your message!");
-    // console.log(`✅ Expect text element: (${"h1"}) to be Thank you for your message! is correct`);
+    var submitButton = await page.$("input[type='submit']");
+    expect(submitButton).not.toBeNull();
+    await submitButton!.click();
+
+    var thirdTaskInput = await page.$("#new-task");
+    expect(thirdTaskInput).not.toBeNull();
+
+    await thirdTaskInput!.type("Cook dinner");
+
+    var submitButton = await page.$("input[type='submit']");
+    expect(submitButton).not.toBeNull();
+    await submitButton!.click();
 
     await browser.close();
   });

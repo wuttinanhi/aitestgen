@@ -13,7 +13,7 @@ export interface WebTestFunctionCall {
     selector: string,
     visible: boolean,
     varNameInTest: string
-  ): Promise<boolean>;
+  ): Promise<any>;
   expectElementText(
     selector: string,
     text: string,
@@ -22,6 +22,7 @@ export interface WebTestFunctionCall {
   getCurrentUrl(): Promise<string>;
   closeBrowser(): Promise<void>;
   complete(): Promise<void>;
+  reset(): Promise<void>;
   // wrapperGetElement(selector: string): Promise<any[]>;
   // getIframesData(): Promise<any>;
   // switchToIframe(selector: string): Promise<void>;

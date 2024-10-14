@@ -1,38 +1,16 @@
 import puppeteer, { Browser, Page } from "puppeteer";
 import { HTMLStripNonDisplayTags } from "../helpers/html";
 import { sleep } from "../helpers/utils";
-import { ElementNotFoundError, PageNotFoundError } from "./errors";
+import {
+  BrowserAlreadyLaunchedError,
+  ElementNotFoundError,
+  PageNotFoundError,
+} from "./errors";
 import { WebTestFunctionCall } from "./interfaces";
 
 export class PuppeteerWebTest implements WebTestFunctionCall {
   private browser: Browser | null = null;
   private activePage: Page | null = null;
-
-  // async newPage() {
-  //   this.activePage = await this.browser!.newPage();
-  // }
-
-  // async getPages() {
-  //   const pages = await this.browser!.pages();
-  //   return pages.map((page, index) => {
-  //     return {
-  //       index,
-  //       url: page.url(),
-  //     };
-  //   });
-  // }
-
-  // async setActivePageByIndex(index: number) {
-  //   const pages = await this.browser!.pages();
-  //   pages[index].bringToFront();
-  //   this.activePage = pages[index];
-  // }
-
-  // async deletePage(index: number) {
-  //   const pages = await this.browser!.pages();
-  //   await pages[index].close();
-  //   this.activePage = pages.at(-1)!;
-  // }
 
   getActivePage() {
     const page = this.activePage;
@@ -50,16 +28,20 @@ export class PuppeteerWebTest implements WebTestFunctionCall {
     return Promise.race([
       this.getActivePage().waitForNavigation({
         waitUntil: "networkidle0",
-        timeout: 10000,
+        timeout: 5_000,
       }),
       this.getActivePage().waitForNetworkIdle({
-        timeout: 10000,
+        timeout: 5_000,
       }),
-      sleep(12000),
+      sleep(12_000),
     ]);
   }
 
   async launchBrowser(): Promise<void> {
+    if (this.browser) {
+      throw new BrowserAlreadyLaunchedError();
+    }
+
     this.browser = await puppeteer.launch({
       headless: false,
       defaultViewport: {
@@ -70,6 +52,7 @@ export class PuppeteerWebTest implements WebTestFunctionCall {
       // defaultViewport: null,
       // args: ["--start-maximized"],
     });
+
     this.activePage = await this.browser.newPage();
   }
 
@@ -136,11 +119,13 @@ export class PuppeteerWebTest implements WebTestFunctionCall {
     selector: string,
     visible: boolean,
     _: string
-  ): Promise<boolean> {
+  ): Promise<any> {
     const element = await this.getActivePage().$(selector);
     const isVisible =
       element !== null && (await element.boundingBox()) !== null;
-    return isVisible === visible;
+    return {
+      evaluate_result: isVisible === visible,
+    };
   }
 
   async expectElementText(selector: string, text: string, _: string) {
@@ -152,7 +137,7 @@ export class PuppeteerWebTest implements WebTestFunctionCall {
     const elementText = await selectedElement.evaluate((el) => el.textContent);
 
     return {
-      result: elementText === text,
+      evaluate_result: elementText === text,
     };
   }
 
@@ -216,5 +201,10 @@ export class PuppeteerWebTest implements WebTestFunctionCall {
 
   async complete(): Promise<void> {
     return;
+  }
+
+  async reset(): Promise<void> {
+    await this.closeBrowser();
+    await this.launchBrowser();
   }
 }
