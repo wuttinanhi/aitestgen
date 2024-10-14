@@ -1,0 +1,61 @@
+[
+  {
+    "methodName": "launchBrowser",
+    "methodArguments": []
+  },
+  {
+    "methodName": "navigateTo",
+    "methodArguments": ["http://localhost:3000"]
+  },
+  {
+    "methodName": "getHtmlSource",
+    "methodArguments": []
+  },
+  {
+    "methodName": "setInputValue",
+    "methodArguments": ["#name", "John Doe"]
+  },
+  {
+    "methodName": "setInputValue",
+    "methodArguments": ["#email", ""]
+  },
+  {
+    "methodName": "setInputValue",
+    "methodArguments": [
+      "#message",
+      "Hello, I would like to know more about your services!"
+    ]
+  },
+  {
+    "methodName": "expectElementVisible",
+    "methodArguments": ["#message", true]
+  },
+  {
+    "methodName": "getHtmlSource",
+    "methodArguments": []
+  },
+  {
+    "methodName": "setInputValue",
+    "methodArguments": ["#email", "john.doe@example.com"]
+  },
+  {
+    "methodName": "clickElement",
+    "methodArguments": ["button[type='submit']"]
+  },
+  {
+    "methodName": "expectElementVisible",
+    "methodArguments": ["h1", true]
+  },
+  {
+    "methodName": "expectElementText",
+    "methodArguments": ["h1", "Thank you for contacting us!"]
+  },
+  {
+    "methodName": "getHtmlSource",
+    "methodArguments": []
+  },
+  {
+    "methodName": "expectElementText",
+    "methodArguments": ["h1", "Thank you for your message!"]
+  }
+]

@@ -1,19 +1,8 @@
 import puppeteer, { Browser, Page } from "puppeteer";
 import { HTMLStripNonDisplayTags } from "../helpers/html";
 import { sleep } from "../helpers/utils";
+import { ElementNotFoundError, PageNotFoundError } from "./errors";
 import { WebTestFunctionCall } from "./interfaces";
-
-export class PageNotFoundError extends Error {
-  constructor() {
-    super("Active page not found");
-  }
-}
-
-export class ElementNotFoundError extends Error {
-  constructor() {
-    super("Element not found");
-  }
-}
 
 export class PuppeteerWebTest implements WebTestFunctionCall {
   private browser: Browser | null = null;
@@ -174,7 +163,35 @@ export class PuppeteerWebTest implements WebTestFunctionCall {
       .catch(() => "");
   }
 
+  setOptionValue(selector: string, value: any): Promise<any> {
+    throw new Error("Method not implemented.");
+  }
+
+  getOptionValue(selector: string): Promise<string> {
+    throw new Error("Method not implemented.");
+  }
+
+  wrapperGetInputs(): Promise<any> {
+    throw new Error("Method not implemented.");
+  }
+
+  wrapperGetButtons(): Promise<any> {
+    throw new Error("Method not implemented.");
+  }
+
+  getIframesData(): Promise<any> {
+    throw new Error("Method not implemented.");
+  }
+
+  switchToIframe(selector: string): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+
   async closeBrowser(): Promise<void> {
     await this.browser!.close();
+  }
+
+  async complete(): Promise<void> {
+    return;
   }
 }

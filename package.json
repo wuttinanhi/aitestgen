@@ -7,13 +7,15 @@
   "dependencies": {
     "openai": "^4.67.1",
     "prettier": "^3.3.3",
-    "puppeteer": "^23.5.0"
+    "puppeteer": "^23.5.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "tsx": "^4.19.1"
   },
   "scripts": {
     "start": "tsx src/main.ts",
-    "test_generated": "tsx src/test_generated.ts"
+    "test_generated": "tsx src/test_generated.ts",
+    "devrun": "tsx src/main.ts prompts/example1.txt"
   }
 }

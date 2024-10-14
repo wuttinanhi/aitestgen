@@ -1,4 +1,0 @@
-1. navigate to youtube
-2. search for "rickroll"
-3. click on the first video
-4. expect video title to be "Rick Astley - Never Gonna Give You Up (Official Music Video)"

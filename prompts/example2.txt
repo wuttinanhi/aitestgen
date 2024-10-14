@@ -1,3 +1,0 @@
-1. navigate to "https://www.kernel.org/"
-2. click on contact us
-3. expect a link with text "helpdesk@kernel.org"

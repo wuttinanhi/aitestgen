@@ -1,9 +1,0 @@
-Generate testcase for fill contact form.
-
-1. Go to http://localhost:3000
-2. fill the form with the following details:
-    - Name: John Doe
-    - Email: john@example.com
-    - Message: Hello, I am interested in your services.
-3. Submit the form.
-4. Expect to see a success message.

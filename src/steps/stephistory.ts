@@ -56,7 +56,7 @@ export class StepHistory {
     ) {
       selectedSteps.unshift({
         methodName: "launchBrowser",
-        methodArguments: [],
+        args: [],
       });
     }
 
@@ -67,14 +67,14 @@ export class StepHistory {
     ) {
       selectedSteps.push({
         methodName: "closeBrowser",
-        methodArguments: [],
+        args: [],
       });
     }
 
     // append `browser.` to each method name
     let expectVariableIndex = 1;
     const browserSelectedSteps = selectedSteps.map((step) => {
-      const parsedArgs = argsArrayToStringParse(step.methodArguments);
+      const parsedArgs = argsArrayToStringParse(step.args);
       const codeLine = `await browser.${step.methodName}(${parsedArgs});`;
 
       // if contains expect
@@ -105,5 +105,9 @@ export class StepHistory {
 
     // write the replaced content to src/test_generated.ts
     await writeFileString("src/test_generated.ts", formattedCode);
+  }
+
+  toJSONString() {
+    return JSON.stringify(this.steps);
   }
 }
