@@ -15,7 +15,7 @@
   },
   "scripts": {
     "start": "tsx src/main.ts",
-    "test_generated": "tsx src/test_generated.ts",
+    "testgen": "tsx src/testgen.ts",
     "devrun": "tsx src/main.ts prompts/example1.txt"
   }
 }

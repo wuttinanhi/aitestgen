@@ -23,6 +23,8 @@ async function main() {
 
   const messageBuffer: Array<OpenAI.ChatCompletionMessageParam> = [];
 
+  const uniqueVariableNames: string[] = [];
+
   messageBuffer.push({
     role: "system",
     content: systemInstruction,
@@ -64,7 +66,13 @@ async function main() {
             break loop_hard_limit;
           }
 
-          await handleToolCalls(engine, messageBuffer, stepHistory, toolCall);
+          await handleToolCalls(
+            engine,
+            messageBuffer,
+            stepHistory,
+            uniqueVariableNames,
+            toolCall
+          );
         }
       } else {
         console.log("AI chat:", choice.message.content);

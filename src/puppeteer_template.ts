@@ -1,6 +1,6 @@
 import puppeteer from "puppeteer";
 
-async function generated() {
+async function runTest() {
   const browser = await puppeteer.launch({
     headless: false,
     defaultViewport: {
@@ -12,7 +12,9 @@ async function generated() {
     // args: ["--start-maximized"],
   });
 
-  // <REPLACE TEST STEPS>
+  let page = await browser.newPage();
+
+  // {{GENERATED_CODE}}
 }
 
-generated();
+runTest();

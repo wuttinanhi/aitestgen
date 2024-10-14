@@ -1,12 +1,14 @@
 URL: http://localhost:3000
+
 VARIABLES:
     - name: "name"
         type: "text"
         value: "John Doe"
     - name: "email"
         type: "email"
-        value: "
+        value: "john@example.com"
     - name: "message"
         type: "textarea"
         value: "Hello, I would like to know more about your services!"
+        
 PROMPT: fill contact form and expect success message

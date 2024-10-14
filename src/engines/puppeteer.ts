@@ -8,36 +8,42 @@ export class PuppeteerWebTest implements WebTestFunctionCall {
   private browser: Browser | null = null;
   private activePage: Page | null = null;
 
-  async newPage() {
-    this.activePage = await this.browser!.newPage();
-  }
+  // async newPage() {
+  //   this.activePage = await this.browser!.newPage();
+  // }
 
-  async getPages() {
-    const pages = await this.browser!.pages();
-    return pages.map((page, index) => {
-      return {
-        index,
-        url: page.url(),
-      };
-    });
-  }
+  // async getPages() {
+  //   const pages = await this.browser!.pages();
+  //   return pages.map((page, index) => {
+  //     return {
+  //       index,
+  //       url: page.url(),
+  //     };
+  //   });
+  // }
 
-  async setActivePageByIndex(index: number) {
-    const pages = await this.browser!.pages();
-    pages[index].bringToFront();
-    this.activePage = pages[index];
-  }
+  // async setActivePageByIndex(index: number) {
+  //   const pages = await this.browser!.pages();
+  //   pages[index].bringToFront();
+  //   this.activePage = pages[index];
+  // }
 
-  async deletePage(index: number) {
-    const pages = await this.browser!.pages();
-    await pages[index].close();
-    this.activePage = pages.at(-1)!;
-  }
+  // async deletePage(index: number) {
+  //   const pages = await this.browser!.pages();
+  //   await pages[index].close();
+  //   this.activePage = pages.at(-1)!;
+  // }
 
   getActivePage() {
     const page = this.activePage;
     if (!page) throw new PageNotFoundError();
     return page;
+  }
+
+  getBrowser() {
+    const browser = this.browser;
+    if (!browser) throw new Error("Browser not found");
+    return browser;
   }
 
   async waitForPageLoad() {
@@ -64,7 +70,7 @@ export class PuppeteerWebTest implements WebTestFunctionCall {
       // defaultViewport: null,
       // args: ["--start-maximized"],
     });
-    await this.newPage();
+    this.activePage = await this.browser.newPage();
   }
 
   async navigateTo(url: string): Promise<void> {
@@ -85,7 +91,7 @@ export class PuppeteerWebTest implements WebTestFunctionCall {
     return element !== null;
   }
 
-  async clickElement(selector: string): Promise<any> {
+  async clickElement(selector: string, _: string): Promise<any> {
     const selectedElement = await this.getActivePage().$(selector);
     if (!selectedElement) {
       throw new ElementNotFoundError();
@@ -128,7 +134,8 @@ export class PuppeteerWebTest implements WebTestFunctionCall {
 
   async expectElementVisible(
     selector: string,
-    visible: boolean
+    visible: boolean,
+    _: string
   ): Promise<boolean> {
     const element = await this.getActivePage().$(selector);
     const isVisible =
@@ -136,7 +143,7 @@ export class PuppeteerWebTest implements WebTestFunctionCall {
     return isVisible === visible;
   }
 
-  async expectElementText(selector: string, text: string) {
+  async expectElementText(selector: string, text: string, _: string) {
     const selectedElement = await this.getActivePage().$(selector);
     if (!selectedElement) {
       throw new ElementNotFoundError();
@@ -161,6 +168,22 @@ export class PuppeteerWebTest implements WebTestFunctionCall {
     return this.getActivePage()
       .$eval(selector, (el) => (el as HTMLInputElement).value)
       .catch(() => "");
+  }
+
+  async getTabs(): Promise<any> {
+    const tabs = await this.getBrowser().pages();
+    return tabs.map((tab, i) => {
+      return {
+        index: i,
+        pageURL: tab.url(),
+      };
+    });
+  }
+
+  async switchTab(tabId: number): Promise<void> {
+    const tabs = await this.getBrowser().pages();
+    const tab = tabs[tabId];
+    await tab.bringToFront();
   }
 
   setOptionValue(selector: string, value: any): Promise<any> {

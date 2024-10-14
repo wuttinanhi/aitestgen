@@ -1,5 +1,5 @@
 import { readFileString, writeFileString } from "../helpers/files";
-import { formatCode } from "../helpers/formatter";
+import { formatTSCode } from "../helpers/formatter";
 import { argsArrayToStringParse } from "../helpers/utils";
 import { IStep } from "../interfaces/step";
 
@@ -101,7 +101,7 @@ export class StepHistory {
       browserSelectedSteps.join("\n")
     );
 
-    const formattedCode = await formatCode(replaced);
+    const formattedCode = await formatTSCode(replaced);
 
     // write the replaced content to src/test_generated.ts
     await writeFileString("src/test_generated.ts", formattedCode);

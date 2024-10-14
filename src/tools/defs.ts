@@ -8,6 +8,22 @@ export const launchBrowserTool = zodFunction({
   description: "Launch the browser",
 });
 
+export const getTabsParams = z.object({});
+export const getTabsTool = zodFunction({
+  name: "getTabs",
+  parameters: getTabsParams,
+  description: "Get all the tabs data in the browser",
+});
+
+export const switchTabParams = z.object({
+  tabId: z.number().describe("The ID of the tab to switch to"),
+});
+export const switchTabTool = zodFunction({
+  name: "switchTab",
+  parameters: switchTabParams,
+  description: "Switch to the tab with the given ID",
+});
+
 export const navigateToParams = z.object({
   url: z.string().describe("The URL to navigate to"),
 });
@@ -26,6 +42,11 @@ export const getHtmlSourceTool = zodFunction({
 
 export const clickElementParams = z.object({
   selector: z.string().describe("The selector of the element to click"),
+  varName: z
+    .string()
+    .describe(
+      "The variable name to store the element in (should be the element name like writing javascript puppeteer test and every variable name should be unique in entire test)"
+    ),
 });
 export const clickElementTool = zodFunction({
   name: "clickElement",
@@ -84,6 +105,11 @@ export const expectElementVisibleParams = z.object({
     .string()
     .describe("The selector of the element to check for visibility"),
   visible: z.boolean().describe("Whether the element should be visible"),
+  varName: z
+    .string()
+    .describe(
+      "The variable name to store the element in (should be the element name like writing javascript puppeteer test and every variable name should be unique in entire test)"
+    ),
 });
 export const expectElementVisibleTool = zodFunction({
   name: "expectElementVisible",
@@ -97,6 +123,11 @@ export const expectElementTextParams = z.object({
     .string()
     .describe("The selector of the element to check the text of"),
   text: z.string().describe("The text to check for"),
+  varName: z
+    .string()
+    .describe(
+      "The variable name to store the element in (should be the element name like writing javascript puppeteer test and every variable name should be unique in entire test)"
+    ),
 });
 export const expectElementTextTool = zodFunction({
   name: "expectElementText",
