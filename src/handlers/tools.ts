@@ -17,7 +17,7 @@ export function toolCallResponse(
   messageBuffer.push(toolCallResponse);
 
   console.log(
-    `${resultOBJ.length ? `Tool Result Length: ${resultOBJ.length}` : ""} Data: ${JSON.stringify(resultOBJ).slice(0, 100)}`
+    `Tool Result Length: ${resultOBJ.length} Data: ${JSON.stringify(resultOBJ).slice(0, 100)}`
   );
 }
 
@@ -86,7 +86,7 @@ export async function handleToolCalls(
 
     // if function name contains "expect" the result should always be true to add to the step buffer
     // prettier-ignore
-    const shouldAddStep = functionName.includes("expect") ? (result["result"] === true) : true;
+    const shouldAddStep = functionName.includes("expect") ? (result["evaluate_result"] === true) : true;
     if (shouldAddStep) {
       stepBuffer.createStep(step);
     }
@@ -101,12 +101,14 @@ export async function handleToolCalls(
     }
   } catch (err) {
     const error = err as Error;
-    console.error("error in invoking function", error);
+    console.error("error in invoking function");
 
     const errorObj = {
       status: "error",
       message: error.message,
     };
+
+    console.error(errorObj);
 
     // push the error back to the messages
     toolCallResponse(messageBuffer, toolCall.id, errorObj);

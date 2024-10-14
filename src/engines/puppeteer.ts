@@ -197,6 +197,7 @@ export class PuppeteerWebTest implements WebTestFunctionCall {
 
   async closeBrowser(): Promise<void> {
     await this.browser!.close();
+    this.browser = null;
   }
 
   async complete(): Promise<void> {

@@ -1,1 +1,42 @@
-[{"methodName":"launchBrowser","args":[]},{"methodName":"navigateTo","args":["https://microsoftedge.github.io/Demos/demo-to-do/"]},{"methodName":"getHtmlSource","args":[]},{"methodName":"setInputValue","args":["#new-task","Feed the dog","firstTaskInput"],"variables":["firstTaskInput"]},{"methodName":"clickElement","args":["input[type='submit']","submitButton"],"variables":["submitButton"]},{"methodName":"setInputValue","args":["#new-task","Learn to code","secondTaskInput"],"variables":["secondTaskInput"]},{"methodName":"clickElement","args":["input[type='submit']","submitButton"],"variables":["submitButton"]},{"methodName":"setInputValue","args":["#new-task","Cook dinner","thirdTaskInput"],"variables":["thirdTaskInput"]},{"methodName":"clickElement","args":["input[type='submit']","submitButton"],"variables":["submitButton"]},{"methodName":"getHtmlSource","args":[]}]
+[
+  { "methodName": "launchBrowser", "args": [] },
+  {
+    "methodName": "navigateTo",
+    "args": ["https://microsoftedge.github.io/Demos/demo-to-do/"]
+  },
+  { "methodName": "getHtmlSource", "args": [] },
+  {
+    "methodName": "typeText",
+    "args": ["#new-task", "Feed the dog", "taskInput1"],
+    "variables": ["taskInput1"]
+  },
+  {
+    "methodName": "clickElement",
+    "args": ["input[type='submit']", "submitButton1"],
+    "variables": ["submitButton1"]
+  },
+  {
+    "methodName": "typeText",
+    "args": ["#new-task", "Learn to code", "taskInput2"],
+    "variables": ["taskInput2"]
+  },
+  {
+    "methodName": "clickElement",
+    "args": ["input[type='submit']", "submitButton2"],
+    "variables": ["submitButton2"]
+  },
+  {
+    "methodName": "typeText",
+    "args": ["#new-task", "Cook dinner", "taskInput3"],
+    "variables": ["taskInput3"]
+  },
+  {
+    "methodName": "clickElement",
+    "args": ["input[type='submit']", "submitButton3"],
+    "variables": ["submitButton3"]
+  },
+  { "methodName": "getHtmlSource", "args": [] },
+  { "methodName": "getHtmlSource", "args": [] },
+  { "methodName": "getHtmlSource", "args": [] },
+  { "methodName": "getHtmlSource", "args": [] }
+]

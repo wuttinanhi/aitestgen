@@ -13,5 +13,10 @@ Your task is to automate test generation using Puppeteer REPL backend commands.*
 - **Form Submission**: If no submit button is present, use `setInputValue()` and `pressKey('Enter')`.
 - **Optimization**: Batch actions to improve efficiency.
 - **Order**: Maintain the correct sequence of actions for smooth flow.
-- **Validation**: Verify success or error messages, visibility of elements, etc.
-- **Error Handling**: Use `reset` sparingly when errors require a fresh start.
+- **Error Handling**: Use `reset()` to reset browser. use when can't go back. (use sparingly!)
+- **Verification**: Ensure to verify text or visible with expect functions like successful message (or as user asked).
+
+**WARNINGS:**
+- Do not use `reset()` unless necessary.
+- Do not use `reset()` when you can't find a selector.
+- Do not use `reset()` when expect functions return `{ "evaluate_result":false }` try changing the selector.

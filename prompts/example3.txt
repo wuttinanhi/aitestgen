@@ -5,4 +5,8 @@ Tasks:
 - Learn to code
 - Cook dinner
 
-Prompt: Add the tasks to the list and verify their successful addition.
+Prompt:
+Add tasks to the list and verify 3 tasks are added to the list.
+
+Hints:
+- the task added expect element selector is `#tasks > li:nth-child(?) > label > span`

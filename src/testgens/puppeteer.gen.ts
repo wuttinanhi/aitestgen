@@ -92,7 +92,7 @@ await ${varName0}!.type("${arg1}");`;
       case "setOptionValue":
         return `await ${this.pageVar}.setOptionValue(${stepArgs});`;
       case "expectElementVisible":
-        if (arg1 == "true") {
+        if ((arg1 as any) == true) {
           return `
 var ${varName0} = await page.$("${arg0}");
 expect(${varName0}).not.toBeNull();
@@ -112,7 +112,7 @@ expect(${varName0}).not.toBeNull();
 
 const ${varName0}_text = await ${varName0}!.evaluate((e) => e.textContent);
 expect(${varName0}_text).toBe("${arg1}");
-console.log(\`✅ Expect text element: (\$\{"${arg0}"\}\) to be ${arg1} is correct\`);    
+console.log(\`✅ Expect text element: (\$\{"${arg0}"\}\) to be "${arg1}"\`);    
 `;
       case "waitForPageLoad":
         return `
@@ -127,6 +127,14 @@ console.log(\`✅ Expect text element: (\$\{"${arg0}"\}\) to be ${arg1} is corre
     }),
   ]);
           `;
+      case "pressKey":
+        return `
+await ${this.pageVar}.keyboard.press("${arg0}");
+`;
+      case "typeText":
+        return ``;
+      case "getHtmlSource":
+        return ``;
       default:
         console.warn(
           `Step is not recognized: ${stepName} with args: ${stepArgs}`
