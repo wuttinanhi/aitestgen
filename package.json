@@ -12,6 +12,7 @@
     "@types/jest": "^29.5.13",
     "babel-jest": "^29.7.0",
     "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
     "jest-puppeteer": "^10.1.2",
     "openai": "^4.67.1",
     "prettier": "^3.3.3",
@@ -26,8 +27,9 @@
   },
   "scripts": {
     "start": "tsx src/main.ts",
-    "testgen": "tsx src/testgen.ts",
+    "devgen": "tsx src/testgen.ts",
     "devrun": "tsx src/main.ts prompts/example1.txt",
-    "test": "jest"
+    "devtest": "jest --coverage",
+    "test": "echo 'if you mean to test generated testcases, use 'devtest'!'"
   }
 }
