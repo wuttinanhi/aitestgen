@@ -11,7 +11,7 @@ async function main() {
 
   const userPromptFilePath = process.argv[2];
   const USER_PROMPT = await readFileString(userPromptFilePath);
-  console.log("User Prompt", USER_PROMPT);
+  console.log("User Prompt\n", USER_PROMPT);
 
   const LOOP_HARD_LIMIT = 30;
 
@@ -90,7 +90,7 @@ async function main() {
     const stepsJSON = stepHistory.toJSONString();
     console.log("Steps JSON", stepsJSON);
 
-    await writeFileString("out.steps.json", stepsJSON);
+    await writeFileString("generated/out.steps.json", stepsJSON);
   }
 }
 

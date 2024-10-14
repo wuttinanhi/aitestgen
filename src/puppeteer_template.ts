@@ -1,20 +1,25 @@
-import puppeteer from "puppeteer";
+import puppeteer, { Browser } from "puppeteer";
 
-async function runTest() {
-  const browser = await puppeteer.launch({
-    headless: false,
-    defaultViewport: {
-      width: 1280,
-      height: 720,
-    },
-    // start in maximized window
-    // defaultViewport: null,
-    // args: ["--start-maximized"],
+describe("TESTSUITE", () => {
+  let browser: Browser;
+
+  beforeEach(async () => {
+    browser = await puppeteer.launch({
+      headless: false,
+      defaultViewport: {
+        width: 1280,
+        height: 720,
+      },
+    });
   });
 
-  let page = await browser.newPage();
+  afterEach(async () => {
+    await browser.close();
+  });
 
-  // {{GENERATED_CODE}}
-}
+  it("TESTCASE_1", async () => {
+    let page = await browser.newPage();
 
-runTest();
+    // {{GENERATED_CODE}}
+  });
+});

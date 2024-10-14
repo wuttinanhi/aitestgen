@@ -72,10 +72,8 @@ await ${this.pageVar}.goto("${arg0}");
       case "clickElement":
         return `
 var ${varName0} = await page.$("${arg0}");
-if (!${varName0}) {
-  throw new Error(\`Element not found: \$\{"${arg0}"\}\`);
-}
-await ${varName0}.click();`;
+expect(${varName0}).not.toBeNull();
+await ${varName0}!.click();`;
       case "setInputValue":
         return `
 var inputElement = await page.$("${arg0}");
@@ -92,35 +90,24 @@ await inputElement.type("${arg1}");`;
         if (arg1 == "true") {
           return `
 var ${varName0} = await page.$("${arg0}");
-if (!${varName0}) {
-  throw new Error(\`Expect element visible: \$\{"${arg0}"\}\`);
-}else{
-  console.log(\`✅ Expect element visible: \$\{"${arg0}"\} is correct\`);
-}
+expect(${varName0}).not.toBeNull();
+// console.log(\`✅ Expect element visible: \$\{"${arg0}"\} is correct\`);
 `;
         } else {
           return `
 var ${varName0} = await page.$("${arg0}");
-if (${varName0}) {
-  throw new Error(\`Expect element not visible: \$\{"${arg0}"\}\`);
-}else{
-  console.log(\`✅ Expect element not visible: \$\{"${arg0}"\} is correct\`);
-}
+expect(${varName0}).toBeNull();
+// console.log(\`✅ Expect element not visible: \$\{"${arg0}"\} is correct\`);
 `;
         }
       case "expectElementText":
         return `
 var ${varName0} = await page.$("${arg0}");
-if (!${varName0}) {
-  throw new Error(\`Element not found: \$\{"${arg0}"\}\`);
-}
+expect(${varName0}).not.toBeNull();
 
-const ${varName0}_text = await ${varName0}.evaluate((e) => e.textContent);
-if (${varName0}_text !== "${arg1}") {
-  throw new Error(\`Expect text element: (\$\{"${arg0}"\}\) to be ${arg1} but got \$\{${varName0}_text\}\`);
-}else{
-  console.log(\`✅ Expect text element: (\$\{"${arg0}"\}\) to be ${arg1} is correct\`);    
-}
+const ${varName0}_text = await ${varName0}!.evaluate((e) => e.textContent);
+expect(${varName0}_text).toBe("${arg1}");
+// console.log(\`✅ Expect text element: (\$\{"${arg0}"\}\) to be ${arg1} is correct\`);    
 `;
       case "waitForPageLoad":
         return `

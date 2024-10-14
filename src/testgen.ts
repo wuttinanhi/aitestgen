@@ -3,7 +3,7 @@ import { formatTSCode } from "./helpers/formatter";
 import { PuppeteerTestGen } from "./testgens/puppeteer.gen";
 
 async function testgen() {
-  const stepOut = await readFileString("out.steps.json");
+  const stepOut = await readFileString("generated/out.steps.json");
   const stepOutJSON = JSON.parse(stepOut);
 
   const templateCode = await readFileString("src/puppeteer_template.ts");
@@ -18,7 +18,7 @@ async function testgen() {
   let generatedTestCode = puppeteerTestGen.generate();
   generatedTestCode = await formatTSCode(generatedTestCode);
 
-  await writeFileString("test_generated.ts", generatedTestCode);
+  await writeFileString("generated/app.test.ts", generatedTestCode);
 }
 
 testgen();
