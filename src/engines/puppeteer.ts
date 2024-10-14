@@ -96,10 +96,6 @@ export class PuppeteerWebTest implements WebTestFunctionCall {
     };
   }
 
-  async typeText(selector: string, text: string): Promise<void> {
-    await this.getActivePage().type(selector, text);
-  }
-
   async setInputValue(selector: string, value: any): Promise<any> {
     const selectedElement = await this.getActivePage().$(selector);
     if (!selectedElement) {

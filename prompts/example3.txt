@@ -9,4 +9,5 @@ Prompt:
 Add tasks to the list and verify 3 tasks are added to the list.
 
 Hints:
-- the task added expect element selector is `#tasks > li:nth-child(?) > label > span`
+- the task added expect element selector is `#tasks > li:nth-child(?) > label > span` (the nth-child start at 2)
+- Press enter key after input to add task

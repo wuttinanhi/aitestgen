@@ -131,8 +131,7 @@ console.log(\`✅ Expect text element: (\$\{"${arg0}"\}\) to be "${arg1}"\`);
         return `
 await ${this.pageVar}.keyboard.press("${arg0}");
 `;
-      case "typeText":
-        return ``;
+
       case "getHtmlSource":
         return ``;
       default:
