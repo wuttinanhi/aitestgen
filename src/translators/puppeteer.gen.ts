@@ -2,7 +2,7 @@ import { argsArrayToStringParse } from "../helpers/utils";
 import { IStep } from "../interfaces/step";
 import { StepHistory } from "../steps/stephistory";
 
-export class PuppeteerTestGen {
+export class PuppeteerTestTranslator {
   private steps: IStep[];
   private templateCode: string;
   private browserVar: string;
