@@ -1,5 +1,6 @@
 import { argsArrayToStringParse } from "../helpers/utils";
 import { IStep } from "../interfaces/step";
+import { StepHistory } from "../steps/stephistory";
 
 export class PuppeteerTestGen {
   private steps: IStep[];
@@ -10,13 +11,13 @@ export class PuppeteerTestGen {
   private generatedCode: string = ``;
 
   constructor(
-    steps: IStep[],
+    stepHistory: StepHistory,
     templateCode: string,
     templatePuppeteerLaunchVariableName: string,
     templatePuppeteerPageVariableName: string,
     templatePlaceholder: string
   ) {
-    this.steps = steps;
+    this.steps = stepHistory.listSteps();
     this.templateCode = templateCode;
     this.browserVar = templatePuppeteerLaunchVariableName;
     this.pageVar = templatePuppeteerPageVariableName;

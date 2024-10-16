@@ -117,4 +117,8 @@ export class StepHistory {
   toJSONString() {
     return JSON.stringify(this.steps);
   }
+
+  fromJSONString(jsonString: string) {
+    this.steps = JSON.parse(jsonString);
+  }
 }
