@@ -62,6 +62,7 @@ export async function handleToolCalls(
       return { completed: true };
     }
 
+    // if function name is reset, then reset the engine
     if (functionName === "reset") {
       await engine.reset();
       stepBuffer.reset();
@@ -82,6 +83,7 @@ export async function handleToolCalls(
       result = { status: "success" };
     }
 
+    // push the result back to the messages buffer
     toolCallResponse(messageBuffer, toolCall.id, result);
 
     // add the step to the step buffer

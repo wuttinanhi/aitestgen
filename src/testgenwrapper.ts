@@ -4,13 +4,12 @@ import { formatTSCode } from "./helpers/formatter";
 import { PuppeteerTestTranslator } from "./translators/puppeteer.gen";
 
 async function testGenWrapper() {
+  const OUT_GENTEST_PATH = "generated/app.test.ts";
+
   // prettier-ignore
   const SYSTEM_INSTRUCTION_PROMPT = await readFileString("prompts/instruction.txt");
   const USER_PROMPT = await readFileString("prompts/example1.txt");
-
-  const TEMPLATE_PATH = "src/templates/puppeteer_template.ts";
-  const TEMPLATE_CODE = await readFileString(TEMPLATE_PATH);
-  const OUT_GENTEST_PATH = "generated/app.test.ts";
+  const TEMPLATE_CODE = await readFileString("templates/puppeteer_template.ts");
 
   console.log("User Prompt\n", USER_PROMPT);
 

@@ -54,13 +54,13 @@ describe("TESTSUITE", () => {
       }),
     ]);
 
-    var successMessage = await page.$("h1");
-    expect(successMessage).not.toBeNull();
+    var successMessageHeader = await page.$("h1");
+    expect(successMessageHeader).not.toBeNull();
 
-    const successMessage_text = await successMessage!.evaluate(
+    const successMessageHeader_text = await successMessageHeader!.evaluate(
       (e) => e.textContent,
     );
-    expect(successMessage_text).toBe("Thank you for your message!");
+    expect(successMessageHeader_text).toBe("Thank you for your message!");
     console.log(
       `✅ Expect text element: (${"h1"}) to be "Thank you for your message!"`,
     );
