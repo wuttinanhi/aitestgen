@@ -21,13 +21,17 @@ export function toolCallResponse(
   );
 }
 
+export interface ToolCallResult {
+  completed: boolean;
+}
+
 export async function handleToolCalls(
   engine: WebTestFunctionCall,
   messageBuffer: any[],
   stepBuffer: StepHistory,
   uniqueVariableNamesBuffer: string[],
   toolCall: OpenAI.Chat.Completions.ChatCompletionMessageToolCall
-) {
+): Promise<ToolCallResult> {
   const functionName = toolCall.function.name;
   const functionArguments = JSON.parse(toolCall.function.arguments);
   const functionArgsValue = Object.values(functionArguments);
@@ -53,14 +57,20 @@ export async function handleToolCalls(
       }
     }
 
+    // if function name is complete, then break the loop
+    if (functionName === "complete") {
+      return { completed: true };
+    }
+
     if (functionName === "reset") {
       await engine.reset();
       stepBuffer.reset();
       uniqueVariableNamesBuffer.length = 0;
-      return toolCallResponse(messageBuffer, toolCall.id, {
+      toolCallResponse(messageBuffer, toolCall.id, {
         status: "success",
         message: "Reset browser successfully",
       });
+      return { completed: false };
     }
 
     // Basic function invocation
@@ -74,6 +84,7 @@ export async function handleToolCalls(
 
     toolCallResponse(messageBuffer, toolCall.id, result);
 
+    // add the step to the step buffer
     const step: IStep = {
       methodName: functionName,
       args: argsAny,
@@ -99,18 +110,21 @@ export async function handleToolCalls(
       };
       stepBuffer.createStep(waitForPageLoadStep);
     }
+
+    return { completed: false };
   } catch (err) {
     const error = err as Error;
-    console.error("error in invoking function");
 
     const errorObj = {
       status: "error",
       message: error.message,
     };
 
-    console.error(errorObj);
-
     // push the error back to the messages
     toolCallResponse(messageBuffer, toolCall.id, errorObj);
+
+    console.error("Error in invoking function:", errorObj);
+
+    return { completed: false };
   }
 }

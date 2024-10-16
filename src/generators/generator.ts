@@ -55,18 +55,17 @@ export async function testStepGen(
           const functionArgsValue = Object.values(functionArguments);
           const argsAny = functionArgsValue as any;
 
-          // if function name is complete, then break the loop
-          if (functionName === "complete") {
-            break loop_hard_limit;
-          }
-
-          await handleToolCalls(
+          const result = await handleToolCalls(
             engine,
             messageBuffer,
             stepHistory,
             uniqueVariableNames,
             toolCall
           );
+
+          if (result.completed) {
+            break loop_hard_limit;
+          }
         }
       } else {
         throw new TestGenUnexpectedAIResponseError(choice.message.content);
