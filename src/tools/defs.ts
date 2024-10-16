@@ -169,7 +169,21 @@ export const resetTool = zodFunction({
   description: "Relaunch the browser and reset the state.",
 });
 
-export const WebTestFunctionToolsCollection = [
+export const goBackHistoryParams = z.object({});
+export const goBackHistoryTool = zodFunction({
+  name: "goBackHistory",
+  parameters: goBackHistoryParams,
+  description: "Go back in the browser history",
+});
+
+export const goForwardHistoryParams = z.object({});
+export const goForwardHistoryTool = zodFunction({
+  name: "goForwardHistory",
+  parameters: goForwardHistoryParams,
+  description: "Go forward in the browser history",
+});
+
+export const WebREPLToolsCollection = [
   launchBrowserTool,
   navigateToTool,
   getHtmlSourceTool,
@@ -186,4 +200,6 @@ export const WebTestFunctionToolsCollection = [
   getTabsTool,
   switchTabTool,
   resetTool,
+  goBackHistoryTool,
+  goForwardHistoryTool,
 ];

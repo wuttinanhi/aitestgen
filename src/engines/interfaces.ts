@@ -26,4 +26,6 @@ export interface WebTestFunctionCall {
   // wrapperGetElement(selector: string): Promise<any[]>;
   // getIframesData(): Promise<any>;
   // switchToIframe(selector: string): Promise<void>;
+  goBackHistory(): Promise<void>;
+  goForwardHistory(): Promise<void>;
 }

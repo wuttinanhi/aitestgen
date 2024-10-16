@@ -20,51 +20,49 @@ describe("TESTSUITE", () => {
   it("TESTCASE_1", async () => {
     let page = await browser.newPage();
 
-    await page.goto("https://microsoftedge.github.io/Demos/demo-to-do/");
+    await page.goto("http://localhost:3000");
 
-    var task1 = await page.$("#new-task");
-    expect(task1).not.toBeNull();
+    var nameInput = await page.$("#name");
+    expect(nameInput).not.toBeNull();
 
-    await task1!.type("Feed the dog");
+    await nameInput!.type("John Doe");
 
-    await page.keyboard.press("Enter");
+    var emailInput = await page.$("#email");
+    expect(emailInput).not.toBeNull();
 
-    var task2 = await page.$("#new-task");
-    expect(task2).not.toBeNull();
+    await emailInput!.type("john@example.com");
 
-    await task2!.type("Learn to code");
+    var messageInput = await page.$("#message");
+    expect(messageInput).not.toBeNull();
 
-    await page.keyboard.press("Enter");
-
-    var task3 = await page.$("#new-task");
-    expect(task3).not.toBeNull();
-
-    await task3!.type("Cook dinner");
-
-    await page.keyboard.press("Enter");
-
-    var task1Verification = await page.$(
-      "#tasks > li:nth-child(2) > label > span",
+    await messageInput!.type(
+      "Hello, I would like to know more about your services!",
     );
-    expect(task1Verification).not.toBeNull();
+
+    var submitButton = await page.$("button[type='submit']");
+    expect(submitButton).not.toBeNull();
+    await submitButton!.click();
+
+    // wait for page load
+    await Promise.race([
+      page.waitForNavigation({
+        waitUntil: "networkidle0",
+        timeout: 10000,
+      }),
+      page.waitForNetworkIdle({
+        timeout: 10000,
+      }),
+    ]);
+
+    var successMessage = await page.$("h1");
+    expect(successMessage).not.toBeNull();
+
+    const successMessage_text = await successMessage!.evaluate(
+      (e) => e.textContent,
+    );
+    expect(successMessage_text).toBe("Thank you for your message!");
     console.log(
-      `✅ Expect element visible: ${"#tasks > li:nth-child(2) > label > span"} is correct`,
-    );
-
-    var task2Verification = await page.$(
-      "#tasks > li:nth-child(3) > label > span",
-    );
-    expect(task2Verification).not.toBeNull();
-    console.log(
-      `✅ Expect element visible: ${"#tasks > li:nth-child(3) > label > span"} is correct`,
-    );
-
-    var task3Verification = await page.$(
-      "#tasks > li:nth-child(4) > label > span",
-    );
-    expect(task3Verification).not.toBeNull();
-    console.log(
-      `✅ Expect element visible: ${"#tasks > li:nth-child(4) > label > span"} is correct`,
+      `✅ Expect text element: (${"h1"}) to be "Thank you for your message!"`,
     );
 
     await browser.close();

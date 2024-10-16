@@ -204,4 +204,12 @@ export class PuppeteerWebTest implements WebTestFunctionCall {
     await this.closeBrowser();
     await this.launchBrowser();
   }
+
+  async goBackHistory(): Promise<void> {
+    await this.getActivePage().goBack();
+  }
+
+  async goForwardHistory(): Promise<void> {
+    await this.getActivePage().goForward();
+  }
 }
