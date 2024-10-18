@@ -72,10 +72,15 @@ export class PuppeteerEngine implements WebTestFunctionCall {
 
   async getHtmlSource(): Promise<any> {
     const content = await this.getActivePage().content();
+    const innerText = await this.getActivePage().evaluate(() => {
+      return document.body.innerText;
+    });
     const htmlSmall = HTMLStripNonDisplayTags(content);
+
     return {
       url: this.getActivePage().url(),
       html: htmlSmall,
+      textOnly: innerText,
     };
   }
 
@@ -189,36 +194,29 @@ export class PuppeteerEngine implements WebTestFunctionCall {
   }
 
   async iframeGetData(): Promise<any> {
-    const data = await iframeTraveler(this.getActivePage(), [], 0);
+    let page: Page;
+    if (this.isInRootFrame) {
+      page = this.getActivePage();
+    } else {
+      page = this.lastPageBeforeEnterIframe!;
+    }
+    const data = await iframeTraveler(page, [], 0);
     return data;
-
-    // const iframes = await this.getActivePage().$$("iframe");
-    // const data = [];
-    // let i = 0;
-
-    // for (const iframe of iframes) {
-    //   // prettier-ignore
-    //   const iframe_src = await iframe.evaluate((el) => (el as HTMLIFrameElement).src);
-
-    //   data.push({
-    //     index: i,
-    //     iframe_src,
-    //     selector: `iframe:nth-child(${i + 1})`,
-    //   });
-    //   i++;
-    // }
-
-    // return data;
   }
 
-  async iframeSwitch(id: any): Promise<void> {
+  async iframeSwitch(index: any): Promise<void> {
     if (this.isInRootFrame) {
       this.lastPageBeforeEnterIframe = this.activePage;
       this.isInRootFrame = false;
     }
 
     const iframes = await this.iframeGetData();
-    this.activePage = iframes[id]._internalPage;
+    const iframe = iframes.at(index);
+    if (!iframe) {
+      throw new Error(`iframe switch at index ${index} not found`);
+    }
+
+    this.activePage = iframe._internalPage;
   }
 
   async iframeReset(): Promise<void> {

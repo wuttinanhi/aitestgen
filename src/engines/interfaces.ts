@@ -35,6 +35,6 @@ export interface WebTestFunctionCall {
   closeTab(tabId: number): Promise<void>;
   // Iframe
   iframeGetData(): Promise<any>;
-  iframeSwitch(id: any): Promise<void>;
+  iframeSwitch(index: any): Promise<void>;
   iframeReset(): Promise<void>;
 }
