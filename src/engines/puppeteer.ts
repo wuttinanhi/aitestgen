@@ -1,4 +1,5 @@
 import puppeteer, { Browser, Page } from "puppeteer";
+import { element2selector } from "puppeteer-element2selector";
 import { HTMLStripNonDisplayTags } from "../helpers/html";
 import { sleep } from "../helpers/utils";
 import {
@@ -13,6 +14,7 @@ export class PuppeteerEngine implements WebTestFunctionCall {
   private activePage: Page | null = null;
   private lastPageBeforeEnterIframe: Page | null = null;
   private isInRootFrame: boolean = true;
+  private currentCSSSelector = [];
 
   getActivePage() {
     const page = this.activePage;
@@ -35,16 +37,18 @@ export class PuppeteerEngine implements WebTestFunctionCall {
   }
 
   async waitForPageLoad() {
-    return Promise.race([
-      this.getActivePage().waitForNavigation({
-        waitUntil: "load",
-        timeout: 5_000,
-      }),
-      this.getActivePage().waitForNetworkIdle({
-        timeout: 5_000,
-      }),
-      sleep(10_000),
-    ]);
+    try {
+      return Promise.race([
+        this.getActivePage().waitForNavigation({
+          waitUntil: "load",
+          timeout: 5_000,
+        }),
+        this.getActivePage().waitForNetworkIdle({
+          timeout: 5_000,
+        }),
+        sleep(10_000),
+      ]);
+    } catch (error) {}
   }
 
   async launchBrowser(): Promise<void> {
@@ -72,15 +76,16 @@ export class PuppeteerEngine implements WebTestFunctionCall {
 
   async getHtmlSource(): Promise<any> {
     const content = await this.getActivePage().content();
-    const innerText = await this.getActivePage().evaluate(() => {
-      return document.body.innerText;
-    });
     const htmlSmall = HTMLStripNonDisplayTags(content);
+
+    // const innerText = await this.getActivePage().evaluate(() => {
+    //   return document.body.innerText;
+    // });
 
     return {
       url: this.getActivePage().url(),
       html: htmlSmall,
-      textOnly: innerText,
+      // textOnly: innerText,
     };
   }
 
@@ -200,7 +205,8 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     } else {
       page = this.lastPageBeforeEnterIframe!;
     }
-    const data = await iframeTraveler(page, [], 0);
+
+    const data = await iframeTraveler(page, [], this.currentCSSSelector, 0);
     return data;
   }
 
@@ -217,14 +223,21 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     }
 
     this.activePage = iframe._internalPage;
+    this.currentCSSSelector = iframe.composed_css_selector;
   }
 
   async iframeReset(): Promise<void> {
     this.activePage = this.lastPageBeforeEnterIframe;
     this.isInRootFrame = true;
+    this.currentCSSSelector = [];
   }
 
   async closeBrowser(): Promise<void> {
+    try {
+      await this.iframeReset();
+    } catch (error) {
+      console.warn("Error resetting iframe", error);
+    }
     await this.browser!.close();
     this.browser = null;
   }
@@ -250,6 +263,7 @@ export class PuppeteerEngine implements WebTestFunctionCall {
 export async function iframeTraveler(
   page: Page,
   dataArrBuffer: any[],
+  parentSelector: any[],
   depth: number
 ) {
   if (depth >= 5) {
@@ -259,21 +273,27 @@ export async function iframeTraveler(
   const iframes = await page.$$("iframe");
 
   for (const iframe of iframes) {
+    const this_iframe_css_selector = await element2selector(iframe as any);
+
     const contentFrame = await iframe.contentFrame();
 
     // prettier-ignore
-    const iframe_src = await iframe.evaluate((el) => (el as HTMLIFrameElement).src);
+    const iframe_src_url = await iframe.evaluate((el) => (el as HTMLIFrameElement).src);
     const i: number = dataArrBuffer.length;
     const iframeAsPage: Page = contentFrame as any;
     const text = await iframeAsPage.evaluate(() => document.body.innerText);
     // const htmlSource = await contentFrame.content();
+    const composed_css_selector = parentSelector.concat(
+      this_iframe_css_selector
+    );
 
     dataArrBuffer.push({
       index: i,
-      iframe_src,
+      iframe_src_url,
       depth,
       _internalPage: iframeAsPage,
       text,
+      composed_css_selector,
       // htmlSource,
     });
 
@@ -285,7 +305,12 @@ export async function iframeTraveler(
     //   continue;
     // }
 
-    await iframeTraveler(iframeAsPage, dataArrBuffer, depth + 1);
+    await iframeTraveler(
+      iframeAsPage,
+      dataArrBuffer,
+      composed_css_selector,
+      depth + 1
+    );
   }
 
   return dataArrBuffer;

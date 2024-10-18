@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { WebTestFunctionCall } from "../engines/interfaces";
-import { IStep } from "../interfaces/step";
+import { FrameData } from "../interfaces/FrameData";
+import { IStep } from "../interfaces/Step";
 import { StepHistory } from "../steps/stephistory";
 
 export function toolCallResponse(
@@ -16,9 +17,7 @@ export function toolCallResponse(
 
   messageBuffer.push(toolCallResponse);
 
-  console.log(
-    `Tool Result Length: ${resultOBJ.length} Data: ${JSON.stringify(resultOBJ).slice(0, 100)}`
-  );
+  console.log(`Return: ${JSON.stringify(resultOBJ).slice(0, 100)}`);
 }
 
 export interface ToolCallResult {
@@ -95,6 +94,16 @@ export async function handleToolCalls(
     // if step have variables, add them to the step
     if (functionArguments["varName"]) {
       step.variables = [functionArguments["varName"]];
+    }
+
+    // if command is "iframeGetData" then add the returned data to the step
+    if (functionName === "iframeGetData") {
+      // remove _internalPage in each frame data
+      result.forEach((frameData: FrameData) => {
+        delete frameData._internalPage;
+      });
+
+      step.iframeGetDataResult = result;
     }
 
     // if function name contains "expect" the result should always be true to add to the step buffer

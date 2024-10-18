@@ -162,6 +162,15 @@ export const switchTabTool = zodFunction({
   description: "Switch to the tab with the given ID",
 });
 
+export const closeTabParams = z.object({
+  tabId: z.number().describe("The ID of the tab to close"),
+});
+export const closeTabTool = zodFunction({
+  name: "closeTab",
+  parameters: closeTabParams,
+  description: "Close the tab with the given ID",
+});
+
 export const resetParams = z.object({});
 export const resetTool = zodFunction({
   name: "reset",
@@ -183,6 +192,29 @@ export const goForwardHistoryTool = zodFunction({
   description: "Go forward in the browser history",
 });
 
+export const iframeGetDataParams = z.object({});
+export const iframeGetDataTool = zodFunction({
+  name: "iframeGetData",
+  parameters: iframeGetDataParams,
+  description: "Get all iframes in this page",
+});
+
+export const iframeSwitchParams = z.object({
+  index: z.number().describe("The index of the iframe to switch to"),
+});
+export const iframeSwitchTool = zodFunction({
+  name: "iframeSwitch",
+  parameters: iframeSwitchParams,
+  description: "Switch to the iframe at the given index",
+});
+
+export const iframeResetParams = z.object({});
+export const iframeResetTool = zodFunction({
+  name: "iframeReset",
+  parameters: iframeResetParams,
+  description: "Reset and focus on root page",
+});
+
 export const WebREPLToolsCollection = [
   launchBrowserTool,
   navigateToTool,
@@ -199,7 +231,11 @@ export const WebREPLToolsCollection = [
   completeTool,
   getTabsTool,
   switchTabTool,
+  closeTabTool,
   resetTool,
   goBackHistoryTool,
   goForwardHistoryTool,
+  iframeGetDataTool,
+  iframeSwitchTool,
+  iframeResetTool,
 ];

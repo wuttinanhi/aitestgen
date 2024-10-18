@@ -20,50 +20,28 @@ describe("TESTSUITE", () => {
   it("TESTCASE_1", async () => {
     let page = await browser.newPage();
 
-    await page.goto("http://localhost:3000");
+    await page.goto("http://localhost:8080");
 
-    var nameInput = await page.$("#name");
-    expect(nameInput).not.toBeNull();
+    var pageCheckpoint = page;
+    // prettier-ignore
+    page = (await (await (await (page.$("iframe") as any).contentFrame()).$("iframe").contentFrame()).$("iframe").contentFrame());
 
-    await nameInput!.type("John Doe");
+    var clickButton = await page.$("button");
+    expect(clickButton).not.toBeNull();
+    await clickButton!.click();
 
-    var emailInput = await page.$("#email");
-    expect(emailInput).not.toBeNull();
+    var showText = await page.$("#showText");
+    expect(showText).not.toBeNull();
+    console.log(`✅ Expect element visible: ${"#showText"} is correct`);
 
-    await emailInput!.type("john@example.com");
+    var showTextText = await page.$("#showText");
+    expect(showTextText).not.toBeNull();
 
-    var messageInput = await page.$("#message");
-    expect(messageInput).not.toBeNull();
-
-    await messageInput!.type(
-      "Hello, I would like to know more about your services!",
+    const showTextText_text = await showTextText!.evaluate(
+      (e) => e.textContent
     );
-
-    var submitButton = await page.$("button[type='submit']");
-    expect(submitButton).not.toBeNull();
-    await submitButton!.click();
-
-    // wait for page load
-    await Promise.race([
-      page.waitForNavigation({
-        waitUntil: "networkidle0",
-        timeout: 10000,
-      }),
-      page.waitForNetworkIdle({
-        timeout: 10000,
-      }),
-    ]);
-
-    var successMessageHeader = await page.$("h1");
-    expect(successMessageHeader).not.toBeNull();
-
-    const successMessageHeader_text = await successMessageHeader!.evaluate(
-      (e) => e.textContent,
-    );
-    expect(successMessageHeader_text).toBe("Thank you for your message!");
-    console.log(
-      `✅ Expect text element: (${"h1"}) to be "Thank you for your message!"`,
-    );
+    expect(showTextText_text).toBe("CLICKED!");
+    console.log(`✅ Expect text element: (${"#showText"}) to be "CLICKED!"`);
 
     await browser.close();
   });

@@ -79,6 +79,6 @@ export async function testStepGen(
     console.error("Error testStepGen:", error);
     throw error;
   } finally {
-    await engine.closeBrowser();
+    // await engine.closeBrowser();
   }
 }

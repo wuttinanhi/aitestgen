@@ -1,5 +1,7 @@
+import { generateIframeSelector } from "../helpers/iframe";
 import { argsArrayToStringParse } from "../helpers/utils";
-import { IStep } from "../interfaces/step";
+import { FrameData } from "../interfaces/FrameData";
+import { IStep } from "../interfaces/Step";
 import { StepHistory } from "../steps/stephistory";
 
 export class PuppeteerTestTranslator {
@@ -9,6 +11,7 @@ export class PuppeteerTestTranslator {
   private pageVar: string = "page";
   private templatePlaceholder: string = "{{GENERATED_CODE}}";
   private generatedCode: string = ``;
+  private lastGetIframeData: FrameData[] = [];
 
   constructor(
     stepHistory: StepHistory,
@@ -42,9 +45,9 @@ export class PuppeteerTestTranslator {
   /**
    * generate
    */
-  public generate() {
+  public async generate() {
     for (const step of this.steps) {
-      const line = this.generateStep(step);
+      const line = await this.generateStep(step);
       this.generatedCode += line + "\n";
       // console.log(line);
     }
@@ -55,7 +58,7 @@ export class PuppeteerTestTranslator {
     );
   }
 
-  protected generateStep(step: IStep) {
+  protected async generateStep(step: IStep) {
     const stepName = step.methodName;
     const stepArgs =
       step.args === undefined ? "" : argsArrayToStringParse(step.args);
@@ -135,6 +138,28 @@ await ${this.pageVar}.keyboard.press("${arg0}");
 
       case "getHtmlSource":
         return ``;
+
+      case "iframeSwitch":
+        const iframeIndex = Number(arg0);
+        const iframeSelector = await generateIframeSelector(
+          this.pageVar,
+          this.lastGetIframeData[iframeIndex].composed_css_selector
+        );
+
+        console.log("iframeSelector", iframeSelector);
+
+        return `var pageCheckpoint = page;
+// prettier-ignore
+page = ${iframeSelector};
+`;
+
+      case "iframeReset":
+        return `page = pageCheckpoint;`;
+
+      case "iframeGetData":
+        this.lastGetIframeData = step.iframeGetDataResult;
+        return ``;
+
       default:
         console.warn(
           `Step is not recognized: ${stepName} with args: ${stepArgs}`
