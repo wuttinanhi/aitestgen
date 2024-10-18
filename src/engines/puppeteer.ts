@@ -24,6 +24,14 @@ export class PuppeteerWebTest implements WebTestFunctionCall {
     return browser;
   }
 
+  async getElement(selector: string) {
+    const selectedElement = await this.getActivePage().$(selector);
+    if (!selectedElement) {
+      throw new ElementNotFoundError();
+    }
+    return selectedElement;
+  }
+
   async waitForPageLoad() {
     return Promise.race([
       this.getActivePage().waitForNavigation({
@@ -75,10 +83,7 @@ export class PuppeteerWebTest implements WebTestFunctionCall {
   }
 
   async clickElement(selector: string, _: string): Promise<any> {
-    const selectedElement = await this.getActivePage().$(selector);
-    if (!selectedElement) {
-      throw new ElementNotFoundError();
-    }
+    const selectedElement = await this.getElement(selector);
 
     const beforeURL = this.getActivePage().url();
 
@@ -97,10 +102,7 @@ export class PuppeteerWebTest implements WebTestFunctionCall {
   }
 
   async setInputValue(selector: string, value: any): Promise<any> {
-    const selectedElement = await this.getActivePage().$(selector);
-    if (!selectedElement) {
-      throw new ElementNotFoundError();
-    }
+    const selectedElement = await this.getElement(selector);
 
     // set input to empty first
     await selectedElement.evaluate((el) => {
@@ -125,10 +127,7 @@ export class PuppeteerWebTest implements WebTestFunctionCall {
   }
 
   async expectElementText(selector: string, text: string, _: string) {
-    const selectedElement = await this.getActivePage().$(selector);
-    if (!selectedElement) {
-      throw new ElementNotFoundError();
-    }
+    const selectedElement = await this.getElement(selector);
 
     const elementText = await selectedElement.evaluate((el) => el.textContent);
 
@@ -167,28 +166,41 @@ export class PuppeteerWebTest implements WebTestFunctionCall {
     await tab.bringToFront();
   }
 
-  setOptionValue(selector: string, value: any): Promise<any> {
-    throw new Error("Method not implemented.");
+  async setOptionValue(selector: string, value: any): Promise<any> {
+    const selectedElement = await this.getElement(selector);
+    await selectedElement.select(value);
   }
 
-  getOptionValue(selector: string): Promise<string> {
-    throw new Error("Method not implemented.");
+  async getOptionValue(selector: string): Promise<string> {
+    const selectedElement = await this.getElement(selector);
+    const value = await selectedElement.evaluate((el) => {
+      return (el as HTMLSelectElement).value;
+    });
+    return value;
   }
 
-  wrapperGetInputs(): Promise<any> {
-    throw new Error("Method not implemented.");
+  async getIframesData(): Promise<any> {
+    const iframes = await this.getActivePage().$$("iframe");
+    const data = [];
+    let i = 0;
+    for (const iframe of iframes) {
+      const src = await iframe.evaluate((el) => (el as HTMLIFrameElement).src);
+      data.push({
+        index: i,
+        src,
+      });
+      i++;
+    }
+    return data;
   }
 
-  wrapperGetButtons(): Promise<any> {
-    throw new Error("Method not implemented.");
-  }
-
-  getIframesData(): Promise<any> {
-    throw new Error("Method not implemented.");
-  }
-
-  switchToIframe(selector: string): Promise<void> {
-    throw new Error("Method not implemented.");
+  async switchToIframe(selector: string): Promise<void> {
+    const iframe = await this.getActivePage().$(selector);
+    if (!iframe) {
+      throw new ElementNotFoundError();
+    }
+    const frame = await iframe.contentFrame();
+    this.activePage = frame!.page();
   }
 
   async closeBrowser(): Promise<void> {
@@ -211,5 +223,13 @@ export class PuppeteerWebTest implements WebTestFunctionCall {
 
   async goForwardHistory(): Promise<void> {
     await this.getActivePage().goForward();
+  }
+
+  wrapperGetInputs(): Promise<any> {
+    throw new Error("Method not implemented.");
+  }
+
+  wrapperGetButtons(): Promise<any> {
+    throw new Error("Method not implemented.");
   }
 }
