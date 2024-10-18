@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { PuppeteerWebTest } from "../engines/puppeteer";
+import { PuppeteerEngine } from "../engines/puppeteer";
 import { handleToolCalls } from "../handlers/tools";
 import { StepHistory } from "../steps/stephistory";
 import { WebREPLToolsCollection } from "../tools/defs";
@@ -12,7 +12,7 @@ export async function testStepGen(
   LOOP_HARD_LIMIT = 30
 ) {
   const openai = new OpenAI();
-  const engine = new PuppeteerWebTest();
+  const engine = new PuppeteerEngine();
   const stepHistory = new StepHistory();
   const messageBuffer: Array<OpenAI.ChatCompletionMessageParam> = [];
   let uniqueVariableNames: string[] = [];

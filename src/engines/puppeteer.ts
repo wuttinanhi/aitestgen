@@ -8,9 +8,11 @@ import {
 } from "./errors";
 import { WebTestFunctionCall } from "./interfaces";
 
-export class PuppeteerWebTest implements WebTestFunctionCall {
+export class PuppeteerEngine implements WebTestFunctionCall {
   private browser: Browser | null = null;
   private activePage: Page | null = null;
+  private lastPageBeforeEnterIframe: Page | null = null;
+  private isInRootFrame: boolean = true;
 
   getActivePage() {
     const page = this.activePage;
@@ -35,13 +37,13 @@ export class PuppeteerWebTest implements WebTestFunctionCall {
   async waitForPageLoad() {
     return Promise.race([
       this.getActivePage().waitForNavigation({
-        waitUntil: "networkidle0",
+        waitUntil: "load",
         timeout: 5_000,
       }),
       this.getActivePage().waitForNetworkIdle({
         timeout: 5_000,
       }),
-      sleep(12_000),
+      sleep(10_000),
     ]);
   }
 
@@ -160,10 +162,17 @@ export class PuppeteerWebTest implements WebTestFunctionCall {
     });
   }
 
-  async switchTab(tabId: number): Promise<void> {
+  async setTab(tabId: number): Promise<void> {
     const tabs = await this.getBrowser().pages();
     const tab = tabs[tabId];
     await tab.bringToFront();
+  }
+
+  async closeTab(tabId: number): Promise<void> {
+    const tabs = await this.getBrowser().pages();
+    const tab = tabs[tabId];
+    await tab.close();
+    this.activePage = tabs[0];
   }
 
   async setOptionValue(selector: string, value: any): Promise<any> {
@@ -179,28 +188,42 @@ export class PuppeteerWebTest implements WebTestFunctionCall {
     return value;
   }
 
-  async getIframesData(): Promise<any> {
-    const iframes = await this.getActivePage().$$("iframe");
-    const data = [];
-    let i = 0;
-    for (const iframe of iframes) {
-      const src = await iframe.evaluate((el) => (el as HTMLIFrameElement).src);
-      data.push({
-        index: i,
-        src,
-      });
-      i++;
-    }
+  async iframeGetData(): Promise<any> {
+    const data = await iframeTraveler(this.getActivePage(), [], 0);
     return data;
+
+    // const iframes = await this.getActivePage().$$("iframe");
+    // const data = [];
+    // let i = 0;
+
+    // for (const iframe of iframes) {
+    //   // prettier-ignore
+    //   const iframe_src = await iframe.evaluate((el) => (el as HTMLIFrameElement).src);
+
+    //   data.push({
+    //     index: i,
+    //     iframe_src,
+    //     selector: `iframe:nth-child(${i + 1})`,
+    //   });
+    //   i++;
+    // }
+
+    // return data;
   }
 
-  async switchToIframe(selector: string): Promise<void> {
-    const iframe = await this.getActivePage().$(selector);
-    if (!iframe) {
-      throw new ElementNotFoundError();
+  async iframeSwitch(id: any): Promise<void> {
+    if (this.isInRootFrame) {
+      this.lastPageBeforeEnterIframe = this.activePage;
+      this.isInRootFrame = false;
     }
-    const frame = await iframe.contentFrame();
-    this.activePage = frame!.page();
+
+    const iframes = await this.iframeGetData();
+    this.activePage = iframes[id]._internalPage;
+  }
+
+  async iframeReset(): Promise<void> {
+    this.activePage = this.lastPageBeforeEnterIframe;
+    this.isInRootFrame = true;
   }
 
   async closeBrowser(): Promise<void> {
@@ -224,12 +247,48 @@ export class PuppeteerWebTest implements WebTestFunctionCall {
   async goForwardHistory(): Promise<void> {
     await this.getActivePage().goForward();
   }
+}
 
-  wrapperGetInputs(): Promise<any> {
-    throw new Error("Method not implemented.");
+export async function iframeTraveler(
+  page: Page,
+  dataArrBuffer: any[],
+  depth: number
+) {
+  if (depth >= 5) {
+    return;
   }
 
-  wrapperGetButtons(): Promise<any> {
-    throw new Error("Method not implemented.");
+  const iframes = await page.$$("iframe");
+
+  for (const iframe of iframes) {
+    const contentFrame = await iframe.contentFrame();
+
+    // prettier-ignore
+    const iframe_src = await iframe.evaluate((el) => (el as HTMLIFrameElement).src);
+    const i: number = dataArrBuffer.length;
+    const iframeAsPage: Page = contentFrame as any;
+    const text = await iframeAsPage.evaluate(() => document.body.innerText);
+    // const htmlSource = await contentFrame.content();
+
+    dataArrBuffer.push({
+      index: i,
+      iframe_src,
+      depth,
+      _internalPage: iframeAsPage,
+      text,
+      // htmlSource,
+    });
+
+    // console.log("iurl", contentFrame.url());
+
+    // const page = contentFrame.page();
+    // if (!page) {
+    //   console.warn("Iframe page not found");
+    //   continue;
+    // }
+
+    await iframeTraveler(iframeAsPage, dataArrBuffer, depth + 1);
   }
+
+  return dataArrBuffer;
 }
