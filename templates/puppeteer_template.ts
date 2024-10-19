@@ -1,4 +1,4 @@
-import puppeteer, { Browser } from "puppeteer";
+import puppeteer, { Browser, Frame, Page } from "puppeteer";
 
 describe("TESTSUITE", () => {
   let browser: Browser;

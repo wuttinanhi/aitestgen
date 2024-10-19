@@ -1,8 +1,8 @@
 export interface FrameData {
   index: number;
   iframe_src_url: string;
-  depth: number;
+  // depth: number;
+  // text: string;
   _internalPage: any;
-  text: string;
-  composed_css_selector: any[];
+  // composed_css_selector: any[];
 }

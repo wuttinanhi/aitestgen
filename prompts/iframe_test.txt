@@ -2,4 +2,4 @@ URL: http://localhost:8080
 
 PROMPT: 
 1. find the iframe that have button inside it
-2. click the button inside the iframe and expect some text!
+2. click the button inside the iframe and assert the showed text!

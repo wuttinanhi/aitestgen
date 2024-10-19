@@ -1,4 +1,5 @@
 import { readFileString, writeFileString } from "./helpers/files";
+import { formatTSCode } from "./helpers/formatter";
 import { StepHistory } from "./steps/stephistory";
 import { PuppeteerTestTranslator } from "./translators/puppeteer.gen";
 
@@ -23,13 +24,17 @@ async function testGenerator() {
     "// {{GENERATED_CODE}}"
   );
 
-  // generate the test code
-  let generatedTestCode = await puppeteerTestGen.generate();
-  await writeFileString(OUT_GENTEST_PATH, generatedTestCode);
+  try {
+    // generate the test code
+    let generatedTestCode = await puppeteerTestGen.generate();
+    await writeFileString(OUT_GENTEST_PATH, generatedTestCode);
 
-  // // try formatting the generated code
-  // let formattedCode = await formatTSCode(generatedTestCode);
-  // await writeFileString(OUT_GENTEST_PATH, formattedCode);
+    // try formatting the generated code
+    let formattedCode = await formatTSCode(generatedTestCode);
+    await writeFileString(OUT_GENTEST_PATH, formattedCode);
+  } catch (error) {
+    console.error("Error generating test code", error);
+  }
 }
 
 testGenerator();

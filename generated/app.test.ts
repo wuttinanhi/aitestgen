@@ -22,48 +22,34 @@ describe("TESTSUITE", () => {
 
     await page.goto("http://localhost:8080");
 
-    var pageCheckpoint = page;
+    var baseFrame = page.mainFrame();
+    var iframe_0 = baseFrame.childFrames()[0];
 
-    async function DEBUG_PAGE_TEXT(page: Page | Frame) {
-      const iframe_1_page_text = await page.evaluate(
-        () => document.body.innerText
-      );
-      console.log(iframe_1_page_text);
-    }
+    var baseFrame = page.mainFrame();
+    var iframe_0 = baseFrame.childFrames()[0];
+    var iframe_1 = iframe_0.childFrames()[0];
 
-    async function DEBUG_PAGE_TYPE(page: Page | Frame) {
-      console.log(await page.evaluate(() => document.title));
-    }
+    var baseFrame = page.mainFrame();
+    var iframe_0 = baseFrame.childFrames()[0];
+    var iframe_1 = iframe_0.childFrames()[0];
+    var iframe_2 = iframe_1.childFrames()[0];
 
-    // prettier-ignore
-    var root = page;
+    var clickButton = await iframe_2.$("button");
+    expect(clickButton).not.toBeNull();
+    await clickButton!.click();
 
-    var iframe_1_selector = (await root.$("iframe"))!;
-    var iframe_1_page = await iframe_1_selector.contentFrame();
-    await DEBUG_PAGE_TEXT(iframe_1_page);
-    await DEBUG_PAGE_TYPE(iframe_1_page.page());
+    var showText = await iframe_2.$("#showText");
+    expect(showText).not.toBeNull();
+    console.log(`✅ Expect element visible: ${"#showText"} is correct`);
 
-    var iframe_2_selector = (await iframe_1_page.$("iframe"))!;
-    var iframe_2_page = await iframe_2_selector.contentFrame();
-    await DEBUG_PAGE_TEXT(iframe_2_page);
-    await DEBUG_PAGE_TYPE(iframe_1_page.page());
+    var showTextText = await iframe_2.$("#showText");
+    expect(showTextText).not.toBeNull();
 
-    // var clickButton = await page.$("button");
-    // expect(clickButton).not.toBeNull();
-    // await clickButton!.click();
-
-    // var showText = await page.$("#showText");
-    // expect(showText).not.toBeNull();
-    // console.log(`✅ Expect element visible: ${"#showText"} is correct`);
-
-    // var showTextText = await page.$("#showText");
-    // expect(showTextText).not.toBeNull();
-
-    // const showTextText_text = await showTextText!.evaluate(
-    //   (e) => e.textContent
-    // );
-    // expect(showTextText_text).toBe("CLICKED!");
-    // console.log(`✅ Expect text element: (${"#showText"}) to be "CLICKED!"`);
+    const showTextText_text = await showTextText!.evaluate(
+      (e) => e.textContent,
+    );
+    expect(showTextText_text).toBe("CLICKED!");
+    console.log(`✅ Expect text element: (${"#showText"}) to be "CLICKED!"`);
 
     await browser.close();
   });

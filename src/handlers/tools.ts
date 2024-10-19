@@ -82,9 +82,6 @@ export async function handleToolCalls(
       result = { status: "success" };
     }
 
-    // push the result back to the messages buffer
-    toolCallResponse(messageBuffer, toolCall.id, result);
-
     // add the step to the step buffer
     const step: IStep = {
       methodName: functionName,
@@ -121,6 +118,9 @@ export async function handleToolCalls(
       };
       stepBuffer.createStep(waitForPageLoadStep);
     }
+
+    // push the result back to the messages buffer
+    toolCallResponse(messageBuffer, toolCall.id, result);
 
     return { completed: false };
   } catch (err) {

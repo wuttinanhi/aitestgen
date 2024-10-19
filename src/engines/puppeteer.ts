@@ -1,7 +1,7 @@
-import puppeteer, { Browser, Page } from "puppeteer";
-import { element2selector } from "puppeteer-element2selector";
+import puppeteer, { Browser, Frame, KeyInput, Page } from "puppeteer";
 import { HTMLStripNonDisplayTags } from "../helpers/html";
 import { sleep } from "../helpers/utils";
+import { FrameData } from "../interfaces/FrameData";
 import {
   BrowserAlreadyLaunchedError,
   ElementNotFoundError,
@@ -11,12 +11,13 @@ import { WebTestFunctionCall } from "./interfaces";
 
 export class PuppeteerEngine implements WebTestFunctionCall {
   private browser: Browser | null = null;
-  private activePage: Page | null = null;
-  private lastPageBeforeEnterIframe: Page | null = null;
-  private isInRootFrame: boolean = true;
-  private currentCSSSelector = [];
+  private activePage: Page | Frame | null = null;
 
-  getActivePage() {
+  private lastPageBeforeEnterIframe: Page | Frame | null = null;
+  private isInRootFrame: boolean = true;
+  // private currentCSSSelector = [];
+
+  getActivePage(): Page | Frame {
     const page = this.activePage;
     if (!page) throw new PageNotFoundError();
     return page;
@@ -28,6 +29,11 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     return browser;
   }
 
+  async getLatestTab() {
+    const tabs = await this.getBrowser().pages();
+    return tabs.at(-1);
+  }
+
   async getElement(selector: string) {
     const selectedElement = await this.getActivePage().$(selector);
     if (!selectedElement) {
@@ -36,16 +42,24 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     return selectedElement;
   }
 
+  async waitForNavigation() {
+    try {
+      this.getActivePage().waitForNavigation({
+        waitUntil: "load",
+        timeout: 5_000,
+      });
+    } catch (error) {}
+  }
+
   async waitForPageLoad() {
     try {
       return Promise.race([
-        this.getActivePage().waitForNavigation({
-          waitUntil: "load",
-          timeout: 5_000,
-        }),
-        this.getActivePage().waitForNetworkIdle({
-          timeout: 5_000,
-        }),
+        this.waitForNavigation(),
+        // wait for network idle is not exist in frame
+        // this.getActivePage().waitForNetworkIdle({
+        //   timeout: 5_000,
+        // }),
+        // Hard limit of 10 seconds
         sleep(10_000),
       ]);
     } catch (error) {}
@@ -98,14 +112,13 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     const selectedElement = await this.getElement(selector);
 
     const beforeURL = this.getActivePage().url();
-
     await selectedElement.click();
 
-    // wait either network idle or page change or wait a bit
     await this.waitForPageLoad();
 
     const afterURL = this.getActivePage().url();
     const pageChanged = beforeURL !== afterURL;
+
     return {
       pageChanged,
       beforeURL,
@@ -148,8 +161,10 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     };
   }
 
-  async pressKey(key: string): Promise<void> {
-    await this.getActivePage().keyboard.press(key as any);
+  async pressKey(key: KeyInput): Promise<void> {
+    const frame = (await this.getActivePage()) as Page;
+    frame.keyboard.press(key);
+    // keyboard.press(key as any);
   }
 
   async getCurrentUrl(): Promise<string> {
@@ -182,7 +197,11 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     const tabs = await this.getBrowser().pages();
     const tab = tabs[tabId];
     await tab.close();
-    this.activePage = tabs[0];
+    const latestTab = await this.getLatestTab();
+    if (!latestTab) {
+      throw new Error("No latest tab found. the browser is closed?");
+    }
+    this.activePage = latestTab;
   }
 
   async setOptionValue(selector: string, value: any): Promise<any> {
@@ -199,20 +218,32 @@ export class PuppeteerEngine implements WebTestFunctionCall {
   }
 
   async iframeGetData(): Promise<any> {
-    let page: Page;
-    if (this.isInRootFrame) {
-      page = this.getActivePage();
-    } else {
-      page = this.lastPageBeforeEnterIframe!;
+    const iframes = await this.getActivePage().$$("iframe");
+
+    const iframDataArr: FrameData[] = [];
+
+    for (const iframe of iframes) {
+      const contentFrame = await iframe.contentFrame();
+
+      const i: number = iframDataArr.length;
+      const iframe_src_url = await iframe.evaluate((e) => e.src);
+      const iframeAsPage: Page = contentFrame as any;
+      // const text = await iframeAsPage.evaluate(() => document.body.innerText);
+      // const composed_css_selector = await element2selector(iframe as any);
+
+      iframDataArr.push({
+        index: i,
+        iframe_src_url,
+        _internalPage: iframeAsPage,
+      });
     }
 
-    const data = await iframeTraveler(page, [], this.currentCSSSelector, 0);
-    return data;
+    return iframDataArr;
   }
 
   async iframeSwitch(index: any): Promise<void> {
     if (this.isInRootFrame) {
-      this.lastPageBeforeEnterIframe = this.activePage;
+      this.lastPageBeforeEnterIframe = this.getActivePage();
       this.isInRootFrame = false;
     }
 
@@ -223,13 +254,19 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     }
 
     this.activePage = iframe._internalPage;
-    this.currentCSSSelector = iframe.composed_css_selector;
   }
 
   async iframeReset(): Promise<void> {
-    this.activePage = this.lastPageBeforeEnterIframe;
+    const latestTab = await this.getLatestTab();
+    if (!latestTab) {
+      throw new Error("No latest tab found. the browser is closed?");
+    }
+
+    this.activePage = latestTab;
     this.isInRootFrame = true;
-    this.currentCSSSelector = [];
+
+    // this.activePage = this.lastPageBeforeEnterIframe;
+    // this.currentCSSSelector = [];
   }
 
   async closeBrowser(): Promise<void> {
@@ -238,7 +275,13 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     } catch (error) {
       console.warn("Error resetting iframe", error);
     }
-    await this.browser!.close();
+
+    const browser = this.browser;
+    if (!browser) {
+      throw new Error("Browser already closed");
+    }
+
+    await browser.close();
     this.browser = null;
   }
 
@@ -252,66 +295,12 @@ export class PuppeteerEngine implements WebTestFunctionCall {
   }
 
   async goBackHistory(): Promise<void> {
-    await this.getActivePage().goBack();
+    const page = this.getActivePage() as Page;
+    await page.goBack();
   }
 
   async goForwardHistory(): Promise<void> {
-    await this.getActivePage().goForward();
+    const page = this.getActivePage() as Page;
+    await page.goForward();
   }
-}
-
-export async function iframeTraveler(
-  page: Page,
-  dataArrBuffer: any[],
-  parentSelector: any[],
-  depth: number
-) {
-  if (depth >= 5) {
-    return;
-  }
-
-  const iframes = await page.$$("iframe");
-
-  for (const iframe of iframes) {
-    const this_iframe_css_selector = await element2selector(iframe as any);
-
-    const contentFrame = await iframe.contentFrame();
-
-    // prettier-ignore
-    const iframe_src_url = await iframe.evaluate((el) => (el as HTMLIFrameElement).src);
-    const i: number = dataArrBuffer.length;
-    const iframeAsPage: Page = contentFrame as any;
-    const text = await iframeAsPage.evaluate(() => document.body.innerText);
-    // const htmlSource = await contentFrame.content();
-    const composed_css_selector = parentSelector.concat(
-      this_iframe_css_selector
-    );
-
-    dataArrBuffer.push({
-      index: i,
-      iframe_src_url,
-      depth,
-      _internalPage: iframeAsPage,
-      text,
-      composed_css_selector,
-      // htmlSource,
-    });
-
-    // console.log("iurl", contentFrame.url());
-
-    // const page = contentFrame.page();
-    // if (!page) {
-    //   console.warn("Iframe page not found");
-    //   continue;
-    // }
-
-    await iframeTraveler(
-      iframeAsPage,
-      dataArrBuffer,
-      composed_css_selector,
-      depth + 1
-    );
-  }
-
-  return dataArrBuffer;
 }

@@ -1,4 +1,3 @@
-import { generateIframeSelector } from "../helpers/iframe";
 import { argsArrayToStringParse } from "../helpers/utils";
 import { FrameData } from "../interfaces/FrameData";
 import { IStep } from "../interfaces/Step";
@@ -8,10 +7,12 @@ export class PuppeteerTestTranslator {
   private steps: IStep[];
   private templateCode: string;
   private browserVar: string;
-  private pageVar: string = "page";
+  private defaultPageVar: string = "page";
+  private currentPageVar: string = "page";
   private templatePlaceholder: string = "{{GENERATED_CODE}}";
   private generatedCode: string = ``;
   private lastGetIframeData: FrameData[] = [];
+  private iframeDepth: number = 0;
 
   constructor(
     stepHistory: StepHistory,
@@ -23,7 +24,8 @@ export class PuppeteerTestTranslator {
     this.steps = stepHistory.listSteps();
     this.templateCode = templateCode;
     this.browserVar = templatePuppeteerLaunchVariableName;
-    this.pageVar = templatePuppeteerPageVariableName;
+    this.defaultPageVar = templatePuppeteerPageVariableName;
+    this.currentPageVar = templatePuppeteerPageVariableName;
     this.templatePlaceholder = templatePlaceholder;
 
     this.sanitizeSteps();
@@ -78,88 +80,99 @@ export class PuppeteerTestTranslator {
         return `await ${this.browserVar}.close();`;
       case "navigateTo":
         return `
-await ${this.pageVar}.goto("${arg0}");
+await ${this.currentPageVar}.goto("${arg0}");
         `;
       case "clickElement":
         return `
-var ${varName0} = await page.$("${arg0}");
+var ${varName0} = await ${this.currentPageVar}.$("${arg0}");
 expect(${varName0}).not.toBeNull();
 await ${varName0}!.click();`;
       case "setInputValue":
         return `
-var ${varName0} = await page.$("${arg0}");
+var ${varName0} = await ${this.currentPageVar}.$("${arg0}");
 expect(${varName0}).not.toBeNull();
 
 await ${varName0}!.type("${arg1}");`;
       case "getInputValue":
-        return `const inputValue = await ${this.pageVar}.getInputValue(${stepArgs});`;
+        return `const inputValue = await ${this.currentPageVar}.getInputValue(${stepArgs});`;
       case "setOptionValue":
-        return `await ${this.pageVar}.setOptionValue(${stepArgs});`;
+        return `await ${this.currentPageVar}.setOptionValue(${stepArgs});`;
       case "expectElementVisible":
         if ((arg1 as any) == true) {
           return `
-var ${varName0} = await page.$("${arg0}");
+var ${varName0} = await ${this.currentPageVar}.$("${arg0}");
 expect(${varName0}).not.toBeNull();
 console.log(\`✅ Expect element visible: \$\{"${arg0}"\} is correct\`);
 `;
         } else {
           return `
-var ${varName0} = await page.$("${arg0}");
+var ${varName0} = await ${this.currentPageVar}.$("${arg0}");
 expect(${varName0}).toBeNull();
 console.log(\`✅ Expect element not visible: \$\{"${arg0}"\} is correct\`);
 `;
         }
+
       case "expectElementText":
         return `
-var ${varName0} = await page.$("${arg0}");
+var ${varName0} = await ${this.currentPageVar}.$("${arg0}");
 expect(${varName0}).not.toBeNull();
 
 const ${varName0}_text = await ${varName0}!.evaluate((e) => e.textContent);
 expect(${varName0}_text).toBe("${arg1}");
 console.log(\`✅ Expect text element: (\$\{"${arg0}"\}\) to be "${arg1}"\`);    
 `;
+
       case "waitForPageLoad":
         return `
   // wait for page load
   await Promise.race([
-    ${this.pageVar}.waitForNavigation({
+    ${this.currentPageVar}.waitForNavigation({
       waitUntil: "networkidle0",
       timeout: 10000,
     }),
-    ${this.pageVar}.waitForNetworkIdle({
+    ${this.currentPageVar}.waitForNetworkIdle({
       timeout: 10000,
     }),
   ]);
           `;
       case "pressKey":
         return `
-await ${this.pageVar}.keyboard.press("${arg0}");
+await ${this.currentPageVar}.keyboard.press("${arg0}");
 `;
 
       case "getHtmlSource":
         return ``;
 
-      case "iframeSwitch":
-        const iframeIndex = Number(arg0);
-        const iframeSelector = await generateIframeSelector(
-          this.pageVar,
-          this.lastGetIframeData[iframeIndex].composed_css_selector
-        );
-
-        console.log("iframeSelector", iframeSelector);
-
-        return `var pageCheckpoint = page;
-
-// prettier-ignore
-page = ${iframeSelector};
-`;
-
-      case "iframeReset":
-        return `page = pageCheckpoint;`;
-
       case "iframeGetData":
         this.lastGetIframeData = step.iframeGetDataResult;
-        return ``;
+        this.iframeDepth += 1;
+        return `var baseFrame = ${this.defaultPageVar}.mainFrame();`;
+
+      case "iframeSwitch":
+        const iframeIndex = Number(arg0);
+
+        let out = ``;
+
+        for (let i = 0; i < this.iframeDepth; i++) {
+          const prevFrameVar = i === 0 ? "baseFrame" : `iframe_${i - 1}`;
+          const newFrameVar = `iframe_${i}`;
+
+          if (i === 0) {
+            out += `var ${newFrameVar} = baseFrame.childFrames()[${iframeIndex}]\n`;
+          } else {
+            out += `var ${newFrameVar} = ${prevFrameVar}.childFrames()[${iframeIndex}]\n`;
+          }
+
+          this.currentPageVar = newFrameVar;
+        }
+
+        return out;
+
+      case "iframeReset":
+        return `
+// reset to main frame
+${this.currentPageVar} = ${this.defaultPageVar};
+`;
 
       default:
         console.warn(
