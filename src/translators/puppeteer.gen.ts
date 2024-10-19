@@ -149,6 +149,7 @@ await ${this.pageVar}.keyboard.press("${arg0}");
         console.log("iframeSelector", iframeSelector);
 
         return `var pageCheckpoint = page;
+
 // prettier-ignore
 page = ${iframeSelector};
 `;

@@ -17,7 +17,7 @@ export async function generateIframeSelector(
 
   for (let i = 0; i < selectors.length; i++) {
     if (i === 0) {
-      result += `(${rootVar}.$("${selectors[i]}") as any).contentFrame()`;
+      result += `${rootVar}.$("${selectors[i]}")!`;
     } else {
       result = `(await ${result}).$("${selectors[i]}").contentFrame()`;
     }
