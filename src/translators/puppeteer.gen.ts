@@ -99,28 +99,25 @@ await ${varName0}!.type("${arg1}");`;
         return `await ${this.currentPageVar}.setOptionValue(${stepArgs});`;
       case "expectElementVisible":
         if ((arg1 as any) == true) {
+          // console.log(\`✅ Expect element visible: \$\{"${arg0}"\} is correct\`);
           return `
 var ${varName0} = await ${this.currentPageVar}.$("${arg0}");
-expect(${varName0}).not.toBeNull();
-console.log(\`✅ Expect element visible: \$\{"${arg0}"\} is correct\`);
-`;
+expect(${varName0}).not.toBeNull();`;
         } else {
+          // console.log(\`✅ Expect element not visible: \$\{"${arg0}"\} is correct\`);
           return `
 var ${varName0} = await ${this.currentPageVar}.$("${arg0}");
-expect(${varName0}).toBeNull();
-console.log(\`✅ Expect element not visible: \$\{"${arg0}"\} is correct\`);
-`;
+expect(${varName0}).toBeNull();`;
         }
 
       case "expectElementText":
+        // console.log(\`✅ Expect text element: (\$\{"${arg0}"\}\) to be "${arg1}"\`);
         return `
 var ${varName0} = await ${this.currentPageVar}.$("${arg0}");
 expect(${varName0}).not.toBeNull();
 
 const ${varName0}_text = await ${varName0}!.evaluate((e) => e.textContent);
-expect(${varName0}_text).toBe("${arg1}");
-console.log(\`✅ Expect text element: (\$\{"${arg0}"\}\) to be "${arg1}"\`);    
-`;
+expect(${varName0}_text).toBe("${arg1}");`;
 
       case "waitForPageLoad":
         return `

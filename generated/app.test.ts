@@ -40,7 +40,6 @@ describe("TESTSUITE", () => {
 
     var showText = await iframe_2.$("#showText");
     expect(showText).not.toBeNull();
-    console.log(`✅ Expect element visible: ${"#showText"} is correct`);
 
     var showTextText = await iframe_2.$("#showText");
     expect(showTextText).not.toBeNull();
@@ -49,8 +48,6 @@ describe("TESTSUITE", () => {
       (e) => e.textContent,
     );
     expect(showTextText_text).toBe("CLICKED!");
-    console.log(`✅ Expect text element: (${"#showText"}) to be "CLICKED!"`);
-
     await browser.close();
   });
 });
