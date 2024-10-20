@@ -46,6 +46,5 @@ describe("TESTSUITE", () => {
 
     const successMessageHeader_text = await successMessageHeader!.evaluate((e) => e.textContent);
     expect(successMessageHeader_text).toBe("Thank you for your message!");
-    await browser.close();
   });
 });

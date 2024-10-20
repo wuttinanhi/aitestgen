@@ -7,7 +7,8 @@ import { PuppeteerTranslator } from "./translators/puppeteer.translator";
 
 async function testGenWrapper() {
   const OUT_GENTEST_PATH = "generated/app.test.ts";
-  const OUT_STEP_HISTORY_PATH = "generated/out.steps.json";
+  const OUT_STEP_ALL = "generated/out.steps.json";
+  const OUT_STEP_SELECTED = "generated/out.steps.selected.json";
 
   // prettier-ignore
   const SYSTEM_INSTRUCTION_PROMPT = await readFileString("prompts/system_instruction_prompt.txt");
@@ -20,6 +21,7 @@ async function testGenWrapper() {
 
   const openai = new OpenAI();
   const messageBuffer: Array<OpenAI.ChatCompletionMessageParam> = [];
+  let TOTAL_TOKEN_USED = 0;
 
   try {
     const result = await testStepGenerator(
@@ -29,22 +31,28 @@ async function testGenWrapper() {
       openai,
       messageBuffer
     );
+    TOTAL_TOKEN_USED += result.totalTokens;
 
     // write step history to file
     await writeFileString(
-      OUT_STEP_HISTORY_PATH,
+      OUT_STEP_ALL,
       JSON.stringify(result.stepHistory.getAll())
     );
 
-    const finalizeSteps = await handleFinalize(
+    const finalizeResult = await handleFinalize(
       SYSTEM_FINALIZE_PROMPT,
       openai,
       messageBuffer,
       result.stepHistory
     );
-    console.log("Finalized Steps", finalizeSteps);
 
-    const selectedSteps = result.stepHistory.pickStepByIds(finalizeSteps);
+    const selectedSteps = result.stepHistory.pickStepByIds(
+      finalizeResult.selectedSteps
+    );
+    TOTAL_TOKEN_USED += finalizeResult.totalTokens;
+
+    // write step history to file
+    await writeFileString(OUT_STEP_SELECTED, JSON.stringify(selectedSteps));
 
     const puppeteerTestGen = new PuppeteerTranslator(
       selectedSteps,
@@ -54,7 +62,7 @@ async function testGenWrapper() {
       "// {{GENERATED_CODE}}"
     );
 
-    console.log("Total Tokens used:", result.totalTokens);
+    console.log("Total Tokens used:", TOTAL_TOKEN_USED);
     console.log("Generated test code at", OUT_GENTEST_PATH);
 
     try {

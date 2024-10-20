@@ -4,7 +4,7 @@ import { FrameData } from "../interfaces/FrameData";
 import { IStep } from "../interfaces/Step";
 import { ToolCallResult } from "../interfaces/ToolCallResult";
 import { StepHistory } from "../steps/stephistory";
-import { toolCallResponse } from "./toolCallResponse";
+import { appendToolCallResponse } from "./toolCallResponse";
 
 export async function handleToolCalls(
   engine: WebTestFunctionCall,
@@ -50,10 +50,11 @@ export async function handleToolCalls(
         stepBuffer.createStep(closeBrowserStep);
       }
 
-      toolCallResponse(messageBuffer, toolCall.id, {
+      appendToolCallResponse(messageBuffer, toolCall, {
         status: "success",
         message: "Backend acknowledged completion",
       });
+
       return { completed: true };
     }
 
@@ -62,10 +63,12 @@ export async function handleToolCalls(
       await engine.reset();
       stepBuffer.reset();
       uniqueVariableNamesBuffer.length = 0; // clear the unique variable names
-      toolCallResponse(messageBuffer, toolCall.id, {
+
+      appendToolCallResponse(messageBuffer, toolCall, {
         status: "success",
         message: "Reset browser successfully",
       });
+
       return { completed: false };
     }
 
@@ -118,7 +121,7 @@ export async function handleToolCalls(
     }
 
     // push the result back to the messages buffer
-    toolCallResponse(messageBuffer, toolCall.id, result);
+    appendToolCallResponse(messageBuffer, toolCall, result);
 
     return { completed: false };
   } catch (err) {
@@ -130,7 +133,7 @@ export async function handleToolCalls(
     };
 
     // push the error back to the messages
-    toolCallResponse(messageBuffer, toolCall.id, errorObj);
+    appendToolCallResponse(messageBuffer, toolCall, errorObj);
 
     console.error("Error in invoking function:", errorObj);
 

@@ -1,17 +1,17 @@
 import OpenAI from "openai";
 
-export function toolCallResponse(
+export function appendToolCallResponse(
   messageBuffer: any[],
-  toolCallId: any,
-  resultOBJ: any
+  toolCall: OpenAI.Chat.Completions.ChatCompletionMessageToolCall,
+  resultObject: any
 ) {
   const toolCallResponse = {
     role: "tool",
-    content: JSON.stringify(resultOBJ),
-    tool_call_id: toolCallId,
+    content: JSON.stringify(resultObject),
+    tool_call_id: toolCall.id,
   } as OpenAI.ChatCompletionMessageParam;
 
   messageBuffer.push(toolCallResponse);
 
-  console.log(`Return: ${JSON.stringify(resultOBJ).slice(0, 100)}`);
+  console.log(`Return: ${JSON.stringify(resultObject).slice(0, 100)}`);
 }

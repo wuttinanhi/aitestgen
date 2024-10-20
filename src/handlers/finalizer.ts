@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { StepHistory } from "../steps/stephistory";
 import { FinalizeParamsType, finalizeTool } from "../tools/finalizer";
+import { appendToolCallResponse } from "./toolCallResponse";
 
 export async function handleFinalize(
   SYSTEM_FINALIZE_PROMPT: string,
@@ -36,6 +37,7 @@ export async function handleFinalize(
   }
 
   const toolCall = choice.message.tool_calls[0];
+
   const _ = toolCall.function.name;
   const functionArguments: FinalizeParamsType = JSON.parse(
     toolCall.function.arguments
@@ -43,5 +45,12 @@ export async function handleFinalize(
 
   const selectedSteps = functionArguments.steps;
 
-  return selectedSteps;
+  appendToolCallResponse(messageBuffer, toolCall, {
+    status: "success",
+  });
+
+  return {
+    selectedSteps,
+    totalTokens: response.usage ? response.usage.total_tokens : 0,
+  };
 }

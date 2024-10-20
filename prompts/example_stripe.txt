@@ -1,0 +1,11 @@
+URL: https://stripe-checkout-next-js-demo.vercel.app/
+
+VARIABLES:
+    - quantity: 1
+    - email: john@example.com
+    - card_number: 4242 4242 4242 4242
+    - card_expiry: 12/30
+    - card_cvc: 123
+    - card_holder_name: John Doe
+
+PROMPT: buy a product and expect successful message after payment

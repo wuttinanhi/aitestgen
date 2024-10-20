@@ -1,6 +1,0 @@
-URL: https://microsoftedge.github.io/Demos/demo-to-do/
-
-VARIABLES:
-    - task1: "Feed the dog"
-
-PROMPT: add task1 to the list and expect the task to be added
