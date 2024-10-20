@@ -182,9 +182,14 @@ var ${new_Get_Iframe_Var} = rootFrame.childFrames();`;
 
         let iframeSwitch_code = ``;
 
-        const latestGetIframeVar = this.getIframeVarStack.at(-1);
+        let latestGetIframeVar = this.getIframeVarStack.at(-1);
 
-        const newIframeVar = `${latestGetIframeVar}_iframe${iframeIndex}`;
+        let last_iframeVar = this.iframeVarStack.at(-1);
+        if (last_iframeVar === undefined) {
+          last_iframeVar = this.defaultPageVar;
+        }
+
+        const newIframeVar = `${last_iframeVar}_iframe${iframeIndex}`;
 
         iframeSwitch_code += `var ${newIframeVar} = ${latestGetIframeVar}[${iframeIndex}]\n`;
 

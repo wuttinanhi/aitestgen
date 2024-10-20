@@ -24,31 +24,22 @@ describe("TESTSUITE", () => {
 
     var rootFrame = page.mainFrame();
     var baseFrame = rootFrame.childFrames();
-    var baseFrame_iframe0 = baseFrame[0];
+    var page_iframe0 = baseFrame[0];
 
-    var baseFrame_iframe0_childFrames = baseFrame_iframe0.childFrames();
-    var baseFrame_iframe0_childFrames_iframe0 = baseFrame_iframe0_childFrames[0];
+    var page_iframe0_childFrames = page_iframe0.childFrames();
+    var page_iframe0_iframe0 = page_iframe0_childFrames[0];
 
-    var baseFrame_iframe0_childFrames_iframe0_childFrames =baseFrame_iframe0_childFrames_iframe0.childFrames();
-    var baseFrame_iframe0_childFrames_iframe0_childFrames_iframe0 =baseFrame_iframe0_childFrames_iframe0_childFrames[0];
+    var page_iframe0_iframe0_childFrames = page_iframe0_iframe0.childFrames();
+    var page_iframe0_iframe0_iframe0 = page_iframe0_iframe0_childFrames[0];
 
-    var clickButton =
-      await baseFrame_iframe0_childFrames_iframe0_childFrames_iframe0.$(
-        "button"
-      );
+    var clickButton = await page_iframe0_iframe0_iframe0.$("button");
     expect(clickButton).not.toBeNull();
     await clickButton!.click();
 
-    var showText =
-      await baseFrame_iframe0_childFrames_iframe0_childFrames_iframe0.$(
-        "#showText"
-      );
+    var showText = await page_iframe0_iframe0_iframe0.$("#showText");
     expect(showText).not.toBeNull();
 
-    var showTextText =
-      await baseFrame_iframe0_childFrames_iframe0_childFrames_iframe0.$(
-        "#showText"
-      );
+    var showTextText = await page_iframe0_iframe0_iframe0.$("#showText");
     expect(showTextText).not.toBeNull();
 
     const showTextText_text = await showTextText!.evaluate(
