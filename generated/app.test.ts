@@ -42,10 +42,9 @@ describe("TESTSUITE", () => {
     var showTextText = await page_iframe0_iframe0_iframe0.$("#showText");
     expect(showTextText).not.toBeNull();
 
-    const showTextText_text = await showTextText!.evaluate(
-      (e) => e.textContent
-    );
+    const showTextText_text = await showTextText!.evaluate((e) => e.textContent);
     expect(showTextText_text).toBe("CLICKED!");
     await browser.close();
   });
 });
+
