@@ -44,7 +44,7 @@ export class PuppeteerEngine implements WebTestFunctionCall {
 
   async waitForNavigation() {
     try {
-      this.getActivePage().waitForNavigation({
+      await this.getActivePage().waitForNavigation({
         waitUntil: "load",
         timeout: 5_000,
       });
@@ -53,7 +53,7 @@ export class PuppeteerEngine implements WebTestFunctionCall {
 
   async waitForPageLoad() {
     try {
-      return Promise.race([
+      await Promise.race([
         this.waitForNavigation(),
         // wait for network idle is not exist in frame
         // this.getActivePage().waitForNetworkIdle({
@@ -96,6 +96,8 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     //   return document.body.innerText;
     // });
 
+    console.log("HTML Source Length", htmlSmall.length);
+
     return {
       url: this.getActivePage().url(),
       html: htmlSmall,
@@ -134,8 +136,11 @@ export class PuppeteerEngine implements WebTestFunctionCall {
       (el as HTMLInputElement).value = "";
     });
 
+    // focus the element
+    await selectedElement.focus();
+
     // type the value
-    await selectedElement.type(value);
+    await selectedElement.type(String(value));
   }
 
   async expectElementVisible(
