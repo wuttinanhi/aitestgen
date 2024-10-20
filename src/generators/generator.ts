@@ -4,7 +4,7 @@ import { handleToolCalls } from "../handlers/tools";
 import { StepHistory } from "../steps/stephistory";
 import { WebREPLToolsCollection } from "../tools/defs";
 import { TestGenUnexpectedAIResponseError } from "./errors";
-import { TestStepGenResult } from "./results";
+import { TestStepGenResult } from "../interfaces/TestStepGenResult";
 
 export async function testStepGen(
   SYSTEM_INSTRUCTION_PROMPT: string,

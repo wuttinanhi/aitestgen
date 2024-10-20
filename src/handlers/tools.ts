@@ -3,6 +3,7 @@ import { WebTestFunctionCall } from "../engines/interfaces";
 import { FrameData } from "../interfaces/FrameData";
 import { IStep } from "../interfaces/Step";
 import { StepHistory } from "../steps/stephistory";
+import { ToolCallResult } from "../interfaces/ToolCallResult";
 
 export function toolCallResponse(
   messageBuffer: any[],
@@ -18,10 +19,6 @@ export function toolCallResponse(
   messageBuffer.push(toolCallResponse);
 
   console.log(`Return: ${JSON.stringify(resultOBJ).slice(0, 100)}`);
-}
-
-export interface ToolCallResult {
-  completed: boolean;
 }
 
 export async function handleToolCalls(
