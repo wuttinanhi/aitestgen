@@ -29,7 +29,7 @@
   "scripts": {
     "start": "tsx src/main.ts",
     "gen": "tsx src/main.ts",
-    "devrun": "tsx src/testgenwrapper.ts",
+    "devrun": "tsx src/generator.ts",
     "devtest": "jest --coverage --verbose --silent=false",
     "test": "echo 'if you mean to test generated testcases, use 'devtest'!'"
   }

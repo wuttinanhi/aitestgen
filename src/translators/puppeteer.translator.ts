@@ -1,7 +1,6 @@
 import { argsArrayToStringParse } from "../helpers/utils";
 import { FrameData } from "../interfaces/FrameData";
 import { IStep } from "../interfaces/Step";
-import { StepHistory } from "../steps/stephistory";
 
 // export interface IframeNode {
 //   id: string;
@@ -9,7 +8,7 @@ import { StepHistory } from "../steps/stephistory";
 //   childs: PageOrFrame[];
 // }
 
-export class PuppeteerTestTranslator {
+export class PuppeteerTranslator {
   private steps: IStep[];
 
   private browserVar: string;
@@ -28,33 +27,18 @@ export class PuppeteerTestTranslator {
   // private iframeTree: IframeNode[] = [];
 
   constructor(
-    stepHistory: StepHistory,
+    steps: IStep[],
     templateCode: string,
     templatePuppeteerLaunchVariableName: string,
     templatePuppeteerPageVariableName: string,
     templatePlaceholder: string
   ) {
-    this.steps = stepHistory.listSteps();
+    this.steps = steps;
     this.templateCode = templateCode;
     this.browserVar = templatePuppeteerLaunchVariableName;
     this.defaultPageVar = templatePuppeteerPageVariableName;
     this.currentPageVar = templatePuppeteerPageVariableName;
     this.templatePlaceholder = templatePlaceholder;
-
-    this.sanitizeSteps();
-  }
-
-  sanitizeSteps() {
-    // browser will always launch
-    // if the first step is not launchBrowser, add it
-    // if (this.steps[0].methodName !== "launchBrowser") {
-    //   this.steps.unshift({ methodName: "launchBrowser", args: [] });
-    // }
-
-    // if the last step is not closeBrowser, add it
-    if (this.steps[this.steps.length - 1].methodName !== "closeBrowser") {
-      this.steps.push({ methodName: "closeBrowser", args: [] });
-    }
   }
 
   /**

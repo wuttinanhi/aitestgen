@@ -1,7 +1,7 @@
 import { readFileString, writeFileString } from "./helpers/files";
 import { formatTSCode } from "./helpers/formatter";
 import { StepHistory } from "./steps/stephistory";
-import { PuppeteerTestTranslator } from "./translators/puppeteer.gen";
+import { PuppeteerTranslator } from "./translators/puppeteer.translator";
 
 async function testGenerator() {
   const IN_STEP_HISTORY_PATH = "generated/out.steps.json";
@@ -14,10 +14,8 @@ async function testGenerator() {
   const stepHistory = new StepHistory();
   stepHistory.fromJSONString(stepHistoryString);
 
-  // console.log(stepHistory.listSteps());
-
-  const puppeteerTestGen = new PuppeteerTestTranslator(
-    stepHistory,
+  const puppeteerTestGen = new PuppeteerTranslator(
+    stepHistory.getAll(),
     TEMPLATE_CODE,
     "browser",
     "page",

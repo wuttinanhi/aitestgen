@@ -40,6 +40,20 @@ export async function handleToolCalls(
 
     // if function name is complete, then break the loop
     if (functionName === "complete") {
+      // if the last step is not closeBrowser, add it
+      if (stepBuffer.latestStep().methodName !== "closeBrowser") {
+        const closeBrowserStep: IStep = {
+          stepId: 0,
+          methodName: "closeBrowser",
+          args: [],
+        };
+        stepBuffer.createStep(closeBrowserStep);
+      }
+
+      toolCallResponse(messageBuffer, toolCall.id, {
+        status: "success",
+        message: "Backend acknowledged completion",
+      });
       return { completed: true };
     }
 
@@ -47,7 +61,7 @@ export async function handleToolCalls(
     if (functionName === "reset") {
       await engine.reset();
       stepBuffer.reset();
-      uniqueVariableNamesBuffer.length = 0;
+      uniqueVariableNamesBuffer.length = 0; // clear the unique variable names
       toolCallResponse(messageBuffer, toolCall.id, {
         status: "success",
         message: "Reset browser successfully",
@@ -66,6 +80,7 @@ export async function handleToolCalls(
 
     // add the step to the step buffer
     const step: IStep = {
+      stepId: 0,
       methodName: functionName,
       args: argsAny,
     };
@@ -95,6 +110,7 @@ export async function handleToolCalls(
     // if result contains pageChanged key then add waitForPageLoad step
     if (result.pageChanged) {
       const waitForPageLoadStep: IStep = {
+        stepId: 0,
         methodName: "waitForPageLoad",
         args: [],
       };

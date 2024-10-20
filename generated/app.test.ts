@@ -1,4 +1,4 @@
-import puppeteer, { Browser } from "puppeteer";
+import puppeteer, { Browser, Frame, Page } from "puppeteer";
 
 describe("TESTSUITE", () => {
   let browser: Browser;
@@ -20,31 +20,32 @@ describe("TESTSUITE", () => {
   it("TESTCASE_1", async () => {
     let page = await browser.newPage();
 
-    await page.goto("http://localhost:8080");
+    await page.goto("http://localhost:3000");
 
-    var rootFrame = page.mainFrame();
-    var baseFrame = rootFrame.childFrames();
-    var page_iframe0 = baseFrame[0];
+    var nameInput = await page.$("#name");
+    expect(nameInput).not.toBeNull();
 
-    var page_iframe0_childFrames = page_iframe0.childFrames();
-    var page_iframe0_iframe0 = page_iframe0_childFrames[0];
+    await nameInput!.type("John Doe");
 
-    var page_iframe0_iframe0_childFrames = page_iframe0_iframe0.childFrames();
-    var page_iframe0_iframe0_iframe0 = page_iframe0_iframe0_childFrames[0];
+    var emailInput = await page.$("#email");
+    expect(emailInput).not.toBeNull();
 
-    var clickButton = await page_iframe0_iframe0_iframe0.$("button");
-    expect(clickButton).not.toBeNull();
-    await clickButton!.click();
+    await emailInput!.type("john@example.com");
 
-    var showText = await page_iframe0_iframe0_iframe0.$("#showText");
-    expect(showText).not.toBeNull();
+    var messageInput = await page.$("#message");
+    expect(messageInput).not.toBeNull();
 
-    var showTextText = await page_iframe0_iframe0_iframe0.$("#showText");
-    expect(showTextText).not.toBeNull();
+    await messageInput!.type("Hello, I would like to know more about your services!");
 
-    const showTextText_text = await showTextText!.evaluate((e) => e.textContent);
-    expect(showTextText_text).toBe("CLICKED!");
+    var submitButton = await page.$("button[type='submit']");
+    expect(submitButton).not.toBeNull();
+    await submitButton!.click();
+
+    var successMessageHeader = await page.$("h1");
+    expect(successMessageHeader).not.toBeNull();
+
+    const successMessageHeader_text = await successMessageHeader!.evaluate((e) => e.textContent);
+    expect(successMessageHeader_text).toBe("Thank you for your message!");
     await browser.close();
   });
 });
-

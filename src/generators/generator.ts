@@ -1,20 +1,23 @@
-import OpenAI from "openai";
+import { default as OpenAI } from "openai";
 import { PuppeteerEngine } from "../engines/puppeteer";
 import { handleToolCalls } from "../handlers/tools";
+import { TestStepGenResult } from "../interfaces/TestStepGenResult";
 import { StepHistory } from "../steps/stephistory";
 import { WebREPLToolsCollection } from "../tools/defs";
 import { TestGenUnexpectedAIResponseError } from "./errors";
-import { TestStepGenResult } from "../interfaces/TestStepGenResult";
 
 export async function testStepGen(
   SYSTEM_INSTRUCTION_PROMPT: string,
   USER_PROMPT: string,
-  LOOP_HARD_LIMIT = 30
+  LOOP_HARD_LIMIT = 30,
+  llm: OpenAI,
+  messageBuffer: Array<OpenAI.ChatCompletionMessageParam>
 ) {
-  const openai = new OpenAI();
+  // const openai = new OpenAI();
+  // const messageBuffer: Array<OpenAI.ChatCompletionMessageParam> = [];
+
   const engine = new PuppeteerEngine();
   const stepHistory = new StepHistory();
-  const messageBuffer: Array<OpenAI.ChatCompletionMessageParam> = [];
   let uniqueVariableNames: string[] = [];
   let TOTAL_TOKENS = 0;
 
@@ -30,7 +33,7 @@ export async function testStepGen(
 
   try {
     loop_hard_limit: for (let i = 0; i < LOOP_HARD_LIMIT; i++) {
-      const response = await openai.chat.completions.create({
+      const response = await llm.chat.completions.create({
         model: "gpt-4o-mini",
         messages: messageBuffer,
         tools: WebREPLToolsCollection,
@@ -79,6 +82,6 @@ export async function testStepGen(
     console.error("Error testStepGen:", error);
     throw error;
   } finally {
-    // await engine.closeBrowser();
+    await engine.closeBrowser();
   }
 }

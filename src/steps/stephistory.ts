@@ -2,6 +2,7 @@ import { IStep } from "../interfaces/Step";
 
 export class StepHistory {
   private steps: IStep[] = [];
+  private STEP_ID = 0;
 
   constructor() {
     this.steps = [];
@@ -11,27 +12,36 @@ export class StepHistory {
    * createStep
    */
   public createStep(step: IStep) {
+    step.stepId = this.STEP_ID++;
     this.steps.push(step);
+  }
+
+  public findStepById(stepId: number) {
+    return this.steps.find((step) => step.stepId === stepId);
   }
 
   /**
    * updateStep
    */
-  public updateStep(stepIndex: number, step: IStep) {
-    this.steps[stepIndex] = step;
+  public updateStep(stepId: number, stepData: IStep) {
+    const step = this.findStepById(stepId);
+    stepData.stepId = stepId;
+    if (step) {
+      Object.assign(step, stepData);
+    }
   }
 
   /**
    * bulkDeleteSteps
    */
-  public bulkDeleteSteps(stepIndexes: number[]) {
-    this.steps = this.steps.filter((_, index) => !stepIndexes.includes(index));
+  public bulkDeleteSteps(stepIDs: number[]) {
+    this.steps = this.steps.filter((step) => !stepIDs.includes(step.stepId!));
   }
 
   /**
    * listSteps
    */
-  public listSteps() {
+  public getAll() {
     return this.steps;
   }
 
@@ -40,6 +50,14 @@ export class StepHistory {
    */
   public reset() {
     this.steps = [];
+  }
+
+  public pickStepByIds(stepIds: number[]) {
+    return this.steps.filter((step) => stepIds.includes(step.stepId!));
+  }
+
+  public latestStep() {
+    return this.steps[this.steps.length - 1];
   }
 
   toJSONString() {
