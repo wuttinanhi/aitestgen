@@ -3,16 +3,29 @@ import { FrameData } from "../interfaces/FrameData";
 import { IStep } from "../interfaces/Step";
 import { StepHistory } from "../steps/stephistory";
 
+// export interface IframeNode {
+//   id: string;
+//   parent: PageOrFrame | null;
+//   childs: PageOrFrame[];
+// }
+
 export class PuppeteerTestTranslator {
   private steps: IStep[];
-  private templateCode: string;
+
   private browserVar: string;
   private defaultPageVar: string = "page";
   private currentPageVar: string = "page";
+
+  private templateCode: string;
   private templatePlaceholder: string = "{{GENERATED_CODE}}";
   private generatedCode: string = ``;
+
   private lastGetIframeData: FrameData[] = [];
   private iframeDepth: number = 0;
+  private iframeVarStack: string[] = [];
+  private getIframeVarStack: string[] = [];
+
+  // private iframeTree: IframeNode[] = [];
 
   constructor(
     stepHistory: StepHistory,
@@ -143,29 +156,46 @@ await ${this.currentPageVar}.keyboard.press("${arg0}");
       case "iframeGetData":
         this.lastGetIframeData = step.iframeGetDataResult;
         this.iframeDepth += 1;
-        return `var baseFrame = ${this.defaultPageVar}.mainFrame();`;
+
+        let getMainframeFromVar = "";
+        let new_Get_Iframe_Var = "";
+        let getFrames_code = "";
+
+        if (this.iframeVarStack.length === 0) {
+          getMainframeFromVar = this.defaultPageVar;
+          new_Get_Iframe_Var = "baseFrame";
+          getFrames_code = `var rootFrame = ${getMainframeFromVar}.mainFrame();
+var ${new_Get_Iframe_Var} = rootFrame.childFrames();`;
+        } else {
+          // prettier-ignore
+          getMainframeFromVar = this.iframeVarStack[this.iframeVarStack.length - 1];
+          new_Get_Iframe_Var = `${getMainframeFromVar}_childFrames`;
+          getFrames_code = `var ${new_Get_Iframe_Var} = ${getMainframeFromVar}.childFrames();`;
+        }
+
+        this.getIframeVarStack.push(new_Get_Iframe_Var);
+
+        return getFrames_code;
 
       case "iframeSwitch":
         const iframeIndex = Number(arg0);
 
-        let out = ``;
+        let iframeSwitch_code = ``;
 
-        for (let i = 0; i < this.iframeDepth; i++) {
-          const prevFrameVar = i === 0 ? "baseFrame" : `iframe_${i - 1}`;
-          const newFrameVar = `iframe_${i}`;
+        const latestGetIframeVar = this.getIframeVarStack.at(-1);
 
-          if (i === 0) {
-            out += `var ${newFrameVar} = baseFrame.childFrames()[${iframeIndex}]\n`;
-          } else {
-            out += `var ${newFrameVar} = ${prevFrameVar}.childFrames()[${iframeIndex}]\n`;
-          }
+        const newIframeVar = `${latestGetIframeVar}_iframe${iframeIndex}`;
 
-          this.currentPageVar = newFrameVar;
-        }
+        iframeSwitch_code += `var ${newIframeVar} = ${latestGetIframeVar}[${iframeIndex}]\n`;
 
-        return out;
+        this.iframeVarStack.push(newIframeVar);
+        this.currentPageVar = newIframeVar;
+
+        return iframeSwitch_code;
 
       case "iframeReset":
+        this.currentPageVar = this.defaultPageVar;
+
         return `
 // reset to main frame
 ${this.currentPageVar} = ${this.defaultPageVar};

@@ -2,24 +2,9 @@ import OpenAI from "openai";
 import { WebTestFunctionCall } from "../engines/interfaces";
 import { FrameData } from "../interfaces/FrameData";
 import { IStep } from "../interfaces/Step";
-import { StepHistory } from "../steps/stephistory";
 import { ToolCallResult } from "../interfaces/ToolCallResult";
-
-export function toolCallResponse(
-  messageBuffer: any[],
-  toolCallId: any,
-  resultOBJ: any
-) {
-  const toolCallResponse = {
-    role: "tool",
-    content: JSON.stringify(resultOBJ),
-    tool_call_id: toolCallId,
-  } as OpenAI.ChatCompletionMessageParam;
-
-  messageBuffer.push(toolCallResponse);
-
-  console.log(`Return: ${JSON.stringify(resultOBJ).slice(0, 100)}`);
-}
+import { StepHistory } from "../steps/stephistory";
+import { toolCallResponse } from "./toolCallResponse";
 
 export async function handleToolCalls(
   engine: WebTestFunctionCall,

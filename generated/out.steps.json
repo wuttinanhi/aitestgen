@@ -1,1 +1,48 @@
-[{"methodName":"launchBrowser","args":[]},{"methodName":"navigateTo","args":["http://localhost:8080"]},{"methodName":"iframeGetData","args":[],"iframeGetDataResult":[{"index":0,"iframe_src_url":"http://localhost:8080/iframe1.html"}]},{"methodName":"iframeSwitch","args":[0]},{"methodName":"getHtmlSource","args":[]},{"methodName":"iframeGetData","args":[],"iframeGetDataResult":[{"index":0,"iframe_src_url":"http://localhost:8080/iframe2.html"}]},{"methodName":"iframeSwitch","args":[0]},{"methodName":"getHtmlSource","args":[]},{"methodName":"iframeGetData","args":[],"iframeGetDataResult":[{"index":0,"iframe_src_url":"http://localhost:8080/iframe3.html"}]},{"methodName":"iframeSwitch","args":[0]},{"methodName":"getHtmlSource","args":[]},{"methodName":"clickElement","args":["button","clickButton"],"variables":["clickButton"]},{"methodName":"expectElementVisible","args":["#showText",true,"showText"],"variables":["showText"]},{"methodName":"getHtmlSource","args":[]},{"methodName":"expectElementText","args":["#showText","CLICKED!","showTextText"],"variables":["showTextText"]},{"methodName":"closeBrowser","args":[]}]
+[
+  { "methodName": "launchBrowser", "args": [] },
+  { "methodName": "navigateTo", "args": ["http://localhost:8080"] },
+  {
+    "methodName": "iframeGetData",
+    "args": [],
+    "iframeGetDataResult": [
+      { "index": 0, "iframe_src_url": "http://localhost:8080/iframe1.html" }
+    ]
+  },
+  { "methodName": "iframeSwitch", "args": [0] },
+  { "methodName": "getHtmlSource", "args": [] },
+  {
+    "methodName": "iframeGetData",
+    "args": [],
+    "iframeGetDataResult": [
+      { "index": 0, "iframe_src_url": "http://localhost:8080/iframe2.html" }
+    ]
+  },
+  { "methodName": "iframeSwitch", "args": [0] },
+  { "methodName": "getHtmlSource", "args": [] },
+  {
+    "methodName": "iframeGetData",
+    "args": [],
+    "iframeGetDataResult": [
+      { "index": 0, "iframe_src_url": "http://localhost:8080/iframe3.html" }
+    ]
+  },
+  { "methodName": "iframeSwitch", "args": [0] },
+  { "methodName": "getHtmlSource", "args": [] },
+  {
+    "methodName": "clickElement",
+    "args": ["button", "clickButton"],
+    "variables": ["clickButton"]
+  },
+  {
+    "methodName": "expectElementVisible",
+    "args": ["#showText", true, "showText"],
+    "variables": ["showText"]
+  },
+  { "methodName": "getHtmlSource", "args": [] },
+  {
+    "methodName": "expectElementText",
+    "args": ["#showText", "CLICKED!", "showTextText"],
+    "variables": ["showTextText"]
+  },
+  { "methodName": "closeBrowser", "args": [] }
+]

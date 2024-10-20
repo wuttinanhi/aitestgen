@@ -1,4 +1,4 @@
-import puppeteer, { Browser, Frame, Page } from "puppeteer";
+import puppeteer, { Browser } from "puppeteer";
 
 describe("TESTSUITE", () => {
   let browser: Browser;
@@ -22,30 +22,37 @@ describe("TESTSUITE", () => {
 
     await page.goto("http://localhost:8080");
 
-    var baseFrame = page.mainFrame();
-    var iframe_0 = baseFrame.childFrames()[0];
+    var rootFrame = page.mainFrame();
+    var baseFrame = rootFrame.childFrames();
+    var baseFrame_iframe0 = baseFrame[0];
 
-    var baseFrame = page.mainFrame();
-    var iframe_0 = baseFrame.childFrames()[0];
-    var iframe_1 = iframe_0.childFrames()[0];
+    var baseFrame_iframe0_childFrames = baseFrame_iframe0.childFrames();
+    var baseFrame_iframe0_childFrames_iframe0 = baseFrame_iframe0_childFrames[0];
 
-    var baseFrame = page.mainFrame();
-    var iframe_0 = baseFrame.childFrames()[0];
-    var iframe_1 = iframe_0.childFrames()[0];
-    var iframe_2 = iframe_1.childFrames()[0];
+    var baseFrame_iframe0_childFrames_iframe0_childFrames =baseFrame_iframe0_childFrames_iframe0.childFrames();
+    var baseFrame_iframe0_childFrames_iframe0_childFrames_iframe0 =baseFrame_iframe0_childFrames_iframe0_childFrames[0];
 
-    var clickButton = await iframe_2.$("button");
+    var clickButton =
+      await baseFrame_iframe0_childFrames_iframe0_childFrames_iframe0.$(
+        "button"
+      );
     expect(clickButton).not.toBeNull();
     await clickButton!.click();
 
-    var showText = await iframe_2.$("#showText");
+    var showText =
+      await baseFrame_iframe0_childFrames_iframe0_childFrames_iframe0.$(
+        "#showText"
+      );
     expect(showText).not.toBeNull();
 
-    var showTextText = await iframe_2.$("#showText");
+    var showTextText =
+      await baseFrame_iframe0_childFrames_iframe0_childFrames_iframe0.$(
+        "#showText"
+      );
     expect(showTextText).not.toBeNull();
 
     const showTextText_text = await showTextText!.evaluate(
-      (e) => e.textContent,
+      (e) => e.textContent
     );
     expect(showTextText_text).toBe("CLICKED!");
     await browser.close();
