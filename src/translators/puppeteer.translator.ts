@@ -74,7 +74,8 @@ export class PuppeteerTranslator {
       case "switchTab":
         return `await ${this.browserVar}.switchTab(${stepArgs});`;
       case "closeBrowser":
-        return `await ${this.browserVar}.close();`;
+        return `
+await ${this.browserVar}.close();`;
       case "navigateTo":
         return `
 await ${this.currentPageVar}.goto("${arg0}");
@@ -118,16 +119,14 @@ expect(${varName0}_text).toBe("${arg1}");`;
 
       case "waitForPageLoad":
         return `
-  // wait for page load
-  await Promise.race([
-    ${this.currentPageVar}.waitForNavigation({
+async function waitForNavigation() {
+  try {
+    await ${this.currentPageVar}.waitForNavigation({
       waitUntil: "networkidle0",
-      timeout: 10000,
-    }),
-    ${this.currentPageVar}.waitForNetworkIdle({
-      timeout: 10000,
-    }),
-  ]);
+    });
+  } catch (error) {}
+}
+await waitForNavigation();
           `;
       case "pressKey":
         return `

@@ -4,10 +4,10 @@ import { StepHistory } from "./steps/stephistory";
 import { PuppeteerTranslator } from "./translators/puppeteer.translator";
 
 async function testGenerator() {
-  const IN_STEP_HISTORY_PATH = "generated/out.steps.json";
-  const OUT_GENTEST_PATH = "generated/app.test.ts";
+  const IN_STEPS = "generated/out.steps.selected.json";
+  const OUT_GENTEST = "generated/app.test.ts";
 
-  const stepHistoryString = await readFileString(IN_STEP_HISTORY_PATH);
+  const stepHistoryString = await readFileString(IN_STEPS);
 
   const TEMPLATE_CODE = await readFileString("templates/puppeteer_template.ts");
 
@@ -25,11 +25,11 @@ async function testGenerator() {
   try {
     // generate the test code
     let generatedTestCode = await puppeteerTestGen.generate();
-    await writeFileString(OUT_GENTEST_PATH, generatedTestCode);
+    await writeFileString(OUT_GENTEST, generatedTestCode);
 
     // try formatting the generated code
     let formattedCode = await formatTSCode(generatedTestCode);
-    await writeFileString(OUT_GENTEST_PATH, formattedCode);
+    await writeFileString(OUT_GENTEST, formattedCode);
   } catch (error) {
     console.error("Error generating test code", error);
   }

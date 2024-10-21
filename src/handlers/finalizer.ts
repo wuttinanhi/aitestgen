@@ -38,12 +38,14 @@ export async function handleFinalize(
 
   const toolCall = choice.message.tool_calls[0];
 
-  const _ = toolCall.function.name;
+  const functionName = toolCall.function.name;
   const functionArguments: FinalizeParamsType = JSON.parse(
     toolCall.function.arguments
   );
 
   const selectedSteps = functionArguments.steps;
+
+  console.log(`Invoking tools: ${functionName}`);
 
   appendToolCallResponse(messageBuffer, toolCall, {
     status: "success",

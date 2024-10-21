@@ -14,9 +14,10 @@ async function testGenWrapper() {
   const SYSTEM_INSTRUCTION_PROMPT = await readFileString("prompts/system_instruction_prompt.txt");
   // prettier-ignore
   const SYSTEM_FINALIZE_PROMPT = await readFileString("prompts/system_finalize_prompt.txt");
-  const USER_PROMPT = await readFileString("prompts/example1.txt");
+
   const TEMPLATE_CODE = await readFileString("templates/puppeteer_template.ts");
 
+  const USER_PROMPT = await readFileString("prompts/example_stripe.txt");
   console.log("User Prompt\n", USER_PROMPT);
 
   const openai = new OpenAI();

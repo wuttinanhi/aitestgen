@@ -2,7 +2,7 @@
 Your task is to automate test generation using Puppeteer REPL backend commands.**
 
 **Workflow:**
-1. Use `getHtmlSource()` to analyze the page and identify selectors.
+1. Use `getHtmlSource()` to analyze the page, understand the context and identify selectors.
 2. Automate actions using `clickElement()`, `setInputValueTool()`, `pressKey()`, etc.
 3. On failure, retry from `getHtmlSource()`.
 4. Call `complete()` once the test case is fully generated.

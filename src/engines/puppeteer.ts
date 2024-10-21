@@ -45,7 +45,7 @@ export class PuppeteerEngine implements WebTestFunctionCall {
   async waitForNavigation() {
     try {
       await this.getActivePage().waitForNavigation({
-        waitUntil: "load",
+        waitUntil: "networkidle0",
         timeout: 5_000,
       });
     } catch (error) {}

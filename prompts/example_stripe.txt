@@ -9,3 +9,6 @@ VARIABLES:
     - card_holder_name: John Doe
 
 PROMPT: buy a product and expect successful message after payment
+
+HINTS:
+- the buy button selector on first page is `#__next > div > main > div.shadow-lg.border.rounded.p-2 > button`

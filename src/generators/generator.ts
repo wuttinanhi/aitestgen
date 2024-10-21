@@ -41,7 +41,7 @@ export async function testStepGen(
         temperature: 0.0,
       });
 
-      console.log(`Loop: ${i}`);
+      console.log(`\n\nLoop: ${i}`);
 
       const choice = response.choices[0];
 

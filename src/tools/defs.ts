@@ -104,7 +104,7 @@ export const expectElementVisibleTool = zodFunction({
   name: "expectElementVisible",
   parameters: expectElementVisibleParams,
   description:
-    "Expect the element that matches the given selector to be visible",
+    "Expect the element that matches the given selector to be visible (please use `getHtmlSource` before call this because you need up to date selector)",
 });
 
 export const expectElementTextParams = z.object({
@@ -122,7 +122,7 @@ export const expectElementTextTool = zodFunction({
   name: "expectElementText",
   parameters: expectElementTextParams,
   description:
-    "Expect the element that matches the given selector to have the given text",
+    "Expect the element that matches the given selector to have the given text (please use `getHtmlSource` before call this because you need up to date selector)",
 });
 
 export const getCurrentUrlParams = z.object({});

@@ -1,4 +1,4 @@
-import puppeteer, { Browser, Frame, Page } from "puppeteer";
+import puppeteer, { Browser } from "puppeteer";
 
 describe("TESTSUITE", () => {
   let browser: Browser;
@@ -20,31 +20,61 @@ describe("TESTSUITE", () => {
   it("TESTCASE_1", async () => {
     let page = await browser.newPage();
 
-    await page.goto("http://localhost:3000");
+    await page.goto("https://stripe-checkout-next-js-demo.vercel.app/");
 
-    var nameInput = await page.$("#name");
-    expect(nameInput).not.toBeNull();
+    var quantityInput = await page.$("input[type='number']");
+    expect(quantityInput).not.toBeNull();
 
-    await nameInput!.type("John Doe");
+    await quantityInput!.type("1");
+
+    var buyButton = await page.$(
+      "#__next > div > main > div.shadow-lg.border.rounded.p-2 > button"
+    );
+    expect(buyButton).not.toBeNull();
+    await buyButton!.click();
+
+    async function waitForNavigation() {
+      try {
+        await page.waitForNavigation({
+          waitUntil: "networkidle0",
+          timeout: 100_000,
+        });
+      } catch (error) {}
+    }
+    await waitForNavigation();
 
     var emailInput = await page.$("#email");
     expect(emailInput).not.toBeNull();
 
     await emailInput!.type("john@example.com");
 
-    var messageInput = await page.$("#message");
-    expect(messageInput).not.toBeNull();
+    var cardNumberInput = await page.$("#cardNumber");
+    expect(cardNumberInput).not.toBeNull();
 
-    await messageInput!.type("Hello, I would like to know more about your services!");
+    await cardNumberInput!.type("4242 4242 4242 4242");
 
-    var submitButton = await page.$("button[type='submit']");
-    expect(submitButton).not.toBeNull();
-    await submitButton!.click();
+    var cardExpiryInput = await page.$("#cardExpiry");
+    expect(cardExpiryInput).not.toBeNull();
 
-    var successMessageHeader = await page.$("h1");
-    expect(successMessageHeader).not.toBeNull();
+    await cardExpiryInput!.type("12/30");
 
-    const successMessageHeader_text = await successMessageHeader!.evaluate((e) => e.textContent);
-    expect(successMessageHeader_text).toBe("Thank you for your message!");
+    var cardCvcInput = await page.$("#cardCvc");
+    expect(cardCvcInput).not.toBeNull();
+
+    await cardCvcInput!.type("123");
+
+    var cardHolderNameInput = await page.$("#billingName");
+    expect(cardHolderNameInput).not.toBeNull();
+
+    await cardHolderNameInput!.type("John Doe");
+
+    var payButton = await page.$(".SubmitButton");
+    expect(payButton).not.toBeNull();
+    await payButton!.click();
+
+    var successMessage = await page.$(".bg-green-100");
+    expect(successMessage).not.toBeNull();
+
+    await browser.close();
   });
 });
