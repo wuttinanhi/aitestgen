@@ -37,7 +37,6 @@ describe("TESTSUITE", () => {
       try {
         await page.waitForNavigation({
           waitUntil: "networkidle0",
-          timeout: 100_000,
         });
       } catch (error) {}
     }
@@ -71,6 +70,8 @@ describe("TESTSUITE", () => {
     var payButton = await page.$(".SubmitButton");
     expect(payButton).not.toBeNull();
     await payButton!.click();
+
+    await waitForNavigation();
 
     var successMessage = await page.$(".bg-green-100");
     expect(successMessage).not.toBeNull();
