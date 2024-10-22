@@ -8,6 +8,7 @@ import {
   PageNotFoundError,
 } from "./errors";
 import { WebTestFunctionCall } from "./interfaces";
+import { SelectorStorage, SelectorType } from "./selector";
 
 export class PuppeteerEngine implements WebTestFunctionCall {
   private browser: Browser | null = null;
@@ -15,7 +16,8 @@ export class PuppeteerEngine implements WebTestFunctionCall {
 
   private lastPageBeforeEnterIframe: Page | Frame | null = null;
   private isInRootFrame: boolean = true;
-  // private currentCSSSelector = [];
+
+  private varNameToSelectorMap: Record<string, SelectorStorage> = {};
 
   getActivePage(): Page | Frame {
     const page = this.activePage;
@@ -34,12 +36,13 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     return tabs.at(-1);
   }
 
-  async getElement(selector: string) {
-    const selectedElement = await this.getActivePage().$(selector);
-    if (!selectedElement) {
+  async getElement(selectorVarName: string) {
+    const selector = this.varNameToSelectorMap[selectorVarName];
+    if (!selector) {
       throw new ElementNotFoundError();
     }
-    return selectedElement;
+
+    return selector;
   }
 
   async waitForNavigation() {
@@ -105,17 +108,13 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     };
   }
 
-  async validateElement(selector: string): Promise<boolean> {
-    const element = await this.getActivePage().$(selector);
-    return element !== null;
-  }
-
-  async clickElement(selector: string, _: string): Promise<any> {
-    const selectedElement = await this.getElement(selector);
+  async clickElement(selectorVarName: string, _: string): Promise<any> {
+    // prettier-ignore
+    const element = (await this.getElement(selectorVarName)).getEngineSelector();
 
     const beforeURL = this.getActivePage().url();
 
-    await selectedElement.click();
+    await element.click();
 
     await this.waitForPageLoad();
 
@@ -129,38 +128,43 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     };
   }
 
-  async setInputValue(selector: string, value: any): Promise<any> {
-    const selectedElement = await this.getElement(selector);
+  async setInputValue(selectorVarName: string, value: any): Promise<any> {
+    // prettier-ignore
+    const element = (await this.getElement(selectorVarName)).getEngineSelector();
 
     // set input to empty first
-    await selectedElement.evaluate((el) => {
+    await element.evaluate((el) => {
       (el as HTMLInputElement).value = "";
     });
 
     // focus the element
-    await selectedElement.focus();
+    await element.focus();
 
     // type the value
-    await selectedElement.type(String(value));
+    await element.type(String(value));
   }
 
   async expectElementVisible(
-    selector: string,
+    selectorVarName: string,
     visible: boolean,
     _: string
   ): Promise<any> {
-    const element = await this.getActivePage().$(selector);
+    // prettier-ignore
+    const element = (await this.getElement(selectorVarName)).getEngineSelector();
+
     const isVisible =
       element !== null && (await element.boundingBox()) !== null;
+
     return {
       evaluate_result: isVisible === visible,
     };
   }
 
-  async expectElementText(selector: string, text: string, _: string) {
-    const selectedElement = await this.getElement(selector);
+  async expectElementText(selectorVarName: string, text: string, _: string) {
+    // prettier-ignore
+    const element = (await this.getElement(selectorVarName)).getEngineSelector();
 
-    const elementText = await selectedElement.evaluate((el) => el.textContent);
+    const elementText = await element.evaluate((el) => el.textContent);
 
     return {
       evaluate_result: elementText === text,
@@ -177,9 +181,12 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     return this.getActivePage().url();
   }
 
-  async getInputValue(selector: string): Promise<string> {
-    return this.getActivePage()
-      .$eval(selector, (el) => (el as HTMLInputElement).value)
+  async getInputValue(selectorVarName: string): Promise<string> {
+    // prettier-ignore
+    const element = (await this.getElement(selectorVarName)).getEngineSelector();
+
+    return element
+      .evaluate((el) => (el as HTMLInputElement).value)
       .catch(() => "");
   }
 
@@ -210,14 +217,16 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     this.activePage = latestTab;
   }
 
-  async setOptionValue(selector: string, value: any): Promise<any> {
-    const selectedElement = await this.getElement(selector);
-    await selectedElement.select(value);
+  async setOptionValue(selectorVarName: string, value: any): Promise<any> {
+    // prettier-ignore
+    const element = (await this.getElement(selectorVarName)).getEngineSelector();
+    await element.select(value);
   }
 
-  async getOptionValue(selector: string): Promise<string> {
-    const selectedElement = await this.getElement(selector);
-    const value = await selectedElement.evaluate((el) => {
+  async getOptionValue(selectorVarName: string): Promise<string> {
+    // prettier-ignore
+    const element = (await this.getElement(selectorVarName)).getEngineSelector();
+    const value = await element.evaluate((el) => {
       return (el as HTMLSelectElement).value;
     });
     return value;
@@ -308,5 +317,54 @@ export class PuppeteerEngine implements WebTestFunctionCall {
   async goForwardHistory(): Promise<void> {
     const page = this.getActivePage() as Page;
     await page.goForward();
+  }
+
+  async createSelectorVariable(
+    varNameInTest: string,
+    selectorType: SelectorType,
+    selectorValue: string
+  ) {
+    let page: Page = this.getActivePage() as Page;
+    if (!page) {
+      throw new PageNotFoundError();
+    }
+
+    let engineSelector: any | null = null;
+    switch (selectorType) {
+      case "css":
+        engineSelector = await page.waitForSelector(selectorValue);
+        break;
+      case "xpath":
+        // prettier-ignore
+        engineSelector = await page.waitForSelector( `::-p-xpath(${selectorValue})`);
+        break;
+      case "id":
+        engineSelector = await page.waitForSelector(`#${selectorValue}`);
+        break;
+      // case "name":
+      //   engineSelector = await page.waitForSelector(`[name="${selectorValue}"]`);
+      //   break;
+      // case "tag":
+      //   engineSelector = await page.waitForSelector(selectorValue);
+      //   break;
+      // case "class":
+      //   engineSelector = await page.waitForSelector(`.${selectorValue}`);
+      // break;
+      default:
+        throw new Error("Unknown selector type");
+    }
+
+    if (!engineSelector) {
+      throw new ElementNotFoundError();
+    }
+
+    const storage = new SelectorStorage(
+      selectorType,
+      selectorValue,
+      engineSelector
+    );
+    this.varNameToSelectorMap[varNameInTest] = storage;
+
+    return;
   }
 }

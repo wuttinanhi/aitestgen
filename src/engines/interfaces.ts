@@ -9,19 +9,19 @@ export interface WebTestFunctionCall {
   getCurrentUrl(): Promise<string>;
   getHtmlSource(): Promise<any>;
   // Interaction
-  clickElement(selector: string, varNameInTest: string): Promise<any>;
-  setInputValue(selector: string, value: any): Promise<any>;
-  getInputValue(selector: string): Promise<string>;
-  setOptionValue(selector: string, value: any): Promise<any>;
-  getOptionValue(selector: string): Promise<string>;
+  clickElement(varSelector: string, varNameInTest: string): Promise<any>;
+  setInputValue(varSelector: string, value: any): Promise<any>;
+  getInputValue(varSelector: string): Promise<string>;
+  setOptionValue(varSelector: string, value: any): Promise<any>;
+  getOptionValue(varSelector: string): Promise<string>;
   // Expect
   expectElementVisible(
-    selector: string,
+    varSelector: string,
     visible: boolean,
     varNameInTest: string
   ): Promise<any>;
   expectElementText(
-    selector: string,
+    varSelector: string,
     text: string,
     varNameInTest: string
   ): Promise<any>;
@@ -37,4 +37,10 @@ export interface WebTestFunctionCall {
   iframeGetData(): Promise<any>;
   iframeSwitch(index: any): Promise<void>;
   iframeReset(): Promise<void>;
+  // Selector
+  createSelectorVariable(
+    varNameInTest: string,
+    selectorType: string,
+    selectorValue: string
+  ): Promise<any>;
 }
