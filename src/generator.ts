@@ -1,8 +1,8 @@
 import OpenAI from "openai";
-import { testStepGen as testStepGenerator } from "./generators/generator";
 import { handleFinalize } from "./handlers/finalizer";
 import { readFileString, writeFileString } from "./helpers/files";
 import { formatTSCode } from "./helpers/formatter";
+import { TestStepGenerator } from "./steps/generator";
 import { PuppeteerTranslator } from "./translators/puppeteer.translator";
 
 async function testGenWrapper() {
@@ -25,31 +25,31 @@ async function testGenWrapper() {
   let TOTAL_TOKEN_USED = 0;
 
   try {
-    const result = await testStepGenerator(
-      SYSTEM_INSTRUCTION_PROMPT,
-      USER_PROMPT,
-      25,
+    const testStepGenerator = new TestStepGenerator(
       openai,
-      messageBuffer
+      SYSTEM_INSTRUCTION_PROMPT,
+      SYSTEM_FINALIZE_PROMPT
     );
-    TOTAL_TOKEN_USED += result.totalTokens;
+
+    const result = await testStepGenerator.generate(USER_PROMPT, messageBuffer);
+    TOTAL_TOKEN_USED += result.getTotalTokens();
 
     // write step history to file
     await writeFileString(
       OUT_STEP_ALL,
-      JSON.stringify(result.stepHistory.getAll())
+      JSON.stringify(result.getStepHistory().getAll())
     );
 
     const finalizeResult = await handleFinalize(
       SYSTEM_FINALIZE_PROMPT,
       openai,
       messageBuffer,
-      result.stepHistory
+      result.getStepHistory()
     );
 
-    const selectedSteps = result.stepHistory.pickStepByIds(
-      finalizeResult.selectedSteps
-    );
+    const selectedSteps = result
+      .getStepHistory()
+      .pickStepByIds(finalizeResult.selectedSteps);
     TOTAL_TOKEN_USED += finalizeResult.totalTokens;
 
     // write step history to file

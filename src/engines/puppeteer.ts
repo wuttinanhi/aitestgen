@@ -114,13 +114,14 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     const selectedElement = await this.getElement(selector);
 
     const beforeURL = this.getActivePage().url();
+
     await selectedElement.click();
 
     await this.waitForPageLoad();
 
     const afterURL = this.getActivePage().url();
-    const pageChanged = beforeURL !== afterURL;
 
+    const pageChanged = beforeURL !== afterURL;
     return {
       pageChanged,
       beforeURL,
