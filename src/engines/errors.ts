@@ -15,3 +15,9 @@ export class BrowserAlreadyLaunchedError extends Error {
     super("Browser already launched");
   }
 }
+
+export class ElementBySelectorNotFoundError extends Error {
+  constructor(selectorType: string, selectorValue: string) {
+    super(`Element not found with type ${selectorType} "${selectorValue}"`);
+  }
+}

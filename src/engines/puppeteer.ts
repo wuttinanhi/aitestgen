@@ -25,6 +25,7 @@ import {
 } from "../tools/defs";
 import {
   BrowserAlreadyLaunchedError,
+  ElementBySelectorNotFoundError,
   ElementNotFoundError,
   PageNotFoundError,
 } from "./errors";
@@ -369,11 +370,11 @@ export class PuppeteerEngine implements WebTestFunctionCall {
       //   engineSelector = await page.waitForSelector(`.${selectorValue}`);
       // break;
       default:
-        throw new Error("Unknown selector type");
+        throw new Error("Unknown selector type " + selectorType);
     }
 
     if (!engineSelector) {
-      throw new ElementNotFoundError();
+      throw new ElementBySelectorNotFoundError(selectorType, selectorValue);
     }
 
     const storage = new SelectorStorage(

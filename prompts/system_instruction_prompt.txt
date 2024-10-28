@@ -17,3 +17,4 @@ Your task is to automate test generation using Puppeteer REPL backend commands.*
 - Do not use `reset()` unless necessary.
 - Do not use `reset()` when you can't find a selector.
 - Do not use `reset()` when expect functions return like `{ "evaluate_result":false }` try changing the selector.
+- Besure to use `createSelectorVariable` to create selector variable first before using tool that requires selector variable.

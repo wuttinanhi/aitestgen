@@ -7,3 +7,6 @@ Tasks:
 
 Prompt:
 Add tasks to the list and assert 3 tasks are added to the list.
+
+Hints:
+The added task span selector is `#tasks > li:nth-child(2) > label > span` where nth-child start at 2.

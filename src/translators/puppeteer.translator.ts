@@ -251,14 +251,14 @@ export class PuppeteerTranslator implements WebTestFunctionCall {
 
     switch (selectorType) {
       case "css":
-        result = `const ${varNameInTest} = await ${this.currentPageVar}.waitForSelector(\`${selectorValue}\`);`;
+        result = `var ${varNameInTest} = await ${this.currentPageVar}.waitForSelector(\`${selectorValue}\`);`;
         break;
       case "xpath":
         // prettier-ignore
-        result = `const ${varNameInTest} = await ${this.currentPageVar}.waitForSelector(\`::-p-xpath(${selectorValue})\`);`
+        result = `var ${varNameInTest} = await ${this.currentPageVar}.waitForSelector(\`::-p-xpath(${selectorValue})\`);`
         break;
       case "id":
-        result = `const ${varNameInTest} = await ${this.currentPageVar}.waitForSelector(\`#${selectorValue}\`);`;
+        result = `var ${varNameInTest} = await ${this.currentPageVar}.waitForSelector(\`#${selectorValue}\`);`;
         break;
       default:
         throw new Error("Unknown selector type");
