@@ -27,8 +27,7 @@ async function testGenWrapper() {
   try {
     const testStepGenerator = new TestStepGenerator(
       openai,
-      SYSTEM_INSTRUCTION_PROMPT,
-      SYSTEM_FINALIZE_PROMPT
+      SYSTEM_INSTRUCTION_PROMPT
     );
 
     const result = await testStepGenerator.generate(USER_PROMPT, messageBuffer);

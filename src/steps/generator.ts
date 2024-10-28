@@ -9,17 +9,11 @@ import { StepHistory } from "./stephistory";
 export class TestStepGenerator {
   private llm: OpenAI;
   private systemInstructionPrompt: string;
-  private systemFinalizePrompt: string;
   private loopHardLimit: number = 30;
 
-  constructor(
-    llm: OpenAI,
-    systemInstructionPrompt: string,
-    systemFinalizePrompt: string
-  ) {
+  constructor(llm: OpenAI, systemInstructionPrompt: string) {
     this.llm = llm;
     this.systemInstructionPrompt = systemInstructionPrompt;
-    this.systemFinalizePrompt = systemFinalizePrompt;
   }
 
   setHardLoopLimit(hardLoopLimit: number) {
