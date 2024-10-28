@@ -21,18 +21,18 @@ describe("TESTSUITE", () => {
   it("TESTCASE_1", async () => {
     let page = await browser.newPage();
 
-    await page.goto("https://stripe-checkout-next-js-demo.vercel.app/");
+    await page.goto("http://localhost:3000");
 
-    var quantityInput = await page.$("input[type='number']");
-    expect(quantityInput).not.toBeNull();
-
-    await quantityInput!.type("1");
-
-    var buyButton = await page.$(
-      "#__next > div > main > div.shadow-lg.border.rounded.p-2 > button"
+    const nameInput = await page.waitForSelector(`#name`);
+    const emailInput = await page.waitForSelector(`#email`);
+    const messageInput = await page.waitForSelector(`#message`);
+    const submitButton = await page.waitForSelector(`button[type='submit']`);
+    await nameInput!.type("John Doe");
+    await emailInput!.type("john@example.com");
+    await messageInput!.type(
+      "Hello, I would like to know more about your services!"
     );
-    expect(buyButton).not.toBeNull();
-    await buyButton!.click();
+    await submitButton!.click();
 
     async function waitForNavigation() {
       try {
@@ -41,41 +41,21 @@ describe("TESTSUITE", () => {
         });
       } catch (error) {}
     }
-    await waitForNavigation();
-
-    var emailInput = await page.$("#email");
-    expect(emailInput).not.toBeNull();
-
-    await emailInput!.type("john@example.com");
-
-    var cardNumberInput = await page.$("#cardNumber");
-    expect(cardNumberInput).not.toBeNull();
-
-    await cardNumberInput!.type("4242 4242 4242 4242");
-
-    var cardExpiryInput = await page.$("#cardExpiry");
-    expect(cardExpiryInput).not.toBeNull();
-
-    await cardExpiryInput!.type("12/30");
-
-    var cardCvcInput = await page.$("#cardCvc");
-    expect(cardCvcInput).not.toBeNull();
-
-    await cardCvcInput!.type("123");
-
-    var cardHolderNameInput = await page.$("#billingName");
-    expect(cardHolderNameInput).not.toBeNull();
-
-    await cardHolderNameInput!.type("John Doe");
-
-    var payButton = await page.$(".SubmitButton");
-    expect(payButton).not.toBeNull();
-    await payButton!.click();
 
     await waitForNavigation();
 
-    var successMessage = await page.$(".bg-green-100");
-    expect(successMessage).not.toBeNull();
+    const successMessage = await page.waitForSelector(`h1`);
+    const successText = await page.waitForSelector(`p`);
+
+    const successMessage_text = await successMessage!.evaluate(
+      (e) => e.textContent
+    );
+    expect(successMessage_text).toBe("Thank you for your message!");
+
+    const successText_text = await successText!.evaluate((e) => e.textContent);
+    expect(successText_text).toBe(
+      "Your message has been received, and we will get back to you shortly."
+    );
 
     await browser.close();
   });

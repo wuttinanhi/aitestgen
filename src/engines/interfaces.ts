@@ -26,35 +26,35 @@ import {
 
 export interface WebTestFunctionCall {
   // Browser
-  launchBrowser(params: TypeLaunchBrowserParams): Promise<void>;
-  closeBrowser(params: TypeCloseBrowserParams): Promise<void>;
-  reset(params: TypeResetParams): Promise<void>;
+  launchBrowser(params: TypeLaunchBrowserParams): Promise<any>;
+  closeBrowser(params: TypeCloseBrowserParams): Promise<any>;
+  reset(params: TypeResetParams): Promise<any>;
   // Special
-  complete(params: TypeCompleteParams): Promise<void>;
+  complete(params: TypeCompleteParams): Promise<any>;
   // Data
-  getCurrentUrl(params: TypeGetCurrentUrlParams): Promise<string>;
+  getCurrentUrl(params: TypeGetCurrentUrlParams): Promise<any>;
   getHtmlSource(params: TypeGetHtmlSourceParams): Promise<any>;
   // Interaction
   clickElement(params: TypeClickElementParams): Promise<any>;
   setInputValue(params: TypeSetInputValueParams): Promise<any>;
-  getInputValue(params: TypeGetInputValueParams): Promise<string>;
+  getInputValue(params: TypeGetInputValueParams): Promise<any>;
   setOptionValue(params: TypeSetOptionValueParams): Promise<any>;
-  getOptionValue(params: TypeGetOptionValueParams): Promise<string>;
+  getOptionValue(params: TypeGetOptionValueParams): Promise<any>;
   // Expect
   expectElementVisible(params: TypeExpectElementVisibleParams): Promise<any>;
   expectElementText(params: TypeExpectElementTextParams): Promise<any>;
   // Navigation
-  navigateTo(params: TypeNavigateToParams): Promise<void>;
-  goBackHistory(params: TypeGoBackHistoryParams): Promise<void>;
-  goForwardHistory(params: TypeGoForwardHistoryParams): Promise<void>;
+  navigateTo(params: TypeNavigateToParams): Promise<any>;
+  goBackHistory(params: TypeGoBackHistoryParams): Promise<any>;
+  goForwardHistory(params: TypeGoForwardHistoryParams): Promise<any>;
   // Tabs
   getTabs(params: TypeGetTabsParams): Promise<any>;
-  setTab(params: TypeSetTabParams): Promise<void>;
-  closeTab(params: TypeCloseTabParams): Promise<void>;
+  setTab(params: TypeSetTabParams): Promise<any>;
+  closeTab(params: TypeCloseTabParams): Promise<any>;
   // Iframe
   iframeGetData(params: TypeIframeGetDataParams): Promise<any>;
-  iframeSwitch(params: TypeIframeSwitchParams): Promise<void>;
-  iframeReset(params: TypeIframeResetParams): Promise<void>;
+  iframeSwitch(params: TypeIframeSwitchParams): Promise<any>;
+  iframeReset(params: TypeIframeResetParams): Promise<any>;
   // Selector
   createSelectorVariable(
     params: TypeCreateSelectorVariableParams
