@@ -1,4 +1,4 @@
-import { zodFunction } from "openai/helpers/zod.mjs";
+import { zodFunction } from "openai/helpers/zod";
 import z from "zod";
 
 export const finalizeParams = z.object({

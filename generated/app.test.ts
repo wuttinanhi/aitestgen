@@ -1,4 +1,5 @@
 import puppeteer, { Browser } from "puppeteer";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 describe("TESTSUITE", () => {
   let browser: Browser;

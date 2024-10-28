@@ -1,9 +1,10 @@
 import OpenAI from "openai";
-import { handleFinalize } from "../src/handlers/finalizer";
-import { readFileString, writeFileString } from "../src/helpers/files";
-import { formatTSCode } from "../src/helpers/formatter";
-import { TestStepGenerator } from "../src/steps/generator";
-import { PuppeteerTranslator } from "../src/translators/puppeteer.translator";
+import { test } from "vitest";
+import { handleFinalize } from "./handlers/finalizer.js";
+import { readFileString, writeFileString } from "./helpers/files.js";
+import { formatTSCode } from "./helpers/formatter.js";
+import { TestStepGenerator } from "./steps/generator.js";
+import { PuppeteerTranslator } from "./translators/puppeteer.translator.js";
 
 test("should generate working test", async () => {
   const OUT_GENTEST_PATH = "generated/app.test.ts";

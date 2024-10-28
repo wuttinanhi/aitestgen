@@ -98,5 +98,10 @@
     "skipLibCheck": true, /* Skip type checking all .d.ts files. */
     "module": "NodeNext",
     "target": "es2017"
-  }
+  },
+  "include": [
+    "src/**/*.ts",
+    "tests/**/*.ts",
+    "tests/**/*.test.ts"
+  ],
 }
