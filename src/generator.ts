@@ -1,9 +1,9 @@
 import OpenAI from "openai";
-import { handleFinalize } from "./handlers/finalizer";
-import { readFileString, writeFileString } from "./helpers/files";
-import { formatTSCode } from "./helpers/formatter";
-import { TestStepGenerator } from "./steps/generator";
-import { PuppeteerTranslator } from "./translators/puppeteer.translator";
+import { handleFinalize } from "./handlers/finalizer.js";
+import { readFileString, writeFileString } from "./helpers/files.js";
+import { formatTSCode } from "./helpers/formatter.js";
+import { TestStepGenerator } from "./steps/generator.js";
+import { PuppeteerTranslator } from "./translators/puppeteer.translator.js";
 
 async function testGenWrapper() {
   const OUT_GENTEST_PATH = "generated/app.test.ts";
@@ -17,7 +17,7 @@ async function testGenWrapper() {
 
   const TEMPLATE_CODE = await readFileString("templates/puppeteer_template.ts");
 
-  const USER_PROMPT = await readFileString("prompts/example_stripe.txt");
+  const USER_PROMPT = await readFileString("prompts/example_contact_form.txt");
   console.log("User Prompt\n", USER_PROMPT);
 
   const openai = new OpenAI();

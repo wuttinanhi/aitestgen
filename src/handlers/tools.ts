@@ -14,17 +14,19 @@ export async function handleToolCalls(
   toolCall: OpenAI.Chat.Completions.ChatCompletionMessageToolCall
 ): Promise<ToolCallResult> {
   const functionName = toolCall.function.name;
-  const functionArguments = JSON.parse(toolCall.function.arguments);
-  const functionArgsValue = Object.values(functionArguments);
-  const argsAny = functionArgsValue as any;
-  const variables = functionArguments["varName"];
+  const functionArgs = JSON.parse(toolCall.function.arguments);
 
-  console.log(
-    `Invoking tools: ${functionName} ${argsAny ? `with args ${argsAny}` : "null"}`
-  );
-  if (variables) {
-    console.log(`Variable: ${variables}`);
-  }
+  // const functionArguments = JSON.parse(toolCall.function.arguments);
+  // const functionArgsValue = Object.values(functionArguments);
+  // const argsAny = functionArgsValue as any;
+  // const variables = functionArguments["varName"];
+
+  console.log(`Invoking tool name: ${functionName}`);
+  console.log(`Invoking tool args: ${functionArgs}`);
+
+  // if (variables) {
+  //   console.log(`Variable: ${variables}`);
+  // }
 
   try {
     // loop each variable name and check if it has been declared before
@@ -45,7 +47,7 @@ export async function handleToolCalls(
         const closeBrowserStep: IStep = {
           stepId: 0,
           methodName: "closeBrowser",
-          args: [],
+          functionArgs: {},
         };
         stepBuffer.createStep(closeBrowserStep);
       }
@@ -60,7 +62,7 @@ export async function handleToolCalls(
 
     // if function name is reset, then reset the engine
     if (functionName === "reset") {
-      await engine.reset();
+      await engine.reset({});
       stepBuffer.reset();
       uniqueVariableNamesBuffer.length = 0; // clear the unique variable names
 
@@ -75,7 +77,8 @@ export async function handleToolCalls(
     // Basic function invocation
     // Invoke the function with the extracted arguments
     // prettier-ignore
-    let result = await (engine as any)[functionName](...functionArgsValue);
+    // let result = await (engine as any)[functionName](...functionArgsValue);
+    let result = await (engine as any)[functionName](functionArgs);
 
     if (result === undefined || result === null) {
       result = { status: "success" };
@@ -85,13 +88,13 @@ export async function handleToolCalls(
     const step: IStep = {
       stepId: 0,
       methodName: functionName,
-      args: argsAny,
+      functionArgs: functionArgs,
     };
 
     // if step have variables, add them to the step
-    if (functionArguments["varName"]) {
-      step.variables = [functionArguments["varName"]];
-    }
+    // if (functionArguments["varName"]) {
+    //   step.variables = [functionArguments["varName"]];
+    // }
 
     // if command is "iframeGetData" then add the returned data to the step
     if (functionName === "iframeGetData") {
@@ -115,7 +118,7 @@ export async function handleToolCalls(
       const waitForPageLoadStep: IStep = {
         stepId: 0,
         methodName: "waitForPageLoad",
-        args: [],
+        functionArgs: {},
       };
       stepBuffer.createStep(waitForPageLoadStep);
     }

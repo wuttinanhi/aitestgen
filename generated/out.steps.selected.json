@@ -1,70 +1,105 @@
 [
-  { "stepId": 0, "methodName": "launchBrowser", "args": [] },
+  { "stepId": 0, "methodName": "launchBrowser", "functionArgs": {} },
   {
     "stepId": 1,
     "methodName": "navigateTo",
-    "args": ["https://stripe-checkout-next-js-demo.vercel.app/"]
+    "functionArgs": { "url": "http://localhost:3000" }
   },
-  { "stepId": 2, "methodName": "getHtmlSource", "args": [] },
+  { "stepId": 2, "methodName": "getHtmlSource", "functionArgs": {} },
   {
     "stepId": 3,
-    "methodName": "setInputValue",
-    "args": ["input[type='number']", "1", "quantityInput"],
-    "variables": ["quantityInput"]
+    "methodName": "createSelectorVariable",
+    "functionArgs": {
+      "varName": "nameInput",
+      "selectorType": "id",
+      "selectorValue": "name"
+    }
   },
   {
     "stepId": 4,
-    "methodName": "clickElement",
-    "args": [
-      "#__next > div > main > div.shadow-lg.border.rounded.p-2 > button",
-      "buyButton"
-    ],
-    "variables": ["buyButton"]
+    "methodName": "createSelectorVariable",
+    "functionArgs": {
+      "varName": "emailInput",
+      "selectorType": "id",
+      "selectorValue": "email"
+    }
   },
-  { "stepId": 5, "methodName": "waitForPageLoad", "args": [] },
-  { "stepId": 6, "methodName": "getHtmlSource", "args": [] },
+  {
+    "stepId": 5,
+    "methodName": "createSelectorVariable",
+    "functionArgs": {
+      "varName": "messageInput",
+      "selectorType": "id",
+      "selectorValue": "message"
+    }
+  },
+  {
+    "stepId": 6,
+    "methodName": "createSelectorVariable",
+    "functionArgs": {
+      "varName": "submitButton",
+      "selectorType": "css",
+      "selectorValue": "button[type='submit']"
+    }
+  },
   {
     "stepId": 7,
     "methodName": "setInputValue",
-    "args": ["#email", "john@example.com", "emailInput"],
-    "variables": ["emailInput"]
+    "functionArgs": { "varSelector": "nameInput", "value": "John Doe" }
   },
   {
     "stepId": 8,
     "methodName": "setInputValue",
-    "args": ["#cardNumber", "4242 4242 4242 4242", "cardNumberInput"],
-    "variables": ["cardNumberInput"]
+    "functionArgs": { "varSelector": "emailInput", "value": "john@example.com" }
   },
   {
     "stepId": 9,
     "methodName": "setInputValue",
-    "args": ["#cardExpiry", "12/30", "cardExpiryInput"],
-    "variables": ["cardExpiryInput"]
+    "functionArgs": {
+      "varSelector": "messageInput",
+      "value": "Hello, I would like to know more about your services!"
+    }
   },
   {
     "stepId": 10,
-    "methodName": "setInputValue",
-    "args": ["#cardCvc", "123", "cardCvcInput"],
-    "variables": ["cardCvcInput"]
-  },
-  {
-    "stepId": 11,
-    "methodName": "setInputValue",
-    "args": ["#billingName", "John Doe", "cardHolderNameInput"],
-    "variables": ["cardHolderNameInput"]
-  },
-  {
-    "stepId": 12,
     "methodName": "clickElement",
-    "args": [".SubmitButton", "payButton"],
-    "variables": ["payButton"]
+    "functionArgs": { "varSelector": "submitButton" }
   },
-  { "stepId": 13, "methodName": "getHtmlSource", "args": [] },
+  { "stepId": 11, "methodName": "waitForPageLoad" },
+  { "stepId": 12, "methodName": "getHtmlSource", "functionArgs": {} },
+  {
+    "stepId": 13,
+    "methodName": "createSelectorVariable",
+    "functionArgs": {
+      "varName": "successMessage",
+      "selectorType": "css",
+      "selectorValue": "h1"
+    }
+  },
   {
     "stepId": 14,
-    "methodName": "expectElementVisible",
-    "args": [".bg-green-100", true, "successMessage"],
-    "variables": ["successMessage"]
+    "methodName": "createSelectorVariable",
+    "functionArgs": {
+      "varName": "successText",
+      "selectorType": "css",
+      "selectorValue": "p"
+    }
   },
-  { "stepId": 15, "methodName": "closeBrowser", "args": [] }
+  {
+    "stepId": 15,
+    "methodName": "expectElementText",
+    "functionArgs": {
+      "varSelector": "successMessage",
+      "expectedText": "Thank you for your message!"
+    }
+  },
+  {
+    "stepId": 16,
+    "methodName": "expectElementText",
+    "functionArgs": {
+      "varSelector": "successText",
+      "expectedText": "Your message has been received, and we will get back to you shortly."
+    }
+  },
+  { "stepId": 17, "methodName": "closeBrowser" }
 ]

@@ -90,7 +90,7 @@ export class TestStepGenerator {
       console.error("Error TestStepGenerator", error);
       throw error;
     } finally {
-      await engine.closeBrowser();
+      await engine.closeBrowser({});
     }
   }
 }

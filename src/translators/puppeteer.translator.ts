@@ -1,4 +1,3 @@
-import { argsArrayToStringParse } from "../helpers/utils";
 import { FrameData } from "../interfaces/FrameData";
 import { IStep } from "../interfaces/Step";
 
@@ -59,12 +58,7 @@ export class PuppeteerTranslator {
 
   protected async generateStep(step: IStep) {
     const stepName = step.methodName;
-    const stepArgs = step.args === undefined ? "" : argsArrayToStringParse(step.args);
-
-    const arg0 = step.args[0] || "";
-    const arg1 = step.args[1] || "";
-
-    const varName0 = step.variables ? step.variables[0] : "";
+    const stepArgs = step.functionArgs;
 
     switch (step.methodName) {
       case "launchBrowser":

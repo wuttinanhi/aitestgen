@@ -108,6 +108,7 @@ export class PuppeteerEngine implements WebTestFunctionCall {
   }
 
   async navigateTo(params: TypeNavigateToParams): Promise<void> {
+    console.log(params);
     await this.getActivePage().goto(params.url);
   }
 
