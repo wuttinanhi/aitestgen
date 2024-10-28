@@ -274,7 +274,7 @@ export class PuppeteerTranslator implements WebTestFunctionCall {
     for (const step of this.steps) {
       const line = await this.generateStep(step);
       this.generatedCode += line + "\n";
-      console.log(line);
+      // console.log(line);
     }
 
     return this.templateCode.replace(

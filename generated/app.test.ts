@@ -1,4 +1,4 @@
-import puppeteer, { Browser } from "puppeteer";
+import puppeteer, { Browser, Frame, Page } from "puppeteer";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 describe("TESTSUITE", () => {
@@ -21,42 +21,21 @@ describe("TESTSUITE", () => {
   it("TESTCASE_1", async () => {
     let page = await browser.newPage();
 
-    await page.goto("http://localhost:3000");
+    await page.goto("https://microsoftedge.github.io/Demos/demo-to-do/");
 
-    const nameInput = await page.waitForSelector(`#name`);
-    const emailInput = await page.waitForSelector(`#email`);
-    const messageInput = await page.waitForSelector(`#message`);
-    const submitButton = await page.waitForSelector(`button[type='submit']`);
-    await nameInput!.type("John Doe");
-    await emailInput!.type("john@example.com");
-    await messageInput!.type(
-      "Hello, I would like to know more about your services!"
-    );
+    const taskInput = await page.waitForSelector(`#new-task`);
+    const submitButton = await page.waitForSelector(`input[type='submit']`);
+    const taskList = await page.waitForSelector(`#tasks`);
+    await taskInput!.type("Feed the dog");
+    await submitButton!.click();
+    await taskInput!.type("Learn to code");
+    await submitButton!.click();
+    await taskInput!.type("Cook dinner");
     await submitButton!.click();
 
-    async function waitForNavigation() {
-      try {
-        await page.waitForNavigation({
-          waitUntil: "networkidle0",
-        });
-      } catch (error) {}
-    }
+    expect(taskList).not.toBeNull();
 
-    await waitForNavigation();
-
-    const successMessage = await page.waitForSelector(`h1`);
-    const successText = await page.waitForSelector(`p`);
-
-    const successMessage_text = await successMessage!.evaluate(
-      (e) => e.textContent
-    );
-    expect(successMessage_text).toBe("Thank you for your message!");
-
-    const successText_text = await successText!.evaluate((e) => e.textContent);
-    expect(successText_text).toBe(
-      "Your message has been received, and we will get back to you shortly."
-    );
-
+    expect(taskList).not.toBeNull();
     await browser.close();
   });
 });

@@ -17,7 +17,18 @@ async function testGenWrapper() {
 
   const TEMPLATE_CODE = await readFileString("templates/puppeteer_template.ts");
 
-  const USER_PROMPT = await readFileString("prompts/example_contact_form.txt");
+  // get prompt file path from args
+  const args = process.argv.slice(2);
+  let promptFilePath = "prompts/example_contact_form.txt";
+  if (args[0]) {
+    promptFilePath = args[0];
+  } else {
+    console.log("No prompt file specified, using default prompt file");
+  }
+
+  const USER_PROMPT = await readFileString(promptFilePath);
+
+  console.log("Using prompt file:", promptFilePath);
   console.log("User Prompt\n", USER_PROMPT);
 
   const openai = new OpenAI();
