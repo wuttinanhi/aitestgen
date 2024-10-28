@@ -1,20 +1,40 @@
-import puppeteer, { Browser, Frame, KeyInput, Page } from "puppeteer";
+import puppeteer, { Browser, Frame, Page } from "puppeteer";
 import { HTMLStripNonDisplayTags } from "../helpers/html";
 import { sleep } from "../helpers/utils";
 import { FrameData } from "../interfaces/FrameData";
+import {
+  TypeClickElementParams,
+  TypeCloseBrowserParams,
+  TypeCloseTabParams,
+  TypeCreateSelectorVariableParams,
+  TypeExpectElementTextParams,
+  TypeExpectElementVisibleParams,
+  TypeGetCurrentUrlParams,
+  TypeGetHtmlSourceParams,
+  TypeGetInputValueParams,
+  TypeGetOptionValueParams,
+  TypeGetTabsParams,
+  TypeIframeGetDataParams,
+  TypeIframeResetParams,
+  TypeIframeSwitchParams,
+  TypeLaunchBrowserParams,
+  TypeNavigateToParams,
+  TypeSetInputValueParams,
+  TypeSetOptionValueParams,
+  TypeSetTabParams,
+} from "../tools/defs";
 import {
   BrowserAlreadyLaunchedError,
   ElementNotFoundError,
   PageNotFoundError,
 } from "./errors";
 import { WebTestFunctionCall } from "./interfaces";
-import { SelectorStorage, SelectorType } from "./selector";
+import { SelectorStorage } from "./selector";
 
 export class PuppeteerEngine implements WebTestFunctionCall {
   private browser: Browser | null = null;
   private activePage: Page | Frame | null = null;
 
-  private lastPageBeforeEnterIframe: Page | Frame | null = null;
   private isInRootFrame: boolean = true;
 
   private varNameToSelectorMap: Record<string, SelectorStorage> = {};
@@ -68,7 +88,7 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     } catch (error) {}
   }
 
-  async launchBrowser(): Promise<void> {
+  async launchBrowser(_: TypeLaunchBrowserParams): Promise<void> {
     if (this.browser) {
       throw new BrowserAlreadyLaunchedError();
     }
@@ -87,11 +107,11 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     this.activePage = await this.browser.newPage();
   }
 
-  async navigateTo(url: string): Promise<void> {
-    await this.getActivePage().goto(url);
+  async navigateTo(params: TypeNavigateToParams): Promise<void> {
+    await this.getActivePage().goto(params.url);
   }
 
-  async getHtmlSource(): Promise<any> {
+  async getHtmlSource(_: TypeGetHtmlSourceParams): Promise<any> {
     const content = await this.getActivePage().content();
     const htmlSmall = HTMLStripNonDisplayTags(content);
 
@@ -108,9 +128,9 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     };
   }
 
-  async clickElement(selectorVarName: string, _: string): Promise<any> {
+  async clickElement(params: TypeClickElementParams): Promise<any> {
     // prettier-ignore
-    const element = (await this.getElement(selectorVarName)).getEngineSelector();
+    const element = (await this.getElement(params.varSelector)).getEngineSelector();
 
     const beforeURL = this.getActivePage().url();
 
@@ -128,9 +148,9 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     };
   }
 
-  async setInputValue(selectorVarName: string, value: any): Promise<any> {
+  async setInputValue(params: TypeSetInputValueParams): Promise<any> {
     // prettier-ignore
-    const element = (await this.getElement(selectorVarName)).getEngineSelector();
+    const element = (await this.getElement(params.varSelector)).getEngineSelector();
 
     // set input to empty first
     await element.evaluate((el) => {
@@ -141,56 +161,54 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     await element.focus();
 
     // type the value
-    await element.type(String(value));
+    await element.type(String(params.value));
   }
 
   async expectElementVisible(
-    selectorVarName: string,
-    visible: boolean,
-    _: string
+    params: TypeExpectElementVisibleParams
   ): Promise<any> {
     // prettier-ignore
-    const element = (await this.getElement(selectorVarName)).getEngineSelector();
+    const element = (await this.getElement(params.varSelector)).getEngineSelector();
 
     const isVisible =
       element !== null && (await element.boundingBox()) !== null;
 
     return {
-      evaluate_result: isVisible === visible,
+      evaluate_result: isVisible === params.visible,
     };
   }
 
-  async expectElementText(selectorVarName: string, text: string, _: string) {
+  async expectElementText(params: TypeExpectElementTextParams) {
     // prettier-ignore
-    const element = (await this.getElement(selectorVarName)).getEngineSelector();
+    const element = (await this.getElement(params.varSelector)).getEngineSelector();
 
     const elementText = await element.evaluate((el) => el.textContent);
 
     return {
-      evaluate_result: elementText === text,
+      evaluate_result: elementText === params.expectedText,
     };
   }
 
-  async pressKey(key: KeyInput): Promise<void> {
-    const frame = (await this.getActivePage()) as Page;
-    frame.keyboard.press(key);
-    // keyboard.press(key as any);
-  }
+  // async pressKey(key: KeyInput): Promise<void> {
+  //   const frame = (await this.getActivePage()) as Page;
+  //   frame.keyboard.press(key);
+  //   // keyboard.press(key as any);
+  // }
 
-  async getCurrentUrl(): Promise<string> {
+  async getCurrentUrl(_: TypeGetCurrentUrlParams): Promise<string> {
     return this.getActivePage().url();
   }
 
-  async getInputValue(selectorVarName: string): Promise<string> {
+  async getInputValue(params: TypeGetInputValueParams): Promise<string> {
     // prettier-ignore
-    const element = (await this.getElement(selectorVarName)).getEngineSelector();
+    const element = (await this.getElement(params.varSelector)).getEngineSelector();
 
     return element
       .evaluate((el) => (el as HTMLInputElement).value)
       .catch(() => "");
   }
 
-  async getTabs(): Promise<any> {
+  async getTabs(_: TypeGetTabsParams): Promise<any> {
     const tabs = await this.getBrowser().pages();
     return tabs.map((tab, i) => {
       return {
@@ -200,15 +218,15 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     });
   }
 
-  async setTab(tabId: number): Promise<void> {
+  async setTab(params: TypeSetTabParams): Promise<void> {
     const tabs = await this.getBrowser().pages();
-    const tab = tabs[tabId];
+    const tab = tabs[params.tabId];
     await tab.bringToFront();
   }
 
-  async closeTab(tabId: number): Promise<void> {
+  async closeTab(params: TypeCloseTabParams): Promise<void> {
     const tabs = await this.getBrowser().pages();
-    const tab = tabs[tabId];
+    const tab = tabs[params.tabId];
     await tab.close();
     const latestTab = await this.getLatestTab();
     if (!latestTab) {
@@ -217,22 +235,22 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     this.activePage = latestTab;
   }
 
-  async setOptionValue(selectorVarName: string, value: any): Promise<any> {
+  async setOptionValue(params: TypeSetOptionValueParams): Promise<any> {
     // prettier-ignore
-    const element = (await this.getElement(selectorVarName)).getEngineSelector();
-    await element.select(value);
+    const element = (await this.getElement(params.varSelector)).getEngineSelector();
+    await element.select(params.value);
   }
 
-  async getOptionValue(selectorVarName: string): Promise<string> {
+  async getOptionValue(params: TypeGetOptionValueParams): Promise<string> {
     // prettier-ignore
-    const element = (await this.getElement(selectorVarName)).getEngineSelector();
+    const element = (await this.getElement(params.varSelector)).getEngineSelector();
     const value = await element.evaluate((el) => {
       return (el as HTMLSelectElement).value;
     });
     return value;
   }
 
-  async iframeGetData(): Promise<any> {
+  async iframeGetData(_: TypeIframeGetDataParams): Promise<any> {
     const iframes = await this.getActivePage().$$("iframe");
 
     const iframDataArr: FrameData[] = [];
@@ -256,22 +274,21 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     return iframDataArr;
   }
 
-  async iframeSwitch(index: any): Promise<void> {
+  async iframeSwitch(params: TypeIframeSwitchParams): Promise<void> {
     if (this.isInRootFrame) {
-      this.lastPageBeforeEnterIframe = this.getActivePage();
       this.isInRootFrame = false;
     }
 
-    const iframes = await this.iframeGetData();
-    const iframe = iframes.at(index);
+    const iframes = await this.iframeGetData({});
+    const iframe = iframes.at(params.index);
     if (!iframe) {
-      throw new Error(`iframe switch at index ${index} not found`);
+      throw new Error(`iframe switch at index ${params.index} not found`);
     }
 
     this.activePage = iframe._internalPage;
   }
 
-  async iframeReset(): Promise<void> {
+  async iframeReset(_: TypeIframeResetParams): Promise<void> {
     const latestTab = await this.getLatestTab();
     if (!latestTab) {
       throw new Error("No latest tab found. the browser is closed?");
@@ -284,9 +301,9 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     // this.currentCSSSelector = [];
   }
 
-  async closeBrowser(): Promise<void> {
+  async closeBrowser(_: TypeCloseBrowserParams): Promise<void> {
     try {
-      await this.iframeReset();
+      await this.iframeReset({});
     } catch (error) {
       console.warn("Error resetting iframe", error);
     }
@@ -305,8 +322,8 @@ export class PuppeteerEngine implements WebTestFunctionCall {
   }
 
   async reset(): Promise<void> {
-    await this.closeBrowser();
-    await this.launchBrowser();
+    await this.closeBrowser({});
+    await this.launchBrowser({});
   }
 
   async goBackHistory(): Promise<void> {
@@ -319,15 +336,15 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     await page.goForward();
   }
 
-  async createSelectorVariable(
-    varNameInTest: string,
-    selectorType: SelectorType,
-    selectorValue: string
-  ) {
+  async createSelectorVariable(params: TypeCreateSelectorVariableParams) {
     let page: Page = this.getActivePage() as Page;
     if (!page) {
       throw new PageNotFoundError();
     }
+
+    const selectorValue = params.selectorValue;
+    const selectorType = params.selectorType;
+    const varNameInTest = params.varName;
 
     let engineSelector: any | null = null;
     switch (selectorType) {

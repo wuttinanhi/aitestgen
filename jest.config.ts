@@ -102,9 +102,6 @@ const config: Config = {
   // An enum that specifies notification mode. Requires { notify: true }
   // notifyMode: "failure-change",
 
-  // A preset that is used as a base for Jest's configuration
-  // preset: undefined,
-
   // Run tests from one or more projects
   // projects: undefined,
 
@@ -176,9 +173,6 @@ const config: Config = {
   // This option allows use of a custom test runner
   // testRunner: "jest-circus/runner",
 
-  // A map from regular expressions to paths to transformers
-  // transform: undefined,
-
   // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
   // transformIgnorePatterns: [
   //   "/node_modules/",
@@ -199,6 +193,15 @@ const config: Config = {
 
   // timeout for 60 seconds
   testTimeout: 1_000 * 60,
+
+  // A preset that is used as a base for Jest's configuration
+  preset: "ts-jest",
+
+  // A map from regular expressions to paths to transformers
+  transform: {
+    "^.+\\.(ts|tsx)?$": "ts-jest",
+    "^.+\\.(js|jsx)$": "babel-jest",
+  },
 };
 
 export default config;

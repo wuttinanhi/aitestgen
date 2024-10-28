@@ -1,7 +1,9 @@
 import { zodFunction } from "openai/src/helpers/zod.js";
 import z from "zod";
+import { SelectorTypeZodEnum } from "../engines/selector";
 
 export const launchBrowserParams = z.object({});
+export type TypeLaunchBrowserParams = z.infer<typeof launchBrowserParams>;
 export const launchBrowserTool = zodFunction({
   name: "launchBrowser",
   parameters: launchBrowserParams,
@@ -11,6 +13,7 @@ export const launchBrowserTool = zodFunction({
 export const navigateToParams = z.object({
   url: z.string().describe("The URL to navigate to"),
 });
+export type TypeNavigateToParams = z.infer<typeof navigateToParams>;
 export const navigateToTool = zodFunction({
   name: "navigateTo",
   parameters: navigateToParams,
@@ -18,6 +21,7 @@ export const navigateToTool = zodFunction({
 });
 
 export const getHtmlSourceParams = z.object({});
+export type TypeGetHtmlSourceParams = z.infer<typeof getHtmlSourceParams>;
 export const getHtmlSourceTool = zodFunction({
   name: "getHtmlSource",
   parameters: getHtmlSourceParams,
@@ -25,13 +29,9 @@ export const getHtmlSourceTool = zodFunction({
 });
 
 export const clickElementParams = z.object({
-  selector: z.string().describe("The selector of the element to click"),
-  varName: z
-    .string()
-    .describe(
-      "The variable name to store the element in (should be the element name like writing javascript puppeteer test and every variable name should be unique in entire test)"
-    ),
+  varSelector: z.string().describe("The variable name of the element"),
 });
+export type TypeClickElementParams = z.infer<typeof clickElementParams>;
 export const clickElementTool = zodFunction({
   name: "clickElement",
   parameters: clickElementParams,
@@ -39,16 +39,10 @@ export const clickElementTool = zodFunction({
 });
 
 export const setInputValueParams = z.object({
-  selector: z
-    .string()
-    .describe("The selector of the element to set the value of"),
+  varSelector: z.string().describe("The variable name of the element"),
   value: z.string().describe("The value to set"),
-  varName: z
-    .string()
-    .describe(
-      "The variable name to store the element in (should be the element name like writing javascript puppeteer test and every variable name should be unique in entire test)"
-    ),
 });
+export type TypeSetInputValueParams = z.infer<typeof setInputValueParams>;
 export const setInputValueTool = zodFunction({
   name: "setInputValue",
   parameters: setInputValueParams,
@@ -56,10 +50,9 @@ export const setInputValueTool = zodFunction({
 });
 
 export const getInputValueParams = z.object({
-  selector: z
-    .string()
-    .describe("The selector of the element to get the value of"),
+  varSelector: z.string().describe("The variable name of the element"),
 });
+export type TypeGetInputValueParams = z.infer<typeof getInputValueParams>;
 export const getInputValueTool = zodFunction({
   name: "getInputValue",
   parameters: getInputValueParams,
@@ -67,11 +60,10 @@ export const getInputValueTool = zodFunction({
 });
 
 export const setOptionValueParams = z.object({
-  selector: z
-    .string()
-    .describe("The selector of the option to set the value of"),
+  varSelector: z.string().describe("The variable name of the element"),
   value: z.string().describe("The value to set"),
 });
+export type TypeSetOptionValueParams = z.infer<typeof setOptionValueParams>;
 export const setOptionValueTool = zodFunction({
   name: "setOptionValue",
   parameters: setOptionValueParams,
@@ -79,10 +71,9 @@ export const setOptionValueTool = zodFunction({
 });
 
 export const getOptionValueParams = z.object({
-  selector: z
-    .string()
-    .describe("The selector of the option to get the value of"),
+  varSelector: z.string().describe("The variable name of the element"),
 });
+export type TypeGetOptionValueParams = z.infer<typeof getOptionValueParams>;
 export const getOptionValueTool = zodFunction({
   name: "getOptionValue",
   parameters: getOptionValueParams,
@@ -90,16 +81,12 @@ export const getOptionValueTool = zodFunction({
 });
 
 export const expectElementVisibleParams = z.object({
-  selector: z
-    .string()
-    .describe("The selector of the element to check for visibility"),
+  varSelector: z.string().describe("The variable name of the element"),
   visible: z.boolean().describe("Whether the element should be visible"),
-  varName: z
-    .string()
-    .describe(
-      "The variable name to store the element in (should be the element name like writing javascript puppeteer test and every variable name should be unique in entire test)"
-    ),
 });
+export type TypeExpectElementVisibleParams = z.infer<
+  typeof expectElementVisibleParams
+>;
 export const expectElementVisibleTool = zodFunction({
   name: "expectElementVisible",
   parameters: expectElementVisibleParams,
@@ -108,16 +95,12 @@ export const expectElementVisibleTool = zodFunction({
 });
 
 export const expectElementTextParams = z.object({
-  selector: z
-    .string()
-    .describe("The selector of the element to check the text of"),
-  text: z.string().describe("The text to check for"),
-  varName: z
-    .string()
-    .describe(
-      "The variable name to store the element in (should be the element name like writing javascript puppeteer test and every variable name should be unique in entire test)"
-    ),
+  varSelector: z.string().describe("The variable name of the element"),
+  expectedText: z.string().describe("The text to check for"),
 });
+export type TypeExpectElementTextParams = z.infer<
+  typeof expectElementTextParams
+>;
 export const expectElementTextTool = zodFunction({
   name: "expectElementText",
   parameters: expectElementTextParams,
@@ -126,6 +109,7 @@ export const expectElementTextTool = zodFunction({
 });
 
 export const getCurrentUrlParams = z.object({});
+export type TypeGetCurrentUrlParams = z.infer<typeof getCurrentUrlParams>;
 export const getCurrentUrlTool = zodFunction({
   name: "getCurrentUrl",
   parameters: getCurrentUrlParams,
@@ -133,6 +117,7 @@ export const getCurrentUrlTool = zodFunction({
 });
 
 export const closeBrowserParams = z.object({});
+export type TypeCloseBrowserParams = z.infer<typeof closeBrowserParams>;
 export const closeBrowserTool = zodFunction({
   name: "closeBrowser",
   parameters: closeBrowserParams,
@@ -140,6 +125,7 @@ export const closeBrowserTool = zodFunction({
 });
 
 export const completeParams = z.object({});
+export type TypeCompleteParams = z.infer<typeof completeParams>;
 export const completeTool = zodFunction({
   name: "complete",
   parameters: completeParams,
@@ -147,24 +133,27 @@ export const completeTool = zodFunction({
 });
 
 export const getTabsParams = z.object({});
+export type TypeGetTabsParams = z.infer<typeof getTabsParams>;
 export const getTabsTool = zodFunction({
   name: "getTabs",
   parameters: getTabsParams,
   description: "Get all the tabs data in the browser",
 });
 
-export const switchTabParams = z.object({
+export const setTabParams = z.object({
   tabId: z.number().describe("The ID of the tab to switch to"),
 });
-export const switchTabTool = zodFunction({
+export type TypeSetTabParams = z.infer<typeof setTabParams>;
+export const setTabTool = zodFunction({
   name: "switchTab",
-  parameters: switchTabParams,
+  parameters: setTabParams,
   description: "Switch to the tab with the given ID",
 });
 
 export const closeTabParams = z.object({
   tabId: z.number().describe("The ID of the tab to close"),
 });
+export type TypeCloseTabParams = z.infer<typeof closeTabParams>;
 export const closeTabTool = zodFunction({
   name: "closeTab",
   parameters: closeTabParams,
@@ -172,6 +161,7 @@ export const closeTabTool = zodFunction({
 });
 
 export const resetParams = z.object({});
+export type TypeResetParams = z.infer<typeof resetParams>;
 export const resetTool = zodFunction({
   name: "reset",
   parameters: resetParams,
@@ -179,6 +169,7 @@ export const resetTool = zodFunction({
 });
 
 export const goBackHistoryParams = z.object({});
+export type TypeGoBackHistoryParams = z.infer<typeof goBackHistoryParams>;
 export const goBackHistoryTool = zodFunction({
   name: "goBackHistory",
   parameters: goBackHistoryParams,
@@ -186,6 +177,7 @@ export const goBackHistoryTool = zodFunction({
 });
 
 export const goForwardHistoryParams = z.object({});
+export type TypeGoForwardHistoryParams = z.infer<typeof goForwardHistoryParams>;
 export const goForwardHistoryTool = zodFunction({
   name: "goForwardHistory",
   parameters: goForwardHistoryParams,
@@ -193,6 +185,7 @@ export const goForwardHistoryTool = zodFunction({
 });
 
 export const iframeGetDataParams = z.object({});
+export type TypeIframeGetDataParams = z.infer<typeof iframeGetDataParams>;
 export const iframeGetDataTool = zodFunction({
   name: "iframeGetData",
   parameters: iframeGetDataParams,
@@ -202,6 +195,7 @@ export const iframeGetDataTool = zodFunction({
 export const iframeSwitchParams = z.object({
   index: z.number().describe("The index of the iframe to switch to"),
 });
+export type TypeIframeSwitchParams = z.infer<typeof iframeSwitchParams>;
 export const iframeSwitchTool = zodFunction({
   name: "iframeSwitch",
   parameters: iframeSwitchParams,
@@ -209,10 +203,25 @@ export const iframeSwitchTool = zodFunction({
 });
 
 export const iframeResetParams = z.object({});
+export type TypeIframeResetParams = z.infer<typeof iframeResetParams>;
 export const iframeResetTool = zodFunction({
   name: "iframeReset",
   parameters: iframeResetParams,
   description: "Reset and focus on root page",
+});
+
+export const createSelectorVariableParams = z.object({
+  varName: z.string().describe("The variable name of the element"),
+  selectorType: SelectorTypeZodEnum,
+  selectorValue: z.string().describe("The selector value"),
+});
+export type TypeCreateSelectorVariableParams = z.infer<
+  typeof createSelectorVariableParams
+>;
+export const createSelectorVariableTool = zodFunction({
+  name: "createSelectorVariable",
+  parameters: createSelectorVariableParams,
+  description: "Create a variable for a selector",
 });
 
 export const WebREPLToolsCollection = [
@@ -230,7 +239,7 @@ export const WebREPLToolsCollection = [
   closeBrowserTool,
   completeTool,
   getTabsTool,
-  switchTabTool,
+  setTabTool,
   closeTabTool,
   resetTool,
   goBackHistoryTool,
@@ -238,4 +247,5 @@ export const WebREPLToolsCollection = [
   iframeGetDataTool,
   iframeSwitchTool,
   iframeResetTool,
+  createSelectorVariableTool,
 ];

@@ -1,46 +1,62 @@
+import {
+  TypeClickElementParams,
+  TypeCloseBrowserParams,
+  TypeCloseTabParams,
+  TypeCompleteParams,
+  TypeCreateSelectorVariableParams,
+  TypeExpectElementTextParams,
+  TypeExpectElementVisibleParams,
+  TypeGetCurrentUrlParams,
+  TypeGetHtmlSourceParams,
+  TypeGetInputValueParams,
+  TypeGetOptionValueParams,
+  TypeGetTabsParams,
+  TypeGoBackHistoryParams,
+  TypeGoForwardHistoryParams,
+  TypeIframeGetDataParams,
+  TypeIframeResetParams,
+  TypeIframeSwitchParams,
+  TypeLaunchBrowserParams,
+  TypeNavigateToParams,
+  TypeResetParams,
+  TypeSetInputValueParams,
+  TypeSetOptionValueParams,
+  TypeSetTabParams,
+} from "../tools/defs";
+
 export interface WebTestFunctionCall {
   // Browser
-  launchBrowser(): Promise<void>;
-  closeBrowser(): Promise<void>;
-  reset(): Promise<void>;
+  launchBrowser(params: TypeLaunchBrowserParams): Promise<void>;
+  closeBrowser(params: TypeCloseBrowserParams): Promise<void>;
+  reset(params: TypeResetParams): Promise<void>;
   // Special
-  complete(): Promise<void>;
+  complete(params: TypeCompleteParams): Promise<void>;
   // Data
-  getCurrentUrl(): Promise<string>;
-  getHtmlSource(): Promise<any>;
+  getCurrentUrl(params: TypeGetCurrentUrlParams): Promise<string>;
+  getHtmlSource(params: TypeGetHtmlSourceParams): Promise<any>;
   // Interaction
-  clickElement(varSelector: string, varNameInTest: string): Promise<any>;
-  setInputValue(varSelector: string, value: any): Promise<any>;
-  getInputValue(varSelector: string): Promise<string>;
-  setOptionValue(varSelector: string, value: any): Promise<any>;
-  getOptionValue(varSelector: string): Promise<string>;
+  clickElement(params: TypeClickElementParams): Promise<any>;
+  setInputValue(params: TypeSetInputValueParams): Promise<any>;
+  getInputValue(params: TypeGetInputValueParams): Promise<string>;
+  setOptionValue(params: TypeSetOptionValueParams): Promise<any>;
+  getOptionValue(params: TypeGetOptionValueParams): Promise<string>;
   // Expect
-  expectElementVisible(
-    varSelector: string,
-    visible: boolean,
-    varNameInTest: string
-  ): Promise<any>;
-  expectElementText(
-    varSelector: string,
-    text: string,
-    varNameInTest: string
-  ): Promise<any>;
+  expectElementVisible(params: TypeExpectElementVisibleParams): Promise<any>;
+  expectElementText(params: TypeExpectElementTextParams): Promise<any>;
   // Navigation
-  navigateTo(url: string): Promise<void>;
-  goBackHistory(): Promise<void>;
-  goForwardHistory(): Promise<void>;
+  navigateTo(params: TypeNavigateToParams): Promise<void>;
+  goBackHistory(params: TypeGoBackHistoryParams): Promise<void>;
+  goForwardHistory(params: TypeGoForwardHistoryParams): Promise<void>;
   // Tabs
-  getTabs(): Promise<any>;
-  setTab(tabId: number): Promise<void>;
-  closeTab(tabId: number): Promise<void>;
+  getTabs(params: TypeGetTabsParams): Promise<any>;
+  setTab(params: TypeSetTabParams): Promise<void>;
+  closeTab(params: TypeCloseTabParams): Promise<void>;
   // Iframe
-  iframeGetData(): Promise<any>;
-  iframeSwitch(index: any): Promise<void>;
-  iframeReset(): Promise<void>;
+  iframeGetData(params: TypeIframeGetDataParams): Promise<any>;
+  iframeSwitch(params: TypeIframeSwitchParams): Promise<void>;
+  iframeReset(params: TypeIframeResetParams): Promise<void>;
   // Selector
   createSelectorVariable(
-    varNameInTest: string,
-    selectorType: string,
-    selectorValue: string
+    params: TypeCreateSelectorVariableParams
   ): Promise<any>;
 }
