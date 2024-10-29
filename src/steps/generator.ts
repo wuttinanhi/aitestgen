@@ -1,17 +1,18 @@
-import { OpenAI } from "openai";
+import { BaseMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { PuppeteerEngine } from "../engines/puppeteer";
 import { TestGenUnexpectedAIResponseError } from "../errors/errors";
 import { handleToolCalls } from "../handlers/tools";
+import { TypeAIModel } from "../models/types";
 import { WebREPLToolsCollection } from "../tools/defs";
 import { TestStepGenResult } from "./result";
 import { StepHistory } from "./stephistory";
 
 export class TestStepGenerator {
-  private llm: OpenAI;
+  private llm: TypeAIModel;
   private systemInstructionPrompt: string;
   private loopHardLimit: number = 30;
 
-  constructor(llm: OpenAI, systemInstructionPrompt: string) {
+  constructor(llm: TypeAIModel, systemInstructionPrompt: string) {
     this.llm = llm;
     this.systemInstructionPrompt = systemInstructionPrompt;
   }
@@ -20,66 +21,54 @@ export class TestStepGenerator {
     this.loopHardLimit = hardLoopLimit;
   }
 
-  async generate(
-    userPrompt: string,
-    messageBuffer: Array<OpenAI.ChatCompletionMessageParam>
-  ) {
+  async generate(userPrompt: string, messageBuffer: Array<BaseMessage>) {
     const engine = new PuppeteerEngine();
     const stepHistory = new StepHistory();
     let uniqueVariableNames: string[] = [];
     let TOTAL_TOKENS = 0;
 
-    messageBuffer.push({
-      role: "system",
-      content: this.systemInstructionPrompt,
-    });
+    messageBuffer.push(
+      new SystemMessage({
+        content: this.systemInstructionPrompt,
+      }),
+    );
 
-    messageBuffer.push({
-      role: "user",
-      content: userPrompt,
-    });
+    messageBuffer.push(
+      new HumanMessage({
+        content: userPrompt,
+      }),
+    );
 
     try {
       loop_hard_limit: for (let i = 0; i < this.loopHardLimit; i++) {
-        const response = await this.llm.chat.completions.create({
-          model: "gpt-4o-mini",
-          messages: messageBuffer,
-          tools: WebREPLToolsCollection,
-          max_tokens: 500,
-          temperature: 0.0,
+        // BIND TOOLS
+        this.llm.bindTools(WebREPLToolsCollection, {
+          tool_choice: "any",
         });
 
-        console.log(`\n\nLoop: ${i}`);
+        const response = await this.llm.invoke(messageBuffer);
 
-        const choice = response.choices[0];
+        messageBuffer.push(response);
 
-        // push the ai response to the messages
-        messageBuffer.push(choice.message);
-
-        TOTAL_TOKENS += response.usage?.total_tokens!;
+        TOTAL_TOKENS += response.usage_metadata!.total_tokens;
 
         // if it is function call, execute it
-        if (choice.message.tool_calls && choice.message.tool_calls.length > 0) {
-          for (const toolCall of choice.message.tool_calls) {
-            const functionName = toolCall.function.name;
-            const functionArguments = JSON.parse(toolCall.function.arguments);
-            const functionArgsValue = Object.values(functionArguments);
-            const argsAny = functionArgsValue as any;
+        if (response.tool_calls && response.tool_calls.length > 0) {
+          for (const toolCall of response.tool_calls) {
+            const functionName = toolCall.name;
+            const functionArguments = toolCall.args;
 
-            const result = await handleToolCalls(
-              engine,
-              messageBuffer,
-              stepHistory,
-              uniqueVariableNames,
-              toolCall
-            );
+            // const functionArgsValue = Object.values(functionArguments);
+            // const argsAny = functionArgsValue as any;
 
-            if (result.completed) {
+            await handleToolCalls(engine, messageBuffer, stepHistory, uniqueVariableNames, toolCall);
+
+            if (functionName === "complete") {
               break loop_hard_limit;
             }
           }
         } else {
-          throw new TestGenUnexpectedAIResponseError(choice.message.content);
+          throw new TestGenUnexpectedAIResponseError(response.content);
         }
       }
 

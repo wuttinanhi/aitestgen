@@ -1,20 +1,20 @@
-import { OpenAI } from "openai";
+import { ToolCall } from "@langchain/core/dist/messages/tool";
+import { BaseMessage } from "@langchain/core/messages";
 import { WebTestFunctionCall } from "../engines/interfaces";
 import { FrameData } from "../interfaces/FrameData";
 import { IStep } from "../interfaces/Step";
-import { ToolCallResult } from "../interfaces/ToolCallResult";
 import { StepHistory } from "../steps/stephistory";
 import { appendToolCallResponse } from "./toolCallResponse";
 
 export async function handleToolCalls(
   engine: WebTestFunctionCall,
-  messageBuffer: any[],
+  messageBuffer: Array<BaseMessage>,
   stepBuffer: StepHistory,
   uniqueVariableNamesBuffer: string[],
-  toolCall: OpenAI.Chat.Completions.ChatCompletionMessageToolCall
-): Promise<ToolCallResult> {
-  const functionName = toolCall.function.name;
-  const functionArgs = JSON.parse(toolCall.function.arguments);
+  toolCall: ToolCall,
+): Promise<void> {
+  const functionName = toolCall.name;
+  const functionArgs = toolCall.args;
 
   // const functionArguments = JSON.parse(toolCall.function.arguments);
   // const functionArgsValue = Object.values(functionArguments);
@@ -29,12 +29,11 @@ export async function handleToolCalls(
   // }
 
   try {
+    // check variable name duplication
     // loop each variable name and check if it has been declared before
     for (const varName of uniqueVariableNamesBuffer) {
       if (uniqueVariableNamesBuffer.includes(varName)) {
-        throw new Error(
-          `Variable ${varName} already declared. please use a different variable name`
-        );
+        throw new Error(`Variable ${varName} already declared. please use a different variable name`);
       } else {
         uniqueVariableNamesBuffer.push(varName);
       }
@@ -52,12 +51,13 @@ export async function handleToolCalls(
         stepBuffer.createStep(closeBrowserStep);
       }
 
+      // append the tool call response
       appendToolCallResponse(messageBuffer, toolCall, {
         status: "success",
         message: "Backend acknowledged completion",
       });
 
-      return { completed: true };
+      return;
     }
 
     // if function name is reset, then reset the engine
@@ -71,15 +71,13 @@ export async function handleToolCalls(
         message: "Reset browser successfully",
       });
 
-      return { completed: false };
+      return;
     }
 
-    // Basic function invocation
-    // Invoke the function with the extracted arguments
-    // prettier-ignore
-    // let result = await (engine as any)[functionName](...functionArgsValue);
+    // invoke engine function
     let result = await (engine as any)[functionName](functionArgs);
 
+    // if result is undefined or null, then set it to success
     if (result === undefined || result === null) {
       result = { status: "success" };
     }
@@ -106,9 +104,9 @@ export async function handleToolCalls(
       step.iframeGetDataResult = result;
     }
 
-    // if function name contains "expect" the result should always be true to add to the step buffer
-    // prettier-ignore
-    const shouldAddStep = functionName.includes("expect") ? (result["evaluate_result"] === true) : true;
+    // if function name contains "expect"
+    // the result should always be true to add to the step buffer
+    const shouldAddStep = functionName.includes("expect") ? result["evaluate_result"] === true : true;
     if (shouldAddStep) {
       stepBuffer.createStep(step);
     }
@@ -126,7 +124,7 @@ export async function handleToolCalls(
     // push the result back to the messages buffer
     appendToolCallResponse(messageBuffer, toolCall, result);
 
-    return { completed: false };
+    return;
   } catch (err) {
     const error = err as Error;
 
@@ -140,6 +138,6 @@ export async function handleToolCalls(
 
     console.error("Error in invoking function:", errorObj);
 
-    return { completed: false };
+    return;
   }
 }

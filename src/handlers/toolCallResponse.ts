@@ -1,17 +1,13 @@
-import { OpenAI } from "openai";
+import { BaseMessage } from "@langchain/core/messages";
+import { ToolCall, ToolMessage } from "@langchain/core/messages/tool";
 
-export function appendToolCallResponse(
-  messageBuffer: any[],
-  toolCall: OpenAI.Chat.Completions.ChatCompletionMessageToolCall,
-  resultObject: any
-) {
-  const toolCallResponse = {
-    role: "tool",
-    content: JSON.stringify(resultObject),
-    tool_call_id: toolCall.id,
-  } as OpenAI.ChatCompletionMessageParam;
+export function appendToolCallResponse(messageBuffer: Array<BaseMessage>, toolCall: ToolCall, resultObject: any) {
+  const toolCallResponse = new ToolMessage(
+    {
+      content: JSON.stringify(resultObject),
+    },
+    toolCall.id!,
+  );
 
   messageBuffer.push(toolCallResponse);
-
-  console.log(`Return: ${JSON.stringify(resultObject).slice(0, 100)}`);
 }

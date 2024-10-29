@@ -1,10 +1,11 @@
-import { OpenAI } from "openai";
+import { BaseMessage } from "@langchain/core/messages";
 import { test } from "vitest";
-import { handleFinalize } from "../src/handlers/finalizer.js";
-import { readFileString, writeFileString } from "../src/helpers/files.js";
-import { formatTSCode } from "../src/helpers/formatter.js";
-import { TestStepGenerator } from "../src/steps/generator.js";
-import { PuppeteerTranslator } from "../src/translators/puppeteer.translator.js";
+import { handleFinalize } from "../src/handlers/finalizer";
+import { readFileString, writeFileString } from "../src/helpers/files";
+import { formatTSCode } from "../src/helpers/formatter";
+import { modelOpenAI } from "../src/models/openai";
+import { TestStepGenerator } from "../src/steps/generator";
+import { PuppeteerTranslator } from "../src/translators/puppeteer.translator";
 
 test("should generate working test", async () => {
   const OUT_GENTEST_PATH = ".test/app.test.ts";
@@ -21,11 +22,11 @@ test("should generate working test", async () => {
   const USER_PROMPT = await readFileString("prompts/example_contact_form.txt");
   console.log("User Prompt\n", USER_PROMPT);
 
-  const openai = new OpenAI();
-  const messageBuffer: Array<OpenAI.ChatCompletionMessageParam> = [];
+  const model = modelOpenAI;
+  const messageBuffer: Array<BaseMessage> = [];
   let TOTAL_TOKEN_USED = 0;
 
-  const testStepGenerator = new TestStepGenerator(openai, SYSTEM_INSTRUCTION_PROMPT);
+  const testStepGenerator = new TestStepGenerator(model, SYSTEM_INSTRUCTION_PROMPT);
 
   const result = await testStepGenerator.generate(USER_PROMPT, messageBuffer);
   TOTAL_TOKEN_USED += result.getTotalTokens();
@@ -33,7 +34,7 @@ test("should generate working test", async () => {
   // write step history to file
   await writeFileString(OUT_STEP_ALL, JSON.stringify(result.getStepHistory().getAll()));
 
-  const finalizeResult = await handleFinalize(SYSTEM_FINALIZE_PROMPT, openai, messageBuffer, result.getStepHistory());
+  const finalizeResult = await handleFinalize(SYSTEM_FINALIZE_PROMPT, model, messageBuffer, result.getStepHistory());
 
   const selectedSteps = result.getStepHistory().pickStepByIds(finalizeResult.selectedSteps);
   TOTAL_TOKEN_USED += finalizeResult.totalTokens;
