@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { OpenAI } from "openai";
 import { handleFinalize } from "./handlers/finalizer.js";
 import { readFileString, writeFileString } from "./helpers/files.js";
 import { formatTSCode } from "./helpers/formatter.js";

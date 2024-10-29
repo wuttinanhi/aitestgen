@@ -1,12 +1,7 @@
 import { ElementHandle } from "puppeteer";
-import z from "zod";
 
 export type SelectorType = "css" | "xpath" | "id";
 // | "name" | "tag" | "class";
-
-export const SelectorTypeZodEnum = z
-  .enum(["css", "xpath", "id"])
-  .describe("The type of the selector");
 
 export class SelectorStorage {
   private selectorType: SelectorType;

@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { OpenAI } from "openai";
 import { PuppeteerEngine } from "../engines/puppeteer";
 import { TestGenUnexpectedAIResponseError } from "../errors/errors";
 import { handleToolCalls } from "../handlers/tools";

@@ -5,6 +5,9 @@ export default defineConfig({
   test: {
     watch: false,
     testTimeout: 1000 * 60,
+    environment: "node",
+    globals: true,
+    exclude: ["node_modules", "**/node_modules/**"], // Exclude node_modules from tests
     // exclude: ["**/node_modules/**", "node_modules/**"],
     // typecheck: {
     //   ignoreSourceErrors: true,

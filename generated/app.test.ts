@@ -21,15 +21,32 @@ describe("TESTSUITE", () => {
   it("TESTCASE_1", async () => {
     let page = await browser.newPage();
 
-    await page.goto("https://microsoftedge.github.io/Demos/demo-to-do/");
+    await page.goto("http://localhost:3000");
 
-    var newTaskInput = await page.waitForSelector(`#new-task`);
-    var submitButton = await page.waitForSelector(`input[type='submit']`);
-    await newTaskInput!.type("Feed the dog");
+    var nameInput = await page.waitForSelector(`#name`);
+    var emailInput = await page.waitForSelector(`#email`);
+    var messageInput = await page.waitForSelector(`#message`);
+    var submitButton = await page.waitForSelector(`button[type='submit']`);
+    await nameInput!.type("John Doe");
+    await emailInput!.type("john@example.com");
+    await messageInput!.type("Hello, I would like to know more about your services!");
     await submitButton!.click();
-    await newTaskInput!.type("Learn to code");
-    await submitButton!.click();
-    await newTaskInput!.type("Cook dinner");
-    await submitButton!.click();
+
+    async function waitForNavigation() {
+      try {
+        await page.waitForNavigation({
+          waitUntil: "networkidle0",
+        });
+      } catch (error) {}
+    }
+
+    await waitForNavigation();
+
+    var successMessage = await page.waitForSelector(`h1`);
+
+    const successMessage_text = await successMessage!.evaluate((e) => e.textContent);
+    expect(successMessage_text).toBe("Thank you for your message!");
+
+    await browser.close();
   });
 });

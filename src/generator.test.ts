@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { OpenAI } from "openai";
 import { test } from "vitest";
 import { handleFinalize } from "./handlers/finalizer.js";
 import { readFileString, writeFileString } from "./helpers/files.js";

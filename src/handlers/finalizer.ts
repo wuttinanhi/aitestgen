@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { OpenAI } from "openai";
 import { StepHistory } from "../steps/stephistory";
 import { FinalizeParamsType, finalizeTool } from "../tools/finalizer";
 import { appendToolCallResponse } from "./toolCallResponse";

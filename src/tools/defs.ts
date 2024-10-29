@@ -1,6 +1,5 @@
-import { zodFunction } from "openai/src/helpers/zod.js";
+import { zodFunction } from "openai/helpers/zod";
 import z from "zod";
-import { SelectorTypeZodEnum } from "../engines/selector";
 
 export const launchBrowserParams = z.object({});
 export type TypeLaunchBrowserParams = z.infer<typeof launchBrowserParams>;
@@ -209,6 +208,10 @@ export const iframeResetTool = zodFunction({
   parameters: iframeResetParams,
   description: "Reset and focus on root page",
 });
+
+export const SelectorTypeZodEnum = z
+  .enum(["css", "xpath", "id"])
+  .describe("The type of the selector");
 
 export const createSelectorVariableParams = z.object({
   varName: z.string().describe("The variable name of the element"),

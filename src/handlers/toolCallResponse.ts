@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { OpenAI } from "openai";
 
 export function appendToolCallResponse(
   messageBuffer: any[],

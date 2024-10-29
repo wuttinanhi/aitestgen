@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { OpenAI } from "openai";
 import { WebTestFunctionCall } from "../engines/interfaces";
 import { FrameData } from "../interfaces/FrameData";
 import { IStep } from "../interfaces/Step";
