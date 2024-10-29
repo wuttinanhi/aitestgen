@@ -36,30 +36,17 @@ async function testGenWrapper() {
   let TOTAL_TOKEN_USED = 0;
 
   try {
-    const testStepGenerator = new TestStepGenerator(
-      openai,
-      SYSTEM_INSTRUCTION_PROMPT
-    );
+    const testStepGenerator = new TestStepGenerator(openai, SYSTEM_INSTRUCTION_PROMPT);
 
     const result = await testStepGenerator.generate(USER_PROMPT, messageBuffer);
     TOTAL_TOKEN_USED += result.getTotalTokens();
 
     // write step history to file
-    await writeFileString(
-      OUT_STEP_ALL,
-      JSON.stringify(result.getStepHistory().getAll())
-    );
+    await writeFileString(OUT_STEP_ALL, JSON.stringify(result.getStepHistory().getAll()));
 
-    const finalizeResult = await handleFinalize(
-      SYSTEM_FINALIZE_PROMPT,
-      openai,
-      messageBuffer,
-      result.getStepHistory()
-    );
+    const finalizeResult = await handleFinalize(SYSTEM_FINALIZE_PROMPT, openai, messageBuffer, result.getStepHistory());
 
-    const selectedSteps = result
-      .getStepHistory()
-      .pickStepByIds(finalizeResult.selectedSteps);
+    const selectedSteps = result.getStepHistory().pickStepByIds(finalizeResult.selectedSteps);
     TOTAL_TOKEN_USED += finalizeResult.totalTokens;
 
     // write step history to file
@@ -70,7 +57,7 @@ async function testGenWrapper() {
       TEMPLATE_CODE,
       "browser",
       "page",
-      "// {{GENERATED_CODE}}"
+      "// {{GENERATED_CODE}}",
     );
 
     console.log("Total Tokens used:", TOTAL_TOKEN_USED);
@@ -90,10 +77,7 @@ async function testGenWrapper() {
   } catch (error) {
     console.log("Error generating test code", error);
   } finally {
-    await writeFileString(
-      ".debug/messageBuffer.json",
-      JSON.stringify(messageBuffer)
-    );
+    await writeFileString(".debug/messageBuffer.json", JSON.stringify(messageBuffer));
   }
 }
 

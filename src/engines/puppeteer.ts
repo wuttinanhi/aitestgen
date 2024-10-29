@@ -351,14 +351,20 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     let engineSelector: any | null = null;
     switch (selectorType) {
       case "css":
-        engineSelector = await page.waitForSelector(selectorValue);
+        engineSelector = await page.waitForSelector(selectorValue, {
+          timeout: 10_000,
+        });
         break;
       case "xpath":
         // prettier-ignore
-        engineSelector = await page.waitForSelector( `::-p-xpath(${selectorValue})`);
+        engineSelector = await page.waitForSelector( `::-p-xpath(${selectorValue})`, {
+          timeout: 10_000,
+        });
         break;
       case "id":
-        engineSelector = await page.waitForSelector(`#${selectorValue}`);
+        engineSelector = await page.waitForSelector(`#${selectorValue}`, {
+          timeout: 10_000,
+        });
         break;
       // case "name":
       //   engineSelector = await page.waitForSelector(`[name="${selectorValue}"]`);
