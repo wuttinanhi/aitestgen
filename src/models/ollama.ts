@@ -4,4 +4,5 @@ export const modelOllama = new ChatOllama({
   model: "llama3",
   temperature: 0,
   maxRetries: 2,
+  streaming: false,
 });

@@ -1,18 +1,17 @@
 import { BaseMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { PuppeteerEngine } from "../engines/puppeteer";
-import { TestGenUnexpectedAIResponseError } from "../errors/errors";
 import { handleToolCalls } from "../handlers/tools";
-import { TypeAIModel } from "../models/types";
+import { AIModel } from "../models/types";
 import { WebREPLToolsCollection } from "../tools/defs";
 import { TestStepGenResult } from "./result";
 import { StepHistory } from "./stephistory";
 
 export class TestStepGenerator {
-  private llm: TypeAIModel;
+  private llm: AIModel;
   private systemInstructionPrompt: string;
   private loopHardLimit: number = 30;
 
-  constructor(llm: TypeAIModel, systemInstructionPrompt: string) {
+  constructor(llm: AIModel, systemInstructionPrompt: string) {
     this.llm = llm;
     this.systemInstructionPrompt = systemInstructionPrompt;
   }
@@ -40,13 +39,12 @@ export class TestStepGenerator {
     );
 
     try {
-      loop_hard_limit: for (let i = 0; i < this.loopHardLimit; i++) {
-        // BIND TOOLS
-        this.llm.bindTools(WebREPLToolsCollection, {
-          tool_choice: "any",
-        });
+      const aiWithTools = this.llm.bindTools(WebREPLToolsCollection);
 
-        const response = await this.llm.invoke(messageBuffer);
+      loop_hard_limit: for (let i = 0; i < this.loopHardLimit; i++) {
+        const response = await aiWithTools.invoke(messageBuffer);
+
+        console.log(`LOOP: ${i + 1}`);
 
         messageBuffer.push(response);
 
@@ -68,7 +66,17 @@ export class TestStepGenerator {
             }
           }
         } else {
-          throw new TestGenUnexpectedAIResponseError(response.content);
+          // throw new TestGenUnexpectedAIResponseError(response.content);
+
+          console.log(`Error! No tool calls found. tcl: ${response.tool_calls!.length}`);
+
+          messageBuffer.push(
+            new SystemMessage({
+              content: "Error! No tool calls found. Please use tool calls now!",
+            }),
+          );
+
+          continue;
         }
       }
 

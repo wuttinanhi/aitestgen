@@ -1,12 +1,12 @@
 import { AIMessage, BaseMessage, SystemMessage } from "@langchain/core/messages";
-import { TypeAIModel } from "../models/types";
+import { AIModel } from "../models/types";
 import { StepHistory } from "../steps/stephistory";
 import { FinalizeParamsType, finalizeTool } from "../tools/finalizer";
 import { appendToolCallResponse } from "./toolCallResponse";
 
 export async function handleFinalize(
   SYSTEM_FINALIZE_PROMPT: string,
-  llm: TypeAIModel,
+  llm: AIModel,
   messageBuffer: Array<BaseMessage>,
   stepBuffer: StepHistory,
 ) {
@@ -25,10 +25,9 @@ export async function handleFinalize(
   );
 
   // BIND TOOLS finalizer
-  llm.bindTools([finalizeTool], {
-    tool_choice: "finalize",
-  });
-  const response = await llm.invoke(messageBuffer);
+  const llmWithTools = llm.bindTools([finalizeTool]);
+
+  const response = await llmWithTools.invoke(messageBuffer);
 
   messageBuffer.push(response);
 
@@ -40,8 +39,6 @@ export async function handleFinalize(
 
   const functionName = toolCall.name;
   const functionArguments: FinalizeParamsType = toolCall.args as any;
-
-  console.log(toolCall.args);
 
   const selectedSteps = functionArguments.steps;
 

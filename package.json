@@ -1,7 +1,7 @@
 {
   "name": "ai_to_testcase",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "src/main.ts",
   "author": "wuttinanhi <42175957+wuttinanhi@users.noreply.github.com>",
   "license": "MIT",
   "type": "module",
@@ -28,7 +28,7 @@
   },
   "scripts": {
     "start": "tsx src/generator.ts",
-    "test": "vitest",
-    "gentest": "vitest tests/generator.test.ts"
+    "test": "vitest ./.test/*.test.ts",
+    "testgen": "vitest tests/generator.test.ts"
   }
 }
