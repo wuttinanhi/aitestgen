@@ -2,9 +2,9 @@ import { BaseMessage } from "@langchain/core/messages";
 import { handleFinalize } from "../src/handlers/finalizer";
 import { readFileString, writeFileString } from "../src/helpers/files";
 import { formatTSCode } from "../src/helpers/formatter";
-import { modelOpenAI } from "../src/models/openai";
 import { TestStepGenerator } from "../src/steps/generator";
 import { PuppeteerTranslator } from "../src/translators/puppeteer.translator";
+import { modelOllama, OLLAMA_URL } from "./models/ollama";
 
 async function main() {
   const OUT_GENTEST_PATH = ".test/app.test.ts";
@@ -21,7 +21,10 @@ async function main() {
   const USER_PROMPT = await readFileString("prompts/example_contact_form.txt");
   console.log("User Prompt\n", USER_PROMPT);
 
-  const model = modelOpenAI;
+  // const model = modelOpenAI;
+
+  const model = modelOllama;
+  console.log("Using OLLAMA_URL:", OLLAMA_URL);
 
   const messageBuffer: Array<BaseMessage> = [];
   let TOTAL_TOKEN_USED = 0;

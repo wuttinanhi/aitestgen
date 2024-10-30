@@ -25,6 +25,7 @@ import {
 } from "../tools/defs";
 import {
   BrowserAlreadyLaunchedError,
+  BrowserNotLaunchedError,
   ElementBySelectorNotFoundError,
   ElementNotFoundError,
   PageNotFoundError,
@@ -41,6 +42,10 @@ export class PuppeteerEngine implements WebTestFunctionCall {
   private varNameToSelectorMap: Record<string, SelectorStorage> = {};
 
   getActivePage(): Page | Frame {
+    if (!this.browser) {
+      throw new BrowserNotLaunchedError();
+    }
+
     const page = this.activePage;
     if (!page) throw new PageNotFoundError();
     return page;

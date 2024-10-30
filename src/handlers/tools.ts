@@ -21,8 +21,10 @@ export async function handleToolCalls(
   // const argsAny = functionArgsValue as any;
   // const variables = functionArguments["varName"];
 
+  console.log("\n");
   console.log(`Invoking tool name: ${functionName}`);
-  console.log(`Invoking tool args: ${functionArgs}`);
+  console.log(`Invoking tool args:`);
+  console.log(functionArgs);
 
   // if (variables) {
   //   console.log(`Variable: ${variables}`);

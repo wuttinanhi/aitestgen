@@ -68,6 +68,7 @@ export class TestStepGenerator {
         } else {
           // throw new TestGenUnexpectedAIResponseError(response.content);
 
+          console.log(`Unexpected AI Response: ${response.content}`);
           console.log(`Error! No tool calls found. tcl: ${response.tool_calls!.length}`);
 
           messageBuffer.push(
