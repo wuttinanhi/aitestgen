@@ -24,7 +24,7 @@
   },
   "scripts": {
     "start": "tsx src/generator.ts",
-    "test": "vitest",
-    "gentest": "vitest tests/generator.test.ts"
+    "test": "vitest tests",
+    "gentest": "vitest generated"
   }
 }
