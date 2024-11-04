@@ -1,7 +1,15 @@
 import puppeteer, { Browser, Frame, Page } from "puppeteer";
+import {
+  BrowserAlreadyLaunchedError,
+  ElementBySelectorNotFoundError,
+  ElementNotFoundError,
+  PageNotFoundError,
+} from "../errors/engine";
 import { HTMLStripNonDisplayTags } from "../helpers/html";
 import { sleep } from "../helpers/utils";
+import { WebEngine } from "../interfaces/engine";
 import { FrameData } from "../interfaces/FrameData";
+import { SelectorStorage } from "../selectors/selector";
 import {
   TypeClickElementParams,
   TypeCloseBrowserParams,
@@ -23,16 +31,8 @@ import {
   TypeSetOptionValueParams,
   TypeSetTabParams,
 } from "../tools/defs";
-import {
-  BrowserAlreadyLaunchedError,
-  ElementBySelectorNotFoundError,
-  ElementNotFoundError,
-  PageNotFoundError,
-} from "./errors";
-import { WebTestFunctionCall } from "./interfaces";
-import { SelectorStorage } from "./selector";
 
-export class PuppeteerEngine implements WebTestFunctionCall {
+export class PuppeteerEngine implements WebEngine {
   private browser: Browser | null = null;
   private activePage: Page | Frame | null = null;
 
@@ -166,14 +166,11 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     await element.type(String(params.value));
   }
 
-  async expectElementVisible(
-    params: TypeExpectElementVisibleParams
-  ): Promise<any> {
+  async expectElementVisible(params: TypeExpectElementVisibleParams): Promise<any> {
     // prettier-ignore
     const element = (await this.getElement(params.varSelector)).getEngineSelector();
 
-    const isVisible =
-      element !== null && (await element.boundingBox()) !== null;
+    const isVisible = element !== null && (await element.boundingBox()) !== null;
 
     return {
       evaluate_result: isVisible === params.visible,
@@ -205,9 +202,7 @@ export class PuppeteerEngine implements WebTestFunctionCall {
     // prettier-ignore
     const element = (await this.getElement(params.varSelector)).getEngineSelector();
 
-    return element
-      .evaluate((el) => (el as HTMLInputElement).value)
-      .catch(() => "");
+    return element.evaluate((el) => (el as HTMLInputElement).value).catch(() => "");
   }
 
   async getTabs(_: TypeGetTabsParams): Promise<any> {
@@ -383,11 +378,7 @@ export class PuppeteerEngine implements WebTestFunctionCall {
       throw new ElementBySelectorNotFoundError(selectorType, selectorValue);
     }
 
-    const storage = new SelectorStorage(
-      selectorType,
-      selectorValue,
-      engineSelector
-    );
+    const storage = new SelectorStorage(selectorType, selectorValue, engineSelector);
     this.varNameToSelectorMap[varNameInTest] = storage;
 
     return;

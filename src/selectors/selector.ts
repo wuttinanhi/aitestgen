@@ -8,11 +8,7 @@ export class SelectorStorage {
   private selectorValue: string;
   private puppeteerSelector: ElementHandle;
 
-  constructor(
-    selectorType: SelectorType,
-    selectorValue: string,
-    puppeteerSelector: ElementHandle
-  ) {
+  constructor(selectorType: SelectorType, selectorValue: string, puppeteerSelector: ElementHandle) {
     this.selectorType = selectorType;
     this.selectorValue = selectorValue;
     this.puppeteerSelector = puppeteerSelector;

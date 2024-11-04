@@ -20,10 +20,7 @@ export class TestStepGenerator {
     this.loopHardLimit = hardLoopLimit;
   }
 
-  async generate(
-    userPrompt: string,
-    messageBuffer: Array<OpenAI.ChatCompletionMessageParam>
-  ) {
+  async generate(userPrompt: string, messageBuffer: Array<OpenAI.ChatCompletionMessageParam>) {
     const engine = new PuppeteerEngine();
     const stepHistory = new StepHistory();
     let uniqueVariableNames: string[] = [];
@@ -66,13 +63,7 @@ export class TestStepGenerator {
             const functionArgsValue = Object.values(functionArguments);
             const argsAny = functionArgsValue as any;
 
-            const result = await handleToolCalls(
-              engine,
-              messageBuffer,
-              stepHistory,
-              uniqueVariableNames,
-              toolCall
-            );
+            const result = await handleToolCalls(engine, messageBuffer, stepHistory, uniqueVariableNames, toolCall);
 
             if (result.completed) {
               break loop_hard_limit;

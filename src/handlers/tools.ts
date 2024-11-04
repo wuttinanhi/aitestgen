@@ -1,5 +1,5 @@
 import { OpenAI } from "openai";
-import { WebTestFunctionCall } from "../engines/interfaces";
+import { WebEngine } from "../interfaces/engine";
 import { FrameData } from "../interfaces/FrameData";
 import { IStep } from "../interfaces/Step";
 import { ToolCallResult } from "../interfaces/ToolCallResult";
@@ -7,11 +7,11 @@ import { StepHistory } from "../steps/stephistory";
 import { appendToolCallResponse } from "./toolCallResponse";
 
 export async function handleToolCalls(
-  engine: WebTestFunctionCall,
+  engine: WebEngine,
   messageBuffer: any[],
   stepBuffer: StepHistory,
   uniqueVariableNamesBuffer: string[],
-  toolCall: OpenAI.Chat.Completions.ChatCompletionMessageToolCall
+  toolCall: OpenAI.Chat.Completions.ChatCompletionMessageToolCall,
 ): Promise<ToolCallResult> {
   const functionName = toolCall.function.name;
   const functionArgs = JSON.parse(toolCall.function.arguments);
@@ -32,9 +32,7 @@ export async function handleToolCalls(
     // loop each variable name and check if it has been declared before
     for (const varName of uniqueVariableNamesBuffer) {
       if (uniqueVariableNamesBuffer.includes(varName)) {
-        throw new Error(
-          `Variable ${varName} already declared. please use a different variable name`
-        );
+        throw new Error(`Variable ${varName} already declared. please use a different variable name`);
       } else {
         uniqueVariableNamesBuffer.push(varName);
       }
