@@ -21,3 +21,9 @@ export class ElementBySelectorNotFoundError extends Error {
     super(`Element not found with type ${selectorType} "${selectorValue}"`);
   }
 }
+
+export class BrowserNotLaunchedError extends Error {
+  constructor() {
+    super("Browser not launched");
+  }
+}

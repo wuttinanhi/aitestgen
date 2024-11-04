@@ -1,10 +1,11 @@
-import { OpenAI } from "openai";
+import { BaseMessage } from "@langchain/core/messages";
 import { test } from "vitest";
-import { handleFinalize } from "../src/handlers/finalizer.js";
-import { readFileString, writeFileString } from "../src/helpers/files.js";
-import { formatTSCode } from "../src/helpers/formatter.js";
-import { TestStepGenerator } from "../src/steps/generator.js";
-import { PuppeteerTranslator } from "../src/translators/puppeteer.translator.js";
+import { PuppeteerEngine } from "../src/engines/puppeteer";
+import { readFileString, writeFileString } from "../src/helpers/files";
+import { formatTSCode } from "../src/helpers/formatter";
+import { modelOpenAI } from "../src/models/openai";
+import { TestStepGenerator } from "../src/steps/generator";
+import { PuppeteerTranslator } from "../src/translators/puppeteer.translator";
 
 test("should generate working test", async () => {
   const OUT_GENTEST_PATH = ".test/app.test.ts";
@@ -21,35 +22,30 @@ test("should generate working test", async () => {
   const USER_PROMPT = await readFileString("prompts/example_contact_form.txt");
   console.log("User Prompt\n", USER_PROMPT);
 
-  const openai = new OpenAI();
-  const messageBuffer: Array<OpenAI.ChatCompletionMessageParam> = [];
-  let TOTAL_TOKEN_USED = 0;
+  const model = modelOpenAI;
 
-  const testStepGenerator = new TestStepGenerator(openai, SYSTEM_INSTRUCTION_PROMPT);
+  const messageBuffer: Array<BaseMessage> = [];
 
-  const result = await testStepGenerator.generate(USER_PROMPT, messageBuffer);
-  TOTAL_TOKEN_USED += result.getTotalTokens();
+  const webEngine = new PuppeteerEngine();
+  const testStepGenerator = new TestStepGenerator(model, webEngine, SYSTEM_INSTRUCTION_PROMPT, SYSTEM_FINALIZE_PROMPT);
 
-  // write step history to file
-  await writeFileString(OUT_STEP_ALL, JSON.stringify(result.getStepHistory().getAll()));
+  const finalizedSteps = await testStepGenerator.generate(USER_PROMPT, messageBuffer);
 
-  const finalizeResult = await handleFinalize(SYSTEM_FINALIZE_PROMPT, openai, messageBuffer, result.getStepHistory());
+  // write generated steps to file
+  await writeFileString(OUT_STEP_ALL, JSON.stringify(testStepGenerator.getGeneratedSteps()));
 
-  const selectedSteps = result.getStepHistory().pickStepByIds(finalizeResult.selectedSteps);
-  TOTAL_TOKEN_USED += finalizeResult.totalTokens;
-
-  // write step history to file
-  await writeFileString(OUT_STEP_SELECTED, JSON.stringify(selectedSteps));
+  // write finalize steps to file
+  await writeFileString(OUT_STEP_SELECTED, JSON.stringify(finalizedSteps));
 
   const puppeteerTestGen = new PuppeteerTranslator(
-    selectedSteps,
+    finalizedSteps,
     TEMPLATE_CODE,
     "browser",
     "page",
     "// {{GENERATED_CODE}}",
   );
 
-  console.log("Total Tokens used:", TOTAL_TOKEN_USED);
+  console.log("Total Tokens used:", testStepGenerator.getTotalTokens());
   console.log("Generated test code at", OUT_GENTEST_PATH);
 
   // generate the test code

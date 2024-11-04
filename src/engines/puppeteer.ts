@@ -1,6 +1,7 @@
 import puppeteer, { Browser, Frame, Page } from "puppeteer";
 import {
   BrowserAlreadyLaunchedError,
+  BrowserNotLaunchedError,
   ElementBySelectorNotFoundError,
   ElementNotFoundError,
   PageNotFoundError,
@@ -33,6 +34,8 @@ import {
 } from "../tools/defs";
 
 export class PuppeteerEngine implements WebEngine {
+  private isHeadless: boolean = true;
+
   private browser: Browser | null = null;
   private activePage: Page | Frame | null = null;
 
@@ -40,7 +43,15 @@ export class PuppeteerEngine implements WebEngine {
 
   private varNameToSelectorMap: Record<string, SelectorStorage> = {};
 
+  public setHeadless(headless: boolean) {
+    this.isHeadless = headless;
+  }
+
   getActivePage(): Page | Frame {
+    if (!this.browser) {
+      throw new BrowserNotLaunchedError();
+    }
+
     const page = this.activePage;
     if (!page) throw new PageNotFoundError();
     return page;
@@ -95,7 +106,7 @@ export class PuppeteerEngine implements WebEngine {
     }
 
     this.browser = await puppeteer.launch({
-      headless: false,
+      headless: this.isHeadless,
       defaultViewport: {
         width: 1280,
         height: 720,

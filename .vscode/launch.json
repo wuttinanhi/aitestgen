@@ -5,25 +5,25 @@
     "version": "0.2.0",
     "configurations": [
         // From https://medium.com/@mtiller/debugging-with-typescript-jest-ts-jest-and-visual-studio-code-ef9ca8644132
-        {
-            "name": "Debug Jest Tests",
-            "type": "node",
-            "request": "launch",
-            "program": "${file}",
-            "runtimeArgs": [
-                "--inspect-brk",
-                "${workspaceRoot}/node_modules/.bin/jest",
-                "--runInBand"
-            ],
-            "console": "integratedTerminal",
-            "internalConsoleOptions": "neverOpen",
-            "skipFiles": [
-                // Node.js internal core modules
-                "<node_internals>/**",
-                // Ignore all dependencies (optional)
-                "${workspaceFolder}/node_modules/**",
-            ],
-        },
+        // {
+        //     "name": "Debug Jest Tests",
+        //     "type": "node",
+        //     "request": "launch",
+        //     "program": "${file}",
+        //     "runtimeArgs": [
+        //         "--inspect-brk",
+        //         "${workspaceRoot}/node_modules/.bin/jest",
+        //         "--runInBand"
+        //     ],
+        //     "console": "integratedTerminal",
+        //     "internalConsoleOptions": "neverOpen",
+        //     "skipFiles": [
+        //         // Node.js internal core modules
+        //         "<node_internals>/**",
+        //         // Ignore all dependencies (optional)
+        //         "${workspaceFolder}/node_modules/**",
+        //     ],
+        // },
         {
             "name": "tsx",
             "type": "node",
@@ -48,6 +48,23 @@
                 // Ignore all dependencies (optional)
                 "${workspaceFolder}/node_modules/**",
             ],
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Vitest Debug Current Test File",
+            "autoAttachChildProcesses": true,
+            "skipFiles": [
+                "<node_internals>/**",
+                "**/node_modules/**"
+            ],
+            "program": "${workspaceRoot}/node_modules/vitest/vitest.mjs",
+            "args": [
+                "run",
+                "${relativeFile}"
+            ],
+            "smartStep": true,
+            "console": "integratedTerminal"
         }
     ]
 }

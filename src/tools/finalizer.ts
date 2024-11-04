@@ -1,15 +1,14 @@
-import { zodFunction } from "openai/helpers/zod";
+import { StructuredToolParams } from "@langchain/core/tools";
 import z from "zod";
 
 export const finalizeParams = z.object({
   steps: z.array(z.number()).describe("The steps ID to finalize"),
 });
 
-export const finalizeTool = zodFunction({
-  name: "finalize",
-  parameters: finalizeParams,
-  description: "Pick the needed steps to finalize the test",
-});
-
-// infer the type of the function arguments
 export type FinalizeParamsType = z.infer<typeof finalizeParams>;
+
+export const finalizeTool: StructuredToolParams = {
+  name: "finalize",
+  description: "Pick the needed steps to finalize the test",
+  schema: finalizeParams,
+};

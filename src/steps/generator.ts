@@ -1,108 +1,111 @@
-import { OpenAI } from "openai";
-import { PuppeteerEngine } from "../engines/puppeteer";
-import { TestGenUnexpectedAIResponseError } from "../errors/errors";
+import { AIMessage, BaseMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { ToolCall, ToolMessage } from "@langchain/core/messages/tool";
 import { WebEngine } from "../interfaces/engine";
 import { FrameData } from "../interfaces/FrameData";
 import { IStep } from "../interfaces/Step";
-import { ToolCallResult } from "../interfaces/ToolCallResult";
+import { AIModel } from "../models/types";
 import { WebREPLToolsCollection } from "../tools/defs";
 import { FinalizeParamsType, finalizeTool } from "../tools/finalizer";
-import { TestStepGenResult } from "./result";
 import { StepHistory } from "./stephistory";
 
 export class TestStepGenerator {
-  private llm: OpenAI;
+  private llm: AIModel;
+  private webEngine!: WebEngine;
   private systemInstructionPrompt: string;
+  private systemFinalizePrompt: string;
   private loopHardLimit: number = 30;
 
-  constructor(llm: OpenAI, systemInstructionPrompt: string) {
+  private generatedSteps: IStep[] = [];
+  private finalizedSteps: IStep[] = [];
+  private totalTokensUsed: number = 0;
+
+  constructor(llm: AIModel, webEngine: WebEngine, systemInstructionPrompt: string, systemFinalizePrompt: string) {
     this.llm = llm;
     this.systemInstructionPrompt = systemInstructionPrompt;
+    this.systemFinalizePrompt = systemFinalizePrompt;
+    this.webEngine = webEngine;
   }
 
   setHardLoopLimit(hardLoopLimit: number) {
     this.loopHardLimit = hardLoopLimit;
   }
 
-  async generate(userPrompt: string, messageBuffer: Array<OpenAI.ChatCompletionMessageParam>) {
-    const engine = new PuppeteerEngine();
+  async generate(userPrompt: string, messageBuffer: Array<BaseMessage>) {
     const stepHistory = new StepHistory();
     let uniqueVariableNames: string[] = [];
-    let TOTAL_TOKENS = 0;
 
-    messageBuffer.push({
-      role: "system",
-      content: this.systemInstructionPrompt,
-    });
+    messageBuffer.push(
+      new SystemMessage({
+        content: this.systemInstructionPrompt,
+      }),
+    );
 
-    messageBuffer.push({
-      role: "user",
-      content: userPrompt,
-    });
+    messageBuffer.push(
+      new HumanMessage({
+        content: userPrompt,
+      }),
+    );
 
     try {
+      const aiWithTools = this.llm.bindTools(WebREPLToolsCollection);
+
       loop_hard_limit: for (let i = 0; i < this.loopHardLimit; i++) {
-        const response = await this.llm.chat.completions.create({
-          model: "gpt-4o-mini",
-          messages: messageBuffer,
-          tools: WebREPLToolsCollection,
-          max_tokens: 500,
-          temperature: 0.0,
-        });
+        const response = await aiWithTools.invoke(messageBuffer);
 
-        console.log(`\n\nLoop: ${i}`);
+        console.log(`LOOP: ${i + 1}`);
 
-        const choice = response.choices[0];
-
-        // push the ai response to the messages
-        messageBuffer.push(choice.message);
-
-        TOTAL_TOKENS += response.usage?.total_tokens!;
+        messageBuffer.push(response);
+        this.totalTokensUsed += response.usage_metadata!.total_tokens;
 
         // if it is function call, execute it
-        if (choice.message.tool_calls && choice.message.tool_calls.length > 0) {
-          for (const toolCall of choice.message.tool_calls) {
-            const functionName = toolCall.function.name;
-            const functionArguments = JSON.parse(toolCall.function.arguments);
-            const functionArgsValue = Object.values(functionArguments);
-            const argsAny = functionArgsValue as any;
+        if (response.tool_calls && response.tool_calls.length > 0) {
+          for (const toolCall of response.tool_calls) {
+            const functionName = toolCall.name;
+            const functionArguments = toolCall.args;
 
-            const result = await this.handleToolCall(engine, messageBuffer, stepHistory, uniqueVariableNames, toolCall);
+            // const functionArgsValue = Object.values(functionArguments);
+            // const argsAny = functionArgsValue as any;
 
-            if (result.completed) {
+            await this.handleToolCall(this.webEngine, messageBuffer, stepHistory, uniqueVariableNames, toolCall);
+
+            if (functionName === "complete") {
               break loop_hard_limit;
             }
           }
         } else {
-          throw new TestGenUnexpectedAIResponseError(choice.message.content);
+          console.warn("LLM response with no tool calls found in generate step", response.content);
+
+          messageBuffer.push(new SystemMessage({ content: "Error! No tool calls found. Please use tool calls now!" }));
+
+          continue;
         }
       }
 
-      const result = new TestStepGenResult(stepHistory, TOTAL_TOKENS);
+      // store all generated steps
+      this.generatedSteps = stepHistory.getAll();
 
-      return result;
+      const finalizedStep = await this.handleFinalize(this.systemFinalizePrompt, messageBuffer, stepHistory);
+
+      // store all finalized steps
+      this.finalizedSteps = finalizedStep;
+
+      return finalizedStep;
     } catch (error) {
       console.error("Error TestStepGenerator", error);
       throw error;
     } finally {
-      await engine.closeBrowser({});
+      await this.webEngine.closeBrowser({});
     }
   }
 
-  protected appendToolResult(
-    messageBuffer: any[],
-    toolCall: OpenAI.Chat.Completions.ChatCompletionMessageToolCall,
-    resultObject: any,
-  ) {
-    const toolCallResponse = {
-      role: "tool",
+  protected appendToolResult(messageBuffer: Array<BaseMessage>, toolCall: ToolCall, resultObject: any) {
+    const toolCallResponse = new ToolMessage({
       content: JSON.stringify(resultObject),
-      tool_call_id: toolCall.id,
-    } as OpenAI.ChatCompletionMessageParam;
+      tool_call_id: toolCall.id!,
+    });
+    // toolCallResponse.tool_call_id = toolCall.id!;
 
     messageBuffer.push(toolCallResponse);
-
-    console.log(`Return: ${JSON.stringify(resultObject).slice(0, 100)}`);
   }
 
   protected async handleToolCall(
@@ -110,24 +113,26 @@ export class TestStepGenerator {
     messageBuffer: any[],
     stepBuffer: StepHistory,
     uniqueVariableNamesBuffer: string[],
-    toolCall: OpenAI.Chat.Completions.ChatCompletionMessageToolCall,
-  ): Promise<ToolCallResult> {
-    const functionName = toolCall.function.name;
-    const functionArgs = JSON.parse(toolCall.function.arguments);
+    toolCall: ToolCall,
+  ) {
+    const functionName = toolCall.name;
+    const functionArgs = toolCall.args;
 
     // const functionArguments = JSON.parse(toolCall.function.arguments);
     // const functionArgsValue = Object.values(functionArguments);
     // const argsAny = functionArgsValue as any;
     // const variables = functionArguments["varName"];
 
+    console.log("\n");
     console.log(`Invoking tool name: ${functionName}`);
-    console.log(`Invoking tool args: ${functionArgs}`);
+    console.log(`Invoking tool args: ${JSON.stringify(functionArgs)}`);
 
     // if (variables) {
     //   console.log(`Variable: ${variables}`);
     // }
 
     try {
+      // check variable name duplication
       // loop each variable name and check if it has been declared before
       for (const varName of uniqueVariableNamesBuffer) {
         if (uniqueVariableNamesBuffer.includes(varName)) {
@@ -149,12 +154,13 @@ export class TestStepGenerator {
           stepBuffer.createStep(closeBrowserStep);
         }
 
+        // append the tool call response
         this.appendToolResult(messageBuffer, toolCall, {
           status: "success",
           message: "Backend acknowledged completion",
         });
 
-        return { completed: true };
+        return;
       }
 
       // if function name is reset, then reset the engine
@@ -168,15 +174,13 @@ export class TestStepGenerator {
           message: "Reset browser successfully",
         });
 
-        return { completed: false };
+        return;
       }
 
-      // Basic function invocation
-      // Invoke the function with the extracted arguments
-      // prettier-ignore
-      // let result = await (engine as any)[functionName](...functionArgsValue);
+      // invoke engine function
       let result = await (engine as any)[functionName](functionArgs);
 
+      // if result is undefined or null, then set it to success
       if (result === undefined || result === null) {
         result = { status: "success" };
       }
@@ -203,9 +207,9 @@ export class TestStepGenerator {
         step.iframeGetDataResult = result;
       }
 
-      // if function name contains "expect" the result should always be true to add to the step buffer
-      // prettier-ignore
-      const shouldAddStep = functionName.includes("expect") ? (result["evaluate_result"] === true) : true;
+      // if function name contains "expect"
+      // the result should always be true to add to the step buffer
+      const shouldAddStep = functionName.includes("expect") ? result["evaluate_result"] === true : true;
       if (shouldAddStep) {
         stepBuffer.createStep(step);
       }
@@ -223,7 +227,7 @@ export class TestStepGenerator {
       // push the result back to the messages buffer
       this.appendToolResult(messageBuffer, toolCall, result);
 
-      return { completed: false };
+      return;
     } catch (err) {
       const error = err as Error;
 
@@ -237,59 +241,73 @@ export class TestStepGenerator {
 
       console.error("Error in invoking function:", errorObj);
 
-      return { completed: false };
+      return;
     }
   }
 
   protected async handleFinalize(
     SYSTEM_FINALIZE_PROMPT: string,
-    llm: OpenAI,
-    messageBuffer: Array<OpenAI.ChatCompletionMessageParam>,
-    stepBuffer: StepHistory,
+    messageBuffer: Array<BaseMessage>,
+    stepHistory: StepHistory,
   ) {
-    messageBuffer.push({
-      role: "system",
-      content: SYSTEM_FINALIZE_PROMPT,
-    });
+    // send finalize instruction to llm
+    messageBuffer.push(new SystemMessage({ content: SYSTEM_FINALIZE_PROMPT }));
 
-    const stepJSON = JSON.stringify(stepBuffer.getAll());
+    // loop 5 time before throw error
+    for (let i = 0; i < 5; i++) {
+      // send all step to llm
+      const stepJSON = JSON.stringify(stepHistory.getAll());
+      messageBuffer.push(new AIMessage({ content: stepJSON }));
 
-    messageBuffer.push({
-      role: "assistant",
-      content: stepJSON,
-    });
+      // BIND TOOLS finalizer
+      const llmWithFinalizeTool = this.llm.bindTools([finalizeTool]);
 
-    const response = await llm.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: messageBuffer,
-      tools: [finalizeTool],
-      max_tokens: 500,
-      temperature: 0.0,
-    });
+      const response = await llmWithFinalizeTool.invoke(messageBuffer);
 
-    const choice = response.choices[0];
-    messageBuffer.push(choice.message);
+      messageBuffer.push(response);
+      this.totalTokensUsed += response.usage_metadata!.total_tokens;
 
-    if (!choice.message.tool_calls) {
-      throw new Error("No tool calls found in response");
+      if (!response.tool_calls) {
+        console.warn("LLM response with no tool calls found in finalize step", response.content);
+
+        // response with no tool calls, continue to next loop
+        messageBuffer.push(
+          new SystemMessage({ content: "Error! No tool calls found. Please use tool calls `finalize` now!" }),
+        );
+
+        continue;
+      }
+
+      const toolCall = response.tool_calls[0];
+
+      const functionName = toolCall.name;
+      const functionArguments: FinalizeParamsType = toolCall.args as any;
+
+      const selectedStepIDs = functionArguments.steps;
+
+      console.log(`Invoking tools: ${functionName}`);
+
+      // send complete message to llm
+      this.appendToolResult(messageBuffer, toolCall, { status: "success" });
+
+      // convert ids to steps
+      const selectedSteps = stepHistory.pickStepByIds(selectedStepIDs);
+
+      return selectedSteps;
     }
 
-    const toolCall = choice.message.tool_calls[0];
+    throw new Error("Error in finalizing: AI did not respond with finalize steps");
+  }
 
-    const functionName = toolCall.function.name;
-    const functionArguments: FinalizeParamsType = JSON.parse(toolCall.function.arguments);
+  public getGeneratedSteps() {
+    return this.generatedSteps;
+  }
 
-    const selectedSteps = functionArguments.steps;
+  public getFinalizedSteps() {
+    return this.finalizedSteps;
+  }
 
-    console.log(`Invoking tools: ${functionName}`);
-
-    this.appendToolResult(messageBuffer, toolCall, {
-      status: "success",
-    });
-
-    return {
-      selectedSteps,
-      totalTokens: response.usage ? response.usage.total_tokens : 0,
-    };
+  public getTotalTokens() {
+    return this.totalTokensUsed;
   }
 }
