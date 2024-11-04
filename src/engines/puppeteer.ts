@@ -34,12 +34,18 @@ import {
 } from "../tools/defs";
 
 export class PuppeteerEngine implements WebEngine {
+  private isHeadless: boolean = true;
+
   private browser: Browser | null = null;
   private activePage: Page | Frame | null = null;
 
   private isInRootFrame: boolean = true;
 
   private varNameToSelectorMap: Record<string, SelectorStorage> = {};
+
+  public setHeadless(headless: boolean) {
+    this.isHeadless = headless;
+  }
 
   getActivePage(): Page | Frame {
     if (!this.browser) {
@@ -100,7 +106,7 @@ export class PuppeteerEngine implements WebEngine {
     }
 
     this.browser = await puppeteer.launch({
-      headless: false,
+      headless: this.isHeadless,
       defaultViewport: {
         width: 1280,
         height: 720,

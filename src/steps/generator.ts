@@ -1,6 +1,5 @@
-import { ToolCall, ToolMessage } from "@langchain/core/dist/messages/tool";
 import { AIMessage, BaseMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PuppeteerEngine } from "../engines/puppeteer";
+import { ToolCall, ToolMessage } from "@langchain/core/messages/tool";
 import { WebEngine } from "../interfaces/engine";
 import { FrameData } from "../interfaces/FrameData";
 import { IStep } from "../interfaces/Step";
@@ -11,6 +10,7 @@ import { StepHistory } from "./stephistory";
 
 export class TestStepGenerator {
   private llm: AIModel;
+  private webEngine!: WebEngine;
   private systemInstructionPrompt: string;
   private systemFinalizePrompt: string;
   private loopHardLimit: number = 30;
@@ -19,10 +19,11 @@ export class TestStepGenerator {
   private finalizedSteps: IStep[] = [];
   private totalTokensUsed: number = 0;
 
-  constructor(llm: AIModel, systemInstructionPrompt: string, systemFinalizePrompt: string) {
+  constructor(llm: AIModel, webEngine: WebEngine, systemInstructionPrompt: string, systemFinalizePrompt: string) {
     this.llm = llm;
     this.systemInstructionPrompt = systemInstructionPrompt;
     this.systemFinalizePrompt = systemFinalizePrompt;
+    this.webEngine = webEngine;
   }
 
   setHardLoopLimit(hardLoopLimit: number) {
@@ -30,7 +31,6 @@ export class TestStepGenerator {
   }
 
   async generate(userPrompt: string, messageBuffer: Array<BaseMessage>) {
-    const engine = new PuppeteerEngine();
     const stepHistory = new StepHistory();
     let uniqueVariableNames: string[] = [];
 
@@ -66,7 +66,7 @@ export class TestStepGenerator {
             // const functionArgsValue = Object.values(functionArguments);
             // const argsAny = functionArgsValue as any;
 
-            await this.handleToolCall(engine, messageBuffer, stepHistory, uniqueVariableNames, toolCall);
+            await this.handleToolCall(this.webEngine, messageBuffer, stepHistory, uniqueVariableNames, toolCall);
 
             if (functionName === "complete") {
               break loop_hard_limit;
@@ -94,7 +94,7 @@ export class TestStepGenerator {
       console.error("Error TestStepGenerator", error);
       throw error;
     } finally {
-      await engine.closeBrowser({});
+      await this.webEngine.closeBrowser({});
     }
   }
 
@@ -125,8 +125,7 @@ export class TestStepGenerator {
 
     console.log("\n");
     console.log(`Invoking tool name: ${functionName}`);
-    console.log(`Invoking tool args:`);
-    console.log(functionArgs);
+    console.log(`Invoking tool args: ${JSON.stringify(functionArgs)}`);
 
     // if (variables) {
     //   console.log(`Variable: ${variables}`);
@@ -261,9 +260,9 @@ export class TestStepGenerator {
       messageBuffer.push(new AIMessage({ content: stepJSON }));
 
       // BIND TOOLS finalizer
-      const llmWithTools = this.llm.bindTools([finalizeTool]);
+      const llmWithFinalizeTool = this.llm.bindTools([finalizeTool]);
 
-      const response = await llmWithTools.invoke(messageBuffer);
+      const response = await llmWithFinalizeTool.invoke(messageBuffer);
 
       messageBuffer.push(response);
       this.totalTokensUsed += response.usage_metadata!.total_tokens;
