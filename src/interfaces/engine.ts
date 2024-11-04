@@ -24,7 +24,7 @@ import {
   TypeSetTabParams,
 } from "../tools/defs";
 
-export interface WebTestFunctionCall {
+export interface WebEngine {
   // Browser
   launchBrowser(params: TypeLaunchBrowserParams): Promise<any>;
   closeBrowser(params: TypeCloseBrowserParams): Promise<any>;
@@ -56,7 +56,5 @@ export interface WebTestFunctionCall {
   iframeSwitch(params: TypeIframeSwitchParams): Promise<any>;
   iframeReset(params: TypeIframeResetParams): Promise<any>;
   // Selector
-  createSelectorVariable(
-    params: TypeCreateSelectorVariableParams
-  ): Promise<any>;
+  createSelectorVariable(params: TypeCreateSelectorVariableParams): Promise<any>;
 }

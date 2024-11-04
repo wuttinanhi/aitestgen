@@ -1,7 +1,16 @@
 import puppeteer, { Browser, Frame, Page } from "puppeteer";
+import {
+  BrowserAlreadyLaunchedError,
+  BrowserNotLaunchedError,
+  ElementBySelectorNotFoundError,
+  ElementNotFoundError,
+  PageNotFoundError,
+} from "../errors/engine";
 import { HTMLStripNonDisplayTags } from "../helpers/html";
 import { sleep } from "../helpers/utils";
+import { WebEngine } from "../interfaces/engine";
 import { FrameData } from "../interfaces/FrameData";
+import { SelectorStorage } from "../selectors/selector";
 import {
   TypeClickElementParams,
   TypeCloseBrowserParams,
@@ -23,17 +32,8 @@ import {
   TypeSetOptionValueParams,
   TypeSetTabParams,
 } from "../tools/defs";
-import {
-  BrowserAlreadyLaunchedError,
-  BrowserNotLaunchedError,
-  ElementBySelectorNotFoundError,
-  ElementNotFoundError,
-  PageNotFoundError,
-} from "./errors";
-import { WebTestFunctionCall } from "./interfaces";
-import { SelectorStorage } from "./selector";
 
-export class PuppeteerEngine implements WebTestFunctionCall {
+export class PuppeteerEngine implements WebEngine {
   private browser: Browser | null = null;
   private activePage: Page | Frame | null = null;
 

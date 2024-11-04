@@ -1,5 +1,4 @@
 import { BaseMessage } from "@langchain/core/messages";
-import { handleFinalize } from "../src/handlers/finalizer";
 import { readFileString, writeFileString } from "../src/helpers/files";
 import { formatTSCode } from "../src/helpers/formatter";
 import { TestStepGenerator } from "../src/steps/generator";
@@ -27,33 +26,26 @@ async function main() {
   console.log("Using OLLAMA_URL:", OLLAMA_URL);
 
   const messageBuffer: Array<BaseMessage> = [];
-  let TOTAL_TOKEN_USED = 0;
 
-  const testStepGenerator = new TestStepGenerator(model, SYSTEM_INSTRUCTION_PROMPT);
+  const testStepGenerator = new TestStepGenerator(model, SYSTEM_INSTRUCTION_PROMPT, SYSTEM_FINALIZE_PROMPT);
 
-  const result = await testStepGenerator.generate(USER_PROMPT, messageBuffer);
-  TOTAL_TOKEN_USED += result.getTotalTokens();
+  const finalizedSteps = await testStepGenerator.generate(USER_PROMPT, messageBuffer);
 
-  // write step history to file
-  await writeFileString(OUT_STEP_ALL, JSON.stringify(result.getStepHistory().getAll()));
+  // write generated steps to file
+  await writeFileString(OUT_STEP_ALL, JSON.stringify(testStepGenerator.getGeneratedSteps()));
 
-  const finalizeResult = await handleFinalize(SYSTEM_FINALIZE_PROMPT, model, messageBuffer, result.getStepHistory());
-
-  const selectedSteps = result.getStepHistory().pickStepByIds(finalizeResult.selectedSteps);
-  TOTAL_TOKEN_USED += finalizeResult.totalTokens;
-
-  // write step history to file
-  await writeFileString(OUT_STEP_SELECTED, JSON.stringify(selectedSteps));
+  // write finalize steps to file
+  await writeFileString(OUT_STEP_SELECTED, JSON.stringify(finalizedSteps));
 
   const puppeteerTestGen = new PuppeteerTranslator(
-    selectedSteps,
+    finalizedSteps,
     TEMPLATE_CODE,
     "browser",
     "page",
     "// {{GENERATED_CODE}}",
   );
 
-  console.log("Total Tokens used:", TOTAL_TOKEN_USED);
+  console.log("Total Tokens used:", testStepGenerator.getTotalTokens());
   console.log("Generated test code at", OUT_GENTEST_PATH);
 
   // generate the test code

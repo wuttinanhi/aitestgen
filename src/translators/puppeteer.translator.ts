@@ -1,4 +1,4 @@
-import { WebTestFunctionCall } from "../engines/interfaces";
+import { WebEngine } from "../interfaces/engine";
 import { FrameData } from "../interfaces/FrameData";
 import { IStep } from "../interfaces/Step";
 import {
@@ -33,7 +33,7 @@ import {
 //   childs: PageOrFrame[];
 // }
 
-export class PuppeteerTranslator implements WebTestFunctionCall {
+export class PuppeteerTranslator implements WebEngine {
   private steps: IStep[];
 
   private browserVar: string;
@@ -56,7 +56,7 @@ export class PuppeteerTranslator implements WebTestFunctionCall {
     templateCode: string,
     templatePuppeteerLaunchVariableName: string,
     templatePuppeteerPageVariableName: string,
-    templatePlaceholder: string
+    templatePlaceholder: string,
   ) {
     this.steps = steps;
     this.templateCode = templateCode;
@@ -118,9 +118,7 @@ export class PuppeteerTranslator implements WebTestFunctionCall {
     return "";
   }
 
-  async expectElementVisible(
-    params: TypeExpectElementVisibleParams
-  ): Promise<any> {
+  async expectElementVisible(params: TypeExpectElementVisibleParams): Promise<any> {
     const varSelector = params.varSelector;
     const visible = params.visible;
 
@@ -240,9 +238,7 @@ export class PuppeteerTranslator implements WebTestFunctionCall {
   //   `;
   // }
 
-  async createSelectorVariable(
-    params: TypeCreateSelectorVariableParams
-  ): Promise<any> {
+  async createSelectorVariable(params: TypeCreateSelectorVariableParams): Promise<any> {
     const selectorValue = params.selectorValue;
     const selectorType = params.selectorType;
     const varNameInTest = params.varName;
@@ -277,10 +273,7 @@ export class PuppeteerTranslator implements WebTestFunctionCall {
       // console.log(line);
     }
 
-    return this.templateCode.replace(
-      this.templatePlaceholder,
-      this.generatedCode
-    );
+    return this.templateCode.replace(this.templatePlaceholder, this.generatedCode);
   }
 
   protected async generateStep(step: IStep) {
