@@ -2,7 +2,7 @@
   "name": "ai_to_testcase",
   "version": "1.0.0",
   "main": "index.ts",
-  "types": "index.d.ts",
+  "types": "index.ts",
   "author": "wuttinanhi <42175957+wuttinanhi@users.noreply.github.com>",
   "license": "MIT",
   "type": "module",

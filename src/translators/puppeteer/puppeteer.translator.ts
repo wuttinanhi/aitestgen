@@ -1,5 +1,5 @@
-import { writeFileString } from "src/helpers/files";
-import { formatTSCode } from "src/helpers/formatter";
+import { writeFileString } from "../../helpers/files";
+import { formatTSCode } from "../../helpers/formatter";
 import { WebEngine } from "../../interfaces/engine";
 import { FrameData } from "../../interfaces/FrameData";
 import { IStep } from "../../interfaces/Step";
