@@ -1,8 +1,8 @@
-import { writeFileString } from "../helpers/files";
-import { formatTSCode } from "../helpers/formatter";
-import { WebEngine } from "../interfaces/engine";
-import { FrameData } from "../interfaces/FrameData";
-import { IStep } from "../interfaces/Step";
+import { writeFileString } from "src/helpers/files";
+import { formatTSCode } from "src/helpers/formatter";
+import { WebEngine } from "../../interfaces/engine";
+import { FrameData } from "../../interfaces/FrameData";
+import { IStep } from "../../interfaces/Step";
 import {
   TypeClickElementParams,
   TypeCloseBrowserParams,
@@ -27,7 +27,7 @@ import {
   TypeSetInputValueParams,
   TypeSetOptionValueParams,
   TypeSetTabParams,
-} from "../tools/defs";
+} from "../../tools/defs";
 
 export class PuppeteerTranslator implements WebEngine {
   private steps: IStep[];
@@ -45,21 +45,58 @@ export class PuppeteerTranslator implements WebEngine {
   private iframeVarStack: string[] = [];
   private getIframeVarStack: string[] = [];
 
-  // private iframeTree: IframeNode[] = [];
-
   constructor(
     steps: IStep[],
     templateCode: string,
-    templatePuppeteerLaunchVariableName: string,
-    templatePuppeteerPageVariableName: string,
-    templatePlaceholder: string,
+    templateBrowserVar: string,
+    templatePageVar: string,
+    templateGenCodePlaceholder: string,
   ) {
     this.steps = steps;
     this.templateCode = templateCode;
-    this.browserVar = templatePuppeteerLaunchVariableName;
-    this.defaultPageVar = templatePuppeteerPageVariableName;
-    this.currentPageVar = templatePuppeteerPageVariableName;
-    this.templatePlaceholder = templatePlaceholder;
+    this.browserVar = templateBrowserVar;
+    this.defaultPageVar = templatePageVar;
+    this.currentPageVar = templatePageVar;
+    this.templatePlaceholder = templateGenCodePlaceholder;
+  }
+
+  public async generate() {
+    let generatedCode = "";
+
+    for (const step of this.steps) {
+      const line = await this.generateStep(step);
+      generatedCode += line + "\n";
+      // console.log(line);
+    }
+
+    this.generatedCode = generatedCode;
+
+    return this.templateCode.replace(this.templatePlaceholder, this.generatedCode);
+  }
+
+  public async generateToFile(outFilePath: string) {
+    // generate the test code
+    let generatedTestCode = await this.generate();
+
+    // try formatting the generated code
+    let formattedCode = await formatTSCode(generatedTestCode);
+
+    // save to file
+    await writeFileString(outFilePath, formattedCode);
+  }
+
+  protected async generateStep(step: IStep) {
+    const stepName = step.methodName;
+    const stepArgs = step.functionArgs;
+
+    if (stepName === "iframeGetData") {
+      this.lastGetIframeData = step.iframeGetDataResult;
+    }
+
+    // invoke self method
+    const result = await (this as any)[stepName as any](stepArgs);
+
+    return result;
   }
 
   async launchBrowser(params: TypeLaunchBrowserParams): Promise<any> {
@@ -256,47 +293,6 @@ export class PuppeteerTranslator implements WebEngine {
         throw new Error("Unknown selector type");
     }
 
-    return result;
-  }
-
-  /**
-   * generate
-   */
-  public async generate() {
-    let generatedCode = "";
-
-    for (const step of this.steps) {
-      const line = await this.generateStep(step);
-      generatedCode += line + "\n";
-      // console.log(line);
-    }
-
-    this.generatedCode = generatedCode;
-
-    return this.templateCode.replace(this.templatePlaceholder, this.generatedCode);
-  }
-
-  public async generateToFile(outFilePath: string) {
-    // generate the test code
-    let generatedTestCode = await this.generate();
-
-    // try formatting the generated code
-    let formattedCode = await formatTSCode(generatedTestCode);
-
-    // save to file
-    await writeFileString(outFilePath, formattedCode);
-  }
-
-  protected async generateStep(step: IStep) {
-    const stepName = step.methodName;
-    const stepArgs = step.functionArgs;
-
-    if (stepName === "iframeGetData") {
-      this.lastGetIframeData = step.iframeGetDataResult;
-    }
-
-    // invoke self method
-    const result = await (this as any)[stepName as any](stepArgs);
     return result;
   }
 }

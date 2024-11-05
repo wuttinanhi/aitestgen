@@ -1,7 +1,7 @@
 import { readFileString, writeFileString } from "../helpers/files";
 import { formatTSCode } from "../helpers/formatter";
 import { StepHistory } from "../steps/stephistory";
-import { PuppeteerTranslator } from "../translators/puppeteer.translator";
+import { PuppeteerTranslator } from "../translators/puppeteer/puppeteer.translator";
 
 async function testGenerator() {
   const IN_STEPS = "generated/out.steps.selected.json";
@@ -19,7 +19,7 @@ async function testGenerator() {
     TEMPLATE_CODE,
     "browser",
     "page",
-    "// {{GENERATED_CODE}}"
+    "// {{GENERATED_CODE}}",
   );
 
   try {

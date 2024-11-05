@@ -15,9 +15,7 @@ async function mainTest() {
   var quantityInput = await page.$("input[type='number']");
   await quantityInput!.type("1");
 
-  var buyButton = await page.$(
-    "#__next > div > main > div.shadow-lg.border.rounded.p-2 > button"
-  );
+  var buyButton = await page.$("#__next > div > main > div.shadow-lg.border.rounded.p-2 > button");
   await buyButton!.click();
 
   console.log("before navigation");

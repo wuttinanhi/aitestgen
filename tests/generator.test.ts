@@ -5,7 +5,7 @@ import { readFileString, writeFileString } from "../src/helpers/files";
 import { formatTSCode } from "../src/helpers/formatter";
 import { modelOpenAI } from "../src/models/openai";
 import { TestStepGenerator } from "../src/steps/generator";
-import { PuppeteerTranslator } from "../src/translators/puppeteer.translator";
+import { PuppeteerTranslator } from "../src/translators/puppeteer/puppeteer.translator";
 
 test("should generate working test", async () => {
   const OUT_GENTEST_PATH = ".test/app.test.ts";
