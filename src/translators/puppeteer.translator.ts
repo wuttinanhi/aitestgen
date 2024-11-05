@@ -1,3 +1,5 @@
+import { writeFileString } from "../helpers/files";
+import { formatTSCode } from "../helpers/formatter";
 import { WebEngine } from "../interfaces/engine";
 import { FrameData } from "../interfaces/FrameData";
 import { IStep } from "../interfaces/Step";
@@ -26,12 +28,6 @@ import {
   TypeSetOptionValueParams,
   TypeSetTabParams,
 } from "../tools/defs";
-
-// export interface IframeNode {
-//   id: string;
-//   parent: PageOrFrame | null;
-//   childs: PageOrFrame[];
-// }
 
 export class PuppeteerTranslator implements WebEngine {
   private steps: IStep[];
@@ -267,13 +263,26 @@ export class PuppeteerTranslator implements WebEngine {
    * generate
    */
   public async generate() {
+    let generatedCode = "";
+
     for (const step of this.steps) {
       const line = await this.generateStep(step);
-      this.generatedCode += line + "\n";
+      generatedCode += line + "\n";
       // console.log(line);
     }
 
     return this.templateCode.replace(this.templatePlaceholder, this.generatedCode);
+  }
+
+  public async generateToFile(outFilePath: string) {
+    // generate the test code
+    let generatedTestCode = await this.generate();
+
+    // try formatting the generated code
+    let formattedCode = await formatTSCode(generatedTestCode);
+
+    // save to file
+    await writeFileString(outFilePath, formattedCode);
   }
 
   protected async generateStep(step: IStep) {
