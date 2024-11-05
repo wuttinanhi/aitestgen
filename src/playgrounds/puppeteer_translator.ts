@@ -1,7 +1,7 @@
-import { readFileString, writeFileString } from "./helpers/files";
-import { formatTSCode } from "./helpers/formatter";
-import { StepHistory } from "./steps/stephistory";
-import { PuppeteerTranslator } from "./translators/puppeteer.translator";
+import { readFileString, writeFileString } from "../helpers/files";
+import { formatTSCode } from "../helpers/formatter";
+import { StepHistory } from "../steps/stephistory";
+import { PuppeteerTranslator } from "../translators/puppeteer.translator";
 
 async function testGenerator() {
   const IN_STEPS = "generated/out.steps.selected.json";
