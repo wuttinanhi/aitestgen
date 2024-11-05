@@ -1,4 +1,3 @@
-export * from "./prompts/index";
 export * from "./src/engines/puppeteer";
 export * from "./src/errors/engine";
 export * from "./src/errors/errors";
@@ -8,6 +7,7 @@ export * from "./src/interfaces/engine";
 export * from "./src/interfaces/Step";
 export * from "./src/interfaces/ToolCallResult";
 export * from "./src/models/index";
+export * from "./src/prompts/index";
 export * from "./src/selectors/selector";
 export * from "./src/steps/generator";
 export * from "./src/steps/result";

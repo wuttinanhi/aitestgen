@@ -1,4 +1,6 @@
-import { BaseMessage } from "@langchain/core/messages";
+import { BaseMessage } from "node_modules/@langchain/core/messages";
+import { DEFAULT_SYSTEM_FINALIZE_PROMPT, DEFAULT_SYSTEM_INSTRUCTION_PROMPT } from "src/prompts";
+import { DEFAULT_PUPPETEER_TEMPLATE } from "src/translators";
 import { test } from "vitest";
 import { PuppeteerEngine } from "../src/engines/puppeteer";
 import { readFileString, writeFileString } from "../src/helpers/files";
@@ -12,13 +14,6 @@ test("should generate working test", async () => {
   const OUT_STEP_ALL = ".test/out.steps.json";
   const OUT_STEP_SELECTED = ".test/out.steps.selected.json";
 
-  // prettier-ignore
-  const SYSTEM_INSTRUCTION_PROMPT = await readFileString("prompts/system_instruction_prompt.txt");
-  // prettier-ignore
-  const SYSTEM_FINALIZE_PROMPT = await readFileString("prompts/system_finalize_prompt.txt");
-
-  const TEMPLATE_CODE = await readFileString("templates/puppeteer_template.ts");
-
   const USER_PROMPT = await readFileString("prompts/example_contact_form.txt");
   console.log("User Prompt\n", USER_PROMPT);
 
@@ -27,7 +22,12 @@ test("should generate working test", async () => {
   const messageBuffer: Array<BaseMessage> = [];
 
   const webEngine = new PuppeteerEngine();
-  const testStepGenerator = new TestStepGenerator(model, webEngine, SYSTEM_INSTRUCTION_PROMPT, SYSTEM_FINALIZE_PROMPT);
+  const testStepGenerator = new TestStepGenerator(
+    model,
+    webEngine,
+    DEFAULT_SYSTEM_INSTRUCTION_PROMPT,
+    DEFAULT_SYSTEM_FINALIZE_PROMPT,
+  );
 
   const finalizedSteps = await testStepGenerator.generate(USER_PROMPT, messageBuffer);
 
@@ -39,7 +39,7 @@ test("should generate working test", async () => {
 
   const puppeteerTestGen = new PuppeteerTranslator(
     finalizedSteps,
-    TEMPLATE_CODE,
+    DEFAULT_PUPPETEER_TEMPLATE,
     "browser",
     "page",
     "// {{GENERATED_CODE}}",
