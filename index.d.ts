@@ -1,9 +1,11 @@
+export * from "./prompts/index";
 export { PuppeteerEngine } from "./src/engines/puppeteer";
 export * from "./src/errors/engine";
 export * from "./src/errors/errors";
 export { WebEngine } from "./src/interfaces/engine";
 export { IStep } from "./src/interfaces/Step";
 export { ToolCallResult } from "./src/interfaces/ToolCallResult";
+export * from "./src/models/index";
 export { SelectorStorage, SelectorType } from "./src/selectors/selector";
 export { TestStepGenerator } from "./src/steps/generator";
 export { TestStepGenResult } from "./src/steps/result";
