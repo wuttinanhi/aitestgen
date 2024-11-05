@@ -271,6 +271,8 @@ export class PuppeteerTranslator implements WebEngine {
       // console.log(line);
     }
 
+    this.generatedCode = generatedCode;
+
     return this.templateCode.replace(this.templatePlaceholder, this.generatedCode);
   }
 
