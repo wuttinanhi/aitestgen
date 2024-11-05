@@ -14,4 +14,4 @@ export * from "./src/steps/result";
 export * from "./src/steps/stephistory";
 export * from "./src/tools/defs";
 export * from "./src/tools/finalizer";
-export * from "./src/translators/puppeteer/puppeteer.translator";
+export * from "./src/translators/index";
