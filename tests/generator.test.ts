@@ -22,6 +22,7 @@ test("should generate working test", async () => {
   const messageBuffer: Array<BaseMessage> = [];
 
   const webEngine = new PuppeteerEngine();
+
   const testStepGenerator = new TestStepGenerator(
     model,
     webEngine,
@@ -37,6 +38,7 @@ test("should generate working test", async () => {
   // write finalize steps to file
   await writeFileString(OUT_STEP_SELECTED, JSON.stringify(finalizedSteps));
 
+  // new puppeteer translator
   const puppeteerTestGen = new PuppeteerTranslator(
     finalizedSteps,
     DEFAULT_PUPPETEER_TEMPLATE,
@@ -53,6 +55,8 @@ test("should generate working test", async () => {
 
   // try formatting the generated code
   let formattedCode = await formatTSCode(generatedTestCode);
+
+  // save formatted generated test code to file
   await writeFileString(OUT_GENTEST_PATH, formattedCode);
 
   // write message buffer to file
