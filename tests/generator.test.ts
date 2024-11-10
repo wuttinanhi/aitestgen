@@ -6,7 +6,7 @@ import { PuppeteerEngine } from "../src/engines/puppeteer";
 import { readFileString, writeFileString } from "../src/helpers/files";
 import { formatTSCode } from "../src/helpers/formatter";
 import { modelOpenAI } from "../src/models/openai";
-import { TestStepGenerator } from "../src/steps/generator";
+import { TestStepGenerator } from "../src/generators/generator";
 import { PuppeteerTranslator } from "../src/translators/puppeteer/puppeteer.translator";
 
 test("should generate working test", async () => {

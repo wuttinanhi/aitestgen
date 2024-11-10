@@ -6,7 +6,8 @@ import { IStep } from "../interfaces/Step";
 import { AIModel } from "../models/types";
 import { WebREPLToolsCollection } from "../tools/defs";
 import { FinalizeParamsType, finalizeTool } from "../tools/finalizer";
-import { StepHistory } from "./stephistory";
+import { StepHistory } from "../stephistory/stephistory";
+import { WebControllerProxy } from "src/proxy/webcontroller_proxy";
 
 export class TestStepGenerator {
   private llm: AIModel;
@@ -75,7 +76,11 @@ export class TestStepGenerator {
         } else {
           console.warn("LLM response with no tool calls found in generate step", response.content);
 
-          messageBuffer.push(new SystemMessage({ content: "Error! No tool calls found. Please use tool calls now!" }));
+          messageBuffer.push(
+            new SystemMessage({
+              content: "Error! No tool calls found. Please use tool calls now!",
+            }),
+          );
 
           continue;
         }
@@ -178,7 +183,7 @@ export class TestStepGenerator {
       }
 
       // invoke engine function
-      let result = await (engine as any)[functionName](functionArgs);
+      let result = await WebControllerProxy.callFunction(engine, functionName, functionArgs);
 
       // if result is undefined or null, then set it to success
       if (result === undefined || result === null) {
@@ -272,7 +277,9 @@ export class TestStepGenerator {
 
         // response with no tool calls, continue to next loop
         messageBuffer.push(
-          new SystemMessage({ content: "Error! No tool calls found. Please use tool calls `finalize` now!" }),
+          new SystemMessage({
+            content: "Error! No tool calls found. Please use tool calls `finalize` now!",
+          }),
         );
 
         continue;
