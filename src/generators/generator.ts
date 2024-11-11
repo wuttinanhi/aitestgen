@@ -1,17 +1,17 @@
 import { AIMessage, BaseMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ToolCall, ToolMessage } from "@langchain/core/messages/tool";
-import { WebEngine } from "../interfaces/engine";
-import { FrameData } from "../interfaces/FrameData";
-import { IStep } from "../interfaces/Step";
-import { AIModel } from "../models/types";
-import { WebREPLToolsCollection } from "../tools/defs";
-import { FinalizeParamsType, finalizeTool } from "../tools/finalizer";
-import { StepHistory } from "../stephistory/stephistory";
-import { WebControllerProxy } from "src/proxy/webcontroller_proxy";
+import { FrameData } from "../interfaces/framedata.ts";
+import { IStep } from "../interfaces/step.ts";
+import { AIModel } from "../models/types.ts";
+import { WebREPLToolsCollection } from "../tools/defs.ts";
+import { FinalizeParamsType, finalizeTool } from "../tools/finalizer.ts";
+import { StepHistory } from "../stephistory/stephistory.ts";
+import { WebControllerProxy } from "src/proxy/webcontroller_proxy.ts";
+import { WebController } from "testgenwebcontroller";
 
 export class TestStepGenerator {
   private llm: AIModel;
-  private webEngine!: WebEngine;
+  private webEngine!: WebController;
   private systemInstructionPrompt: string;
   private systemFinalizePrompt: string;
   private loopHardLimit: number = 30;
@@ -20,7 +20,7 @@ export class TestStepGenerator {
   private finalizedSteps: IStep[] = [];
   private totalTokensUsed: number = 0;
 
-  constructor(llm: AIModel, webEngine: WebEngine, systemInstructionPrompt: string, systemFinalizePrompt: string) {
+  constructor(llm: AIModel, webEngine: WebController, systemInstructionPrompt: string, systemFinalizePrompt: string) {
     this.llm = llm;
     this.systemInstructionPrompt = systemInstructionPrompt;
     this.systemFinalizePrompt = systemFinalizePrompt;
@@ -114,7 +114,7 @@ export class TestStepGenerator {
   }
 
   protected async handleToolCall(
-    engine: WebEngine,
+    engine: WebController,
     messageBuffer: any[],
     stepBuffer: StepHistory,
     uniqueVariableNamesBuffer: string[],

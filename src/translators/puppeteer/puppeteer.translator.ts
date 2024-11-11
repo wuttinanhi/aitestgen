@@ -1,8 +1,8 @@
-import { writeFileString } from "../../helpers/files";
-import { formatTSCode } from "../../helpers/formatter";
-import { WebEngine } from "../../interfaces/engine";
-import { FrameData } from "../../interfaces/FrameData";
-import { IStep } from "../../interfaces/Step";
+import { WebController } from "testgenwebcontroller";
+import { writeFileString } from "../../helpers/files.ts";
+import { formatTSCode } from "../../helpers/formatter.ts";
+import { FrameData } from "../../interfaces/framedata.ts";
+import { IStep } from "../../interfaces/step.ts";
 import {
   TypeClickElementParams,
   TypeCloseBrowserParams,
@@ -27,9 +27,9 @@ import {
   TypeSetInputValueParams,
   TypeSetOptionValueParams,
   TypeSetTabParams,
-} from "../../tools/defs";
+} from "../../tools/defs.ts";
 
-export class PuppeteerTranslator implements WebEngine {
+export class PuppeteerTranslator implements WebController {
   private steps: IStep[];
 
   private browserVar: string;
@@ -264,12 +264,6 @@ export class PuppeteerTranslator implements WebEngine {
     await waitForNavigation();
     `;
   }
-
-  // async pressKey(params: any): Promise<any> {
-  //   return `
-  //   await ${this.currentPageVar}.keyboard.press("${arg0}");
-  //   `;
-  // }
 
   async createSelectorVariable(params: TypeCreateSelectorVariableParams): Promise<any> {
     const selectorValue = params.selectorValue;

@@ -6,7 +6,7 @@ describe("TESTSUITE", () => {
 
   beforeEach(async () => {
     browser = await puppeteer.launch({
-      headless: false,
+      headless: true,
       defaultViewport: {
         width: 1280,
         height: 720,

@@ -130,3 +130,5 @@ dist
 .pnp.*
 out.txt
 screenshot.png
+.lintout
+.test/**

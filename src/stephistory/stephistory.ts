@@ -1,4 +1,4 @@
-import { IStep } from "../interfaces/Step";
+import { IStep } from "../interfaces/step.ts";
 
 export class StepHistory {
   private steps: IStep[] = [];

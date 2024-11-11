@@ -1,27 +1,27 @@
-import { BaseMessage } from "node_modules/@langchain/core/messages";
-import { DEFAULT_SYSTEM_FINALIZE_PROMPT, DEFAULT_SYSTEM_INSTRUCTION_PROMPT } from "src/prompts";
-import { DEFAULT_PUPPETEER_TEMPLATE } from "src/translators";
 import { test } from "vitest";
-import { PuppeteerEngine } from "../src/engines/puppeteer";
-import { readFileString, writeFileString } from "../src/helpers/files";
-import { formatTSCode } from "../src/helpers/formatter";
-import { modelOpenAI } from "../src/models/openai";
-import { TestStepGenerator } from "../src/generators/generator";
-import { PuppeteerTranslator } from "../src/translators/puppeteer/puppeteer.translator";
+import { PuppeteerController } from "testgenwebcontroller";
+import { modelOpenAI } from "../src/models/openai.ts";
+import { BaseMessage } from "@langchain/core/messages";
+import { TestStepGenerator } from "../src/generators/generator.ts";
+import { DEFAULT_SYSTEM_FINALIZE_PROMPT, DEFAULT_SYSTEM_INSTRUCTION_PROMPT } from "../src/prompts/index.ts";
+import { readFileString, writeFileString } from "../src/helpers/files.ts";
+import { PuppeteerTranslator } from "../src/translators/puppeteer/puppeteer.translator.ts";
+import { DEFAULT_PUPPETEER_TEMPLATE } from "../src/translators/index.ts";
+import { formatTSCode } from "../src/helpers/formatter.ts";
 
 test("should generate working test", async () => {
   const OUT_GENTEST_PATH = ".test/app.test.ts";
   const OUT_STEP_ALL = ".test/out.steps.json";
   const OUT_STEP_SELECTED = ".test/out.steps.selected.json";
 
-  const USER_PROMPT = await readFileString("prompts/example_contact_form.txt");
+  const USER_PROMPT = await readFileString(__dirname + "/../src/prompts/example_contact_form.txt");
   console.log("User Prompt\n", USER_PROMPT);
 
   const model = modelOpenAI;
 
   const messageBuffer: Array<BaseMessage> = [];
 
-  const webEngine = new PuppeteerEngine();
+  const webEngine = new PuppeteerController();
 
   const testStepGenerator = new TestStepGenerator(
     model,

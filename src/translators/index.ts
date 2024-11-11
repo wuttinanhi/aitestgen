@@ -1,4 +1,4 @@
-export * from "./puppeteer/puppeteer.translator";
+export * from "./puppeteer/puppeteer.translator.ts";
 
 import { readFileSync } from "node:fs";
 import path from "path";
