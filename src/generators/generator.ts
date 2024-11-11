@@ -6,7 +6,7 @@ import { AIModel } from "../models/types.ts";
 import { WebREPLToolsCollection } from "../tools/defs.ts";
 import { FinalizeParamsType, finalizeTool } from "../tools/finalizer.ts";
 import { StepHistory } from "../stephistory/stephistory.ts";
-import { WebControllerProxy } from "src/proxy/webcontroller_proxy.ts";
+import { WebControllerProxy } from "../proxy/webcontroller_proxy.ts";
 import { WebController } from "testgenwebcontroller";
 
 export class TestStepGenerator {

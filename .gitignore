@@ -132,3 +132,6 @@ out.txt
 screenshot.png
 .lintout
 .test/**
+.gen/**
+app.test.ts
+gen.test.ts

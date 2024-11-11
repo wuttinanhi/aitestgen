@@ -1,15 +1,5 @@
-export * from "./src/errors/engine.ts";
-export * from "./src/errors/errors.ts";
-export * from "./src/helpers/files.ts";
-export * from "./src/helpers/formatter.ts";
-export * from "./src/interfaces/step.ts";
-export * from "./src/prompts/index.ts";
-export * from "./src/selectors/selector.ts";
-export * from "./src/generators/generator.ts";
-export * from "./src/stephistory/stephistory.ts";
-export * from "./src/tools/defs.ts";
-export * from "./src/tools/finalizer.ts";
-export * from "./src/translators/index.ts";
-export * from "./src/models/ollama.ts";
-export * from "./src/models/openai.ts";
-export * from "./src/models/types.ts";
+#!/usr/bin/env -S npx tsx
+
+import { main } from "./src/cmds/testgen.ts";
+
+main();

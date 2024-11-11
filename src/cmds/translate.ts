@@ -1,7 +1,7 @@
-import { readFileString, writeFileString } from "src/helpers/files.ts";
-import { formatTSCode } from "src/helpers/formatter.ts";
-import { StepHistory } from "src/stephistory/stephistory.ts";
-import { DEFAULT_PUPPETEER_TEMPLATE, PuppeteerTranslator } from "src/translators/index.ts";
+import { readFileString, writeFileString } from "../helpers/files.ts";
+import { formatTSCode } from "../helpers/formatter.ts";
+import { StepHistory } from "../stephistory/stephistory.ts";
+import { DEFAULT_PUPPETEER_TEMPLATE, PuppeteerTranslator } from "../translators/index.ts";
 
 async function main() {
   const INPUT_STEP_JSON_PATH = ".test/out.steps.selected.json";
