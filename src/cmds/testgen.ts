@@ -9,6 +9,7 @@ import { DEFAULT_PUPPETEER_TEMPLATE, PuppeteerTranslator } from "../translators/
 import { formatTSCode } from "../helpers/formatter.ts";
 import path from "path";
 import { spawn } from "child_process";
+import ora from "ora";
 
 export async function main() {
   const program = new Command();
@@ -56,7 +57,7 @@ export async function main() {
     return;
   }
 
-  console.log("User Prompt:", USER_PROMPT_TEXT);
+  console.log("💬  User Prompt:", USER_PROMPT_TEXT);
 
   // create gen directory
   await createDir(OUT_GEN_DIR);
@@ -65,48 +66,51 @@ export async function main() {
   const messageBuffer: Array<BaseMessage> = [];
   const webController = new PuppeteerController();
 
-  const testStepGenerator = new TestStepGenerator(
-    model,
-    webController,
-    DEFAULT_SYSTEM_INSTRUCTION_PROMPT,
-    DEFAULT_SYSTEM_FINALIZE_PROMPT,
-  );
+  const spinner = ora({
+    // enable ctrl + c for cancel
+    // https://github.com/sindresorhus/ora/issues/156
+    hideCursor: false,
+    discardStdin: false,
+    text: `Generating test...\n`,
+  });
 
+  if (!options.verbose) {
+    spinner.start();
+  }
+
+  // create new test step generator
+  const testStepGenerator = new TestStepGenerator(model, webController, DEFAULT_SYSTEM_INSTRUCTION_PROMPT, DEFAULT_SYSTEM_FINALIZE_PROMPT);
   testStepGenerator.setVerbose(options.verbose);
 
+  // generate steps
   const finalizedSteps = await testStepGenerator.generate(USER_PROMPT_TEXT, messageBuffer);
 
   // write generated steps to file
   await writeFileString(OUT_STEP_ALL, JSON.stringify(testStepGenerator.getGeneratedSteps()));
-
   // write finalize steps to file
   await writeFileString(OUT_STEP_FINALIZED, JSON.stringify(finalizedSteps));
 
   // new puppeteer translator
-  const puppeteerTestGen = new PuppeteerTranslator(
-    finalizedSteps,
-    DEFAULT_PUPPETEER_TEMPLATE,
-    "browser",
-    "page",
-    "// {{GENERATED_CODE}}",
-  );
-
+  const puppeteerTestGen = new PuppeteerTranslator(finalizedSteps, DEFAULT_PUPPETEER_TEMPLATE, "browser", "page", "// {{GENERATED_CODE}}");
   // generate the test code
   let generatedTestCode = await puppeteerTestGen.generate();
 
   try {
-    // try formatting the generated code
+    // try formatting the generated test code
     let formattedCode = await formatTSCode(generatedTestCode);
 
     // save formatted generated test code to file
     await writeFileString(OUT_GENTEST_PATH, formattedCode);
   } catch (error) {
-    console.error("failed to format test code", error);
+    console.error("failed to format generated test code", error);
   }
 
   // write message buffer to file
   await writeFileString(OUT_MESSAGE_BUFFER, JSON.stringify(messageBuffer));
 
-  console.log("Total Tokens used:", testStepGenerator.getTotalTokens());
-  console.log("Generated test code saved at:", OUT_GENTEST_PATH);
+  spinner.text = "Completed!\n";
+  spinner.stop();
+
+  console.log("🪙   Total Tokens used:", testStepGenerator.getTotalTokens());
+  console.log("💾   Generated test code saved at:", OUT_GENTEST_PATH);
 }
