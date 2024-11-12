@@ -1,4 +1,4 @@
-import { WebController } from "testgenwebcontroller";
+import { WebController } from "../interfaces/controller.ts";
 
 export class WebControllerProxy {
   public static async callFunction(controller: WebController, functionName: string, functionArgs: any) {

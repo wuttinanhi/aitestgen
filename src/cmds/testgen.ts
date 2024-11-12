@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import { modelOpenAI } from "../models/openai.ts";
 import { BaseMessage } from "@langchain/core/messages";
-import { PuppeteerController } from "testgenwebcontroller";
+import { PuppeteerController } from "../controllers/puppeteer.controller.ts";
 import { TestStepGenerator } from "../generators/generator.ts";
 import { DEFAULT_SYSTEM_FINALIZE_PROMPT, DEFAULT_SYSTEM_INSTRUCTION_PROMPT } from "../prompts/index.ts";
 import { createDir, createDirIgnoreFile, writeFileString } from "../helpers/files.ts";
@@ -62,11 +62,11 @@ export async function main() {
 
   const model = modelOpenAI;
   const messageBuffer: Array<BaseMessage> = [];
-  const webEngine = new PuppeteerController();
+  const webController = new PuppeteerController();
 
   const testStepGenerator = new TestStepGenerator(
     model,
-    webEngine,
+    webController,
     DEFAULT_SYSTEM_INSTRUCTION_PROMPT,
     DEFAULT_SYSTEM_FINALIZE_PROMPT,
   );
