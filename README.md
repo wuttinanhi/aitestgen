@@ -71,6 +71,12 @@ yarn install
 yarn test
 ```
 
+4. Link this package
+```bash
+yarn link
+```
+
+
 ### Yarn scripts
 
 | Option | Description |
@@ -80,6 +86,7 @@ yarn test
 | `gentest` | Test the generated code |
 | `lint` | Lint codebase |
 | `translate` | Translate test steps only |
+
 
 
 ## License
