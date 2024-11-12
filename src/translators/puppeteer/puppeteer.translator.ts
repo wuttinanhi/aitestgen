@@ -66,7 +66,6 @@ export class PuppeteerTranslator implements WebController {
     for (const step of this.steps) {
       const line = await this.generateStep(step);
       generatedCode += line + "\n";
-      // console.log(line);
     }
 
     this.generatedCode = generatedCode;

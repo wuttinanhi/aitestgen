@@ -15,6 +15,7 @@ export class TestStepGenerator {
   private systemInstructionPrompt: string;
   private systemFinalizePrompt: string;
   private loopHardLimit: number = 30;
+  private verbose: boolean = false;
 
   private generatedSteps: IStep[] = [];
   private finalizedSteps: IStep[] = [];
@@ -34,6 +35,10 @@ export class TestStepGenerator {
 
   setHardLoopLimit(hardLoopLimit: number) {
     this.loopHardLimit = hardLoopLimit;
+  }
+
+  setVerbose(verbose: boolean) {
+    this.verbose = verbose;
   }
 
   async generate(userPrompt: string, messageBuffer: Array<BaseMessage>) {
@@ -58,7 +63,7 @@ export class TestStepGenerator {
       loop_hard_limit: for (let i = 0; i < this.loopHardLimit; i++) {
         const response = await aiWithTools.invoke(messageBuffer);
 
-        console.log(`LOOP: ${i + 1}`);
+        this.logWrapper(`LOOP: ${i + 1}`);
 
         messageBuffer.push(response);
         this.totalTokensUsed += response.usage_metadata!.total_tokens;
@@ -128,18 +133,8 @@ export class TestStepGenerator {
     const functionName = toolCall.name;
     const functionArgs = toolCall.args;
 
-    // const functionArguments = JSON.parse(toolCall.function.arguments);
-    // const functionArgsValue = Object.values(functionArguments);
-    // const argsAny = functionArgsValue as any;
-    // const variables = functionArguments["varName"];
-
-    console.log("\n");
-    console.log(`Invoking tool name: ${functionName}`);
-    console.log(`Invoking tool args: ${JSON.stringify(functionArgs)}`);
-
-    // if (variables) {
-    //   console.log(`Variable: ${variables}`);
-    // }
+    this.logWrapper(`\tInvoking tool name: ${functionName}`);
+    this.logWrapper(`\tInvoking tool args: ${JSON.stringify(functionArgs)}`);
 
     try {
       // check variable name duplication
@@ -249,7 +244,7 @@ export class TestStepGenerator {
       // push the error back to the messages
       this.appendToolResult(messageBuffer, toolCall, errorObj);
 
-      console.error("Error in invoking function:", errorObj);
+      console.error("\tError in invoking function:", JSON.stringify(errorObj));
 
       return;
     }
@@ -297,7 +292,7 @@ export class TestStepGenerator {
 
       const selectedStepIDs = functionArguments.steps;
 
-      console.log(`Invoking tools: ${functionName}`);
+      this.logWrapper(`Invoking tools: ${functionName}`);
 
       // send complete message to llm
       this.appendToolResult(messageBuffer, toolCall, { status: "success" });
@@ -321,5 +316,13 @@ export class TestStepGenerator {
 
   public getTotalTokens() {
     return this.totalTokensUsed;
+  }
+
+  protected logWrapper(text: string) {
+    if (!this.verbose) {
+      return;
+    }
+
+    console.log(text);
   }
 }

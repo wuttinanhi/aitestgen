@@ -31,7 +31,7 @@
   "scripts": {
     "start": "tsx index.ts",
     "test": "vitest tests",
-    "gentest": "vitest generated",
+    "gentest": "vitest run app.test.ts",
     "lint": "tsc --noEmit --skipLibCheck --project tsconfig.json",
     "translate": "tsx src/cmds/translate.ts"
   }

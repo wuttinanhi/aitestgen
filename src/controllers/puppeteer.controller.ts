@@ -36,6 +36,7 @@ import {
 
 export class PuppeteerController implements WebController {
   private isHeadless: boolean = true;
+  private verbose: boolean = false;
 
   private browser: puppeteer.Browser | null = null;
   private activePage: puppeteer.Page | puppeteer.Frame | null = null;
@@ -46,6 +47,10 @@ export class PuppeteerController implements WebController {
 
   public setHeadless(headless: boolean) {
     this.isHeadless = headless;
+  }
+
+  public setVerbose(verbose: boolean) {
+    this.verbose = verbose;
   }
 
   getActivePage(): puppeteer.Page | puppeteer.Frame {
@@ -69,7 +74,7 @@ export class PuppeteerController implements WebController {
     return tabs.at(-1);
   }
 
-  async getElement(selectorVarName: string) {
+  async getSelectorStorageFromVariableName(selectorVarName: string) {
     const selector = this.varNameToSelectorMap[selectorVarName];
     if (!selector) {
       throw new ElementNotFoundError();
@@ -78,28 +83,25 @@ export class PuppeteerController implements WebController {
     return selector;
   }
 
-  async waitForNavigation() {
-    try {
-      await this.getActivePage().waitForNavigation({
-        waitUntil: "networkidle0",
-        timeout: 5_000,
-      });
-    } catch (error) {}
-  }
+  // async waitForNavigation() {
+  //   try {
+  //     await this.getActivePage().waitForNavigation({
+  //       waitUntil: "networkidle0",
+  //       timeout: 5_000,
+  //     });
+  //   } catch (error) {}
+  // }
 
   async waitForPageLoad() {
     try {
       await Promise.race([
-        this.waitForNavigation(),
-        // wait for network idle is not exist in frame
-        // this.getActivePage().waitForNetworkIdle({
-        //   timeout: 5_000,
-        // }),
-        // Hard limit of 10 seconds
-        sleep(10_000),
+        this.getActivePage().waitForNavigation({ waitUntil: "load", timeout: 5 * 1000 }),
+        sleep(5 * 1000),
       ]);
     } catch (_) {
-      // ...
+      if (this.verbose) {
+        console.log("No navigation detected or wait time exceeded.");
+      }
     }
   }
 
@@ -123,7 +125,6 @@ export class PuppeteerController implements WebController {
   }
 
   async navigateTo(params: TypeNavigateToParams): Promise<void> {
-    console.log(params);
     await this.getActivePage().goto(params.url);
   }
 
@@ -135,7 +136,9 @@ export class PuppeteerController implements WebController {
     //   return document.body.innerText;
     // });
 
-    console.log("HTML Source Length", htmlSmall.length);
+    if (this.verbose) {
+      console.log("getHtmlSource Length", htmlSmall.length);
+    }
 
     return {
       url: this.getActivePage().url(),
@@ -145,9 +148,7 @@ export class PuppeteerController implements WebController {
   }
 
   async clickElement(params: TypeClickElementParams): Promise<any> {
-    // prettier-ignore
-    const element = (await this.getElement(params.varSelector))
-      .getSelector();
+    const element = (await this.getSelectorStorageFromVariableName(params.varSelector)).getSelector();
 
     const beforeURL = this.getActivePage().url();
 
@@ -167,7 +168,7 @@ export class PuppeteerController implements WebController {
 
   async setInputValue(params: TypeSetInputValueParams): Promise<any> {
     // prettier-ignore
-    const element = (await this.getElement(params.varSelector))
+    const element = (await this.getSelectorStorageFromVariableName(params.varSelector))
       .getSelector();
 
     // set input to empty first
@@ -184,7 +185,7 @@ export class PuppeteerController implements WebController {
 
   async expectElementVisible(params: TypeExpectElementVisibleParams): Promise<any> {
     // prettier-ignore
-    const element = (await this.getElement(params.varSelector))
+    const element = (await this.getSelectorStorageFromVariableName(params.varSelector))
       .getSelector();
 
     const isVisible = element !== null && (await element.boundingBox()) !== null;
@@ -195,15 +196,19 @@ export class PuppeteerController implements WebController {
   }
 
   async expectElementText(params: TypeExpectElementTextParams) {
-    // prettier-ignore
-    const element = (await this.getElement(params.varSelector))
-      .getSelector();
+    try {
+      // prettier-ignore
+      const selectorStorage = await this.getSelectorStorageFromVariableName(params.varSelector)
+      const element = selectorStorage.getSelector();
 
-    const elementText = await element.evaluate((el) => el.textContent);
+      const elementText = await element.evaluate((el) => el.textContent);
 
-    return {
-      evaluate_result: elementText === params.expectedText,
-    };
+      return {
+        evaluate_result: elementText === params.expectedText,
+      };
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   async getCurrentUrl(_: TypeGetCurrentUrlParams): Promise<string> {
@@ -212,7 +217,7 @@ export class PuppeteerController implements WebController {
 
   async getInputValue(params: TypeGetInputValueParams): Promise<string> {
     // prettier-ignore
-    const element = (await this.getElement(params.varSelector))
+    const element = (await this.getSelectorStorageFromVariableName(params.varSelector))
       .getSelector();
 
     return element.evaluate((el) => (el as HTMLInputElement).value).catch(() => "");
@@ -247,14 +252,14 @@ export class PuppeteerController implements WebController {
 
   async setOptionValue(params: TypeSetOptionValueParams): Promise<any> {
     // prettier-ignore
-    const element = (await this.getElement(params.varSelector))
+    const element = (await this.getSelectorStorageFromVariableName(params.varSelector))
       .getSelector();
     await element.select(params.value);
   }
 
   async getOptionValue(params: TypeGetOptionValueParams): Promise<string> {
     // prettier-ignore
-    const element = (await this.getElement(params.varSelector))
+    const element = (await this.getSelectorStorageFromVariableName(params.varSelector))
       .getSelector();
     const value = await element.evaluate((el) => {
       return (el as HTMLSelectElement).value;
@@ -316,8 +321,8 @@ export class PuppeteerController implements WebController {
   async closeBrowser(_: TypeCloseBrowserParams): Promise<void> {
     try {
       await this.iframeReset({});
-    } catch (error) {
-      // console.warn("Error resetting iframe", error);
+    } catch (_error) {
+      // do nothing
     }
 
     const browser = this.browser;
@@ -358,26 +363,20 @@ export class PuppeteerController implements WebController {
     const selectorType = params.selectorType;
     const varNameInTest = params.varName;
 
+    const defaultOptions: puppeteer.WaitForSelectorOptions = {
+      timeout: 5 * 1000,
+    };
+
     let selectorResult: any | null = null;
     switch (selectorType) {
       case "css":
-        selectorResult = await page.waitForSelector(selectorValue, {
-          timeout: 10_000,
-        });
+        selectorResult = await page.waitForSelector(selectorValue, defaultOptions);
         break;
       case "xpath":
-        // prettier-ignore
-        selectorResult = await page.waitForSelector(
-          `::-p-xpath(${selectorValue})`,
-          {
-            timeout: 10_000,
-          },
-        );
+        selectorResult = await page.waitForSelector(`::-p-xpath(${selectorValue})`, defaultOptions);
         break;
       case "id":
-        selectorResult = await page.waitForSelector(`#${selectorValue}`, {
-          timeout: 10_000,
-        });
+        selectorResult = await page.waitForSelector(`#${selectorValue}`, defaultOptions);
         break;
       // case "name":
       //   selectorResult = await page.waitForSelector(`[name="${selectorValue}"]`);

@@ -17,7 +17,8 @@ export async function main() {
     .description("Generate test from prompting")
     .option("-o, --out", "Output path for generated test file", "app.test.ts")
     .option("-gd, --gendir", "Directory to save generated cache", ".gen/")
-    .option("-t, --test", "Run test only", false);
+    .option("-t, --test", "Run test only", false)
+    .option("-v, --verbose", "Verbose log", false);
 
   program.parse();
 
@@ -70,6 +71,8 @@ export async function main() {
     DEFAULT_SYSTEM_INSTRUCTION_PROMPT,
     DEFAULT_SYSTEM_FINALIZE_PROMPT,
   );
+
+  testStepGenerator.setVerbose(options.verbose);
 
   const finalizedSteps = await testStepGenerator.generate(USER_PROMPT_TEXT, messageBuffer);
 
