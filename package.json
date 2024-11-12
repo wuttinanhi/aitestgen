@@ -33,6 +33,7 @@
     "test": "vitest tests",
     "gentest": "vitest run app.test.ts",
     "lint": "tsc --noEmit --skipLibCheck --project tsconfig.json",
-    "translate": "tsx src/cmds/translate.ts"
+    "translate": "tsx src/cmds/translate.ts",
+    "dev:quick": "tsx index.ts --verbose -- go to http://localhost:3000 and fill the form then expect successful message"
   }
 }

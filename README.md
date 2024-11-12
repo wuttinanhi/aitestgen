@@ -32,7 +32,7 @@ aitestgen [options] [prompt]
 
 Generate new tests:
 ```bash
-aitestgen -o app.test.ts go to http://localhost:3000 and fill the form then expect successful message
+aitestgen -- go to http://localhost:3000 and fill the form then expect successful message
 ```
 
 Run generated tests using Vitest:
