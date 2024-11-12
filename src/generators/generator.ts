@@ -7,28 +7,33 @@ import { WebREPLToolsCollection } from "../tools/defs.ts";
 import { FinalizeParamsType, finalizeTool } from "../tools/finalizer.ts";
 import { StepHistory } from "../stephistory/stephistory.ts";
 import { WebControllerProxy } from "../proxy/webcontroller_proxy.ts";
-import { WebController } from "testgenwebcontroller";
+import { WebController } from "../interfaces/controller.ts";
 
 export class TestStepGenerator {
   private llm: AIModel;
-  private webEngine!: WebController;
+  private webController!: WebController;
   private systemInstructionPrompt: string;
   private systemFinalizePrompt: string;
   private loopHardLimit: number = 30;
+  private verbose: boolean = false;
 
   private generatedSteps: IStep[] = [];
   private finalizedSteps: IStep[] = [];
   private totalTokensUsed: number = 0;
 
-  constructor(llm: AIModel, webEngine: WebController, systemInstructionPrompt: string, systemFinalizePrompt: string) {
+  constructor(llm: AIModel, webController: WebController, systemInstructionPrompt: string, systemFinalizePrompt: string) {
     this.llm = llm;
     this.systemInstructionPrompt = systemInstructionPrompt;
     this.systemFinalizePrompt = systemFinalizePrompt;
-    this.webEngine = webEngine;
+    this.webController = webController;
   }
 
   setHardLoopLimit(hardLoopLimit: number) {
     this.loopHardLimit = hardLoopLimit;
+  }
+
+  setVerbose(verbose: boolean) {
+    this.verbose = verbose;
   }
 
   async generate(userPrompt: string, messageBuffer: Array<BaseMessage>) {
@@ -53,7 +58,7 @@ export class TestStepGenerator {
       loop_hard_limit: for (let i = 0; i < this.loopHardLimit; i++) {
         const response = await aiWithTools.invoke(messageBuffer);
 
-        console.log(`LOOP: ${i + 1}`);
+        this.log(`LOOP: ${i + 1}`);
 
         messageBuffer.push(response);
         this.totalTokensUsed += response.usage_metadata!.total_tokens;
@@ -64,10 +69,12 @@ export class TestStepGenerator {
             const functionName = toolCall.name;
             const functionArguments = toolCall.args;
 
-            // const functionArgsValue = Object.values(functionArguments);
-            // const argsAny = functionArgsValue as any;
+            this.log(`\tInvoking tool name: ${functionName}`);
+            this.log(`\tInvoking tool args: ${JSON.stringify(functionArguments)}`);
 
-            await this.handleToolCall(this.webEngine, messageBuffer, stepHistory, uniqueVariableNames, toolCall);
+            const result = await this.handleToolCall(this.webController, messageBuffer, stepHistory, uniqueVariableNames, toolCall);
+
+            this.log(`\tInvoking result: ${JSON.stringify(result)}`);
 
             if (functionName === "complete") {
               break loop_hard_limit;
@@ -76,11 +83,7 @@ export class TestStepGenerator {
         } else {
           console.warn("LLM response with no tool calls found in generate step", response.content);
 
-          messageBuffer.push(
-            new SystemMessage({
-              content: "Error! No tool calls found. Please use tool calls now!",
-            }),
-          );
+          messageBuffer.push(new SystemMessage({ content: "Error! No tool calls found. Please use tool calls now!" }));
 
           continue;
         }
@@ -99,7 +102,7 @@ export class TestStepGenerator {
       console.error("Error TestStepGenerator", error);
       throw error;
     } finally {
-      await this.webEngine.closeBrowser({});
+      await this.webController.closeBrowser({});
     }
   }
 
@@ -114,7 +117,7 @@ export class TestStepGenerator {
   }
 
   protected async handleToolCall(
-    engine: WebController,
+    controller: WebController,
     messageBuffer: any[],
     stepBuffer: StepHistory,
     uniqueVariableNamesBuffer: string[],
@@ -122,19 +125,6 @@ export class TestStepGenerator {
   ) {
     const functionName = toolCall.name;
     const functionArgs = toolCall.args;
-
-    // const functionArguments = JSON.parse(toolCall.function.arguments);
-    // const functionArgsValue = Object.values(functionArguments);
-    // const argsAny = functionArgsValue as any;
-    // const variables = functionArguments["varName"];
-
-    console.log("\n");
-    console.log(`Invoking tool name: ${functionName}`);
-    console.log(`Invoking tool args: ${JSON.stringify(functionArgs)}`);
-
-    // if (variables) {
-    //   console.log(`Variable: ${variables}`);
-    // }
 
     try {
       // check variable name duplication
@@ -168,9 +158,9 @@ export class TestStepGenerator {
         return;
       }
 
-      // if function name is reset, then reset the engine
+      // if function name is reset, then reset the controller
       if (functionName === "reset") {
-        await engine.reset({});
+        await controller.reset({});
         stepBuffer.reset();
         uniqueVariableNamesBuffer.length = 0; // clear the unique variable names
 
@@ -182,15 +172,15 @@ export class TestStepGenerator {
         return;
       }
 
-      // invoke engine function
-      let result = await WebControllerProxy.callFunction(engine, functionName, functionArgs);
+      // invoke controller function
+      let result = await WebControllerProxy.callFunction(controller, functionName, functionArgs);
 
       // if result is undefined or null, then set it to success
       if (result === undefined || result === null) {
         result = { status: "success" };
       }
 
-      // add the step to the step buffer
+      // create new step
       const step: IStep = {
         stepId: 0,
         methodName: functionName,
@@ -212,8 +202,7 @@ export class TestStepGenerator {
         step.iframeGetDataResult = result;
       }
 
-      // if function name contains "expect"
-      // the result should always be true to add to the step buffer
+      // if function name contains "expect". the result should always be true to add to the step buffer
       const shouldAddStep = functionName.includes("expect") ? result["evaluate_result"] === true : true;
       if (shouldAddStep) {
         stepBuffer.createStep(step);
@@ -232,7 +221,7 @@ export class TestStepGenerator {
       // push the result back to the messages buffer
       this.appendToolResult(messageBuffer, toolCall, result);
 
-      return;
+      return result;
     } catch (err) {
       const error = err as Error;
 
@@ -244,17 +233,13 @@ export class TestStepGenerator {
       // push the error back to the messages
       this.appendToolResult(messageBuffer, toolCall, errorObj);
 
-      console.error("Error in invoking function:", errorObj);
+      this.log(`\tError in invoking function: ${JSON.stringify(errorObj)}`);
 
       return;
     }
   }
 
-  protected async handleFinalize(
-    SYSTEM_FINALIZE_PROMPT: string,
-    messageBuffer: Array<BaseMessage>,
-    stepHistory: StepHistory,
-  ) {
+  protected async handleFinalize(SYSTEM_FINALIZE_PROMPT: string, messageBuffer: Array<BaseMessage>, stepHistory: StepHistory) {
     // send finalize instruction to llm
     messageBuffer.push(new SystemMessage({ content: SYSTEM_FINALIZE_PROMPT }));
 
@@ -276,11 +261,7 @@ export class TestStepGenerator {
         console.warn("LLM response with no tool calls found in finalize step", response.content);
 
         // response with no tool calls, continue to next loop
-        messageBuffer.push(
-          new SystemMessage({
-            content: "Error! No tool calls found. Please use tool calls `finalize` now!",
-          }),
-        );
+        messageBuffer.push(new SystemMessage({ content: "Error! No tool calls found. Please use tool calls `finalize` now!" }));
 
         continue;
       }
@@ -292,7 +273,7 @@ export class TestStepGenerator {
 
       const selectedStepIDs = functionArguments.steps;
 
-      console.log(`Invoking tools: ${functionName}`);
+      this.log(`Invoking tools: ${functionName}`);
 
       // send complete message to llm
       this.appendToolResult(messageBuffer, toolCall, { status: "success" });
@@ -316,5 +297,13 @@ export class TestStepGenerator {
 
   public getTotalTokens() {
     return this.totalTokensUsed;
+  }
+
+  protected log(text: string) {
+    if (!this.verbose) {
+      return;
+    }
+
+    console.log(text);
   }
 }

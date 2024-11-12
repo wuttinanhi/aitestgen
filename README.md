@@ -1,10 +1,8 @@
 # ai_to_testcase (aitestgen)
 
+Generate test cases from natural language descriptions
+
 A command-line tool that leverages AI to automatically generate test cases from natural language prompts. This tool helps developers quickly create comprehensive test suites by describing what they want to test in plain English.
-
-## Features
-
-- Generate test cases from natural language descriptions
 
 ## Installation
 
@@ -22,18 +20,29 @@ aitestgen [options] [prompt]
 
 ### Options
 
-| Option | Alias | Description |
-|--------|-------|-------------|
-| `--out` | `-o` | Specify the output path for generated test files |
-| `--gendir` | `-gd` | Set the directory to save generated cache |
-| `--test` | `-t` | Run tests only without generating new ones (default: false) |
-| `--help` | `-h` | Display help information |
+```txt
+
+Usage: aitestgen [options]
+
+Generate test from prompting
+
+Options:
+  -o, --out <path>           Output path for generated test file (default: "app.test.ts")
+  -gd, --gendir <path>       Directory to save generated cache (default: ".gen/")
+  -p, --provider <provider>  Set model provider "openai" "ollama" (default: "openai")
+  -m, --model <model>        Specify model to use (default: "gpt-4o-mini")
+  -oh, --ollamahost <url>    Set Ollama endpoint (default: "http://localhost:11434")
+  -t, --test                 Run test only (default: false)
+  -v, --verbose              Verbose log (default: false)
+  -h, --help                 display help for command
+
+```
 
 ### Examples
 
 Generate new tests:
 ```bash
-aitestgen -o app.test.ts go to http://localhost:3000 and fill the form then expect successful message
+aitestgen -- go to http://localhost:3000 and fill the form then expect successful message
 ```
 
 Run generated tests using Vitest:
@@ -54,13 +63,31 @@ git clone https://github.com/yourusername/aitestgen.git
 
 2. Install dependencies
 ```bash
-npm install
+yarn install
 ```
 
 3. Run tests
 ```bash
-npm test
+yarn test
 ```
+
+4. Link this package
+```bash
+yarn link
+```
+
+
+### Yarn scripts
+
+| Option | Description |
+|--------|-------------|
+| `start` | Start the program. |
+| `test` | Test the specs |
+| `gentest` | Test the generated code |
+| `lint` | Lint codebase |
+| `translate` | Translate test steps only |
+
+
 
 ## License
 
