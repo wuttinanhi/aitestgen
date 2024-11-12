@@ -1,5 +1,4 @@
 import { Command } from "commander";
-import { modelOpenAI } from "../models/openai.ts";
 import { BaseMessage } from "@langchain/core/messages";
 import { PuppeteerController } from "../controllers/puppeteer.controller.ts";
 import { TestStepGenerator } from "../generators/generator.ts";
@@ -10,21 +9,26 @@ import { formatTSCode } from "../helpers/formatter.ts";
 import path from "path";
 import { spawn } from "child_process";
 import ora from "ora";
+import { AIModel } from "src/models/types.ts";
+import { getOllamaModel, getOpenAIModel } from "src/models/wrapper.ts";
 
 export async function main() {
   const program = new Command();
 
   program
     .description("Generate test from prompting")
-    .option("-o, --out", "Output path for generated test file", "app.test.ts")
-    .option("-gd, --gendir", "Directory to save generated cache", ".gen/")
+    .option("-o, --out <path>", "Output path for generated test file", "app.test.ts")
+    .option("-gd, --gendir <path>", "Directory to save generated cache", ".gen/")
+    .option("-p, --provider <provider>", `Set model provider "openai" "ollama"`, "openai")
+    .option("-m, --model <model>", "Specify model to use", "gpt-4o-mini")
+    .option("-oh, --ollamahost <url>", "Set Ollama endpoint", "http://localhost:11434")
     .option("-t, --test", "Run test only", false)
     .option("-v, --verbose", "Verbose log", false);
 
   program.parse();
 
-  const args = program.args;
   const options = program.opts();
+  const args = program.args;
 
   if (options.test) {
     // Run `vitest` as a child process
@@ -36,11 +40,6 @@ export async function main() {
       process.exit(code);
     });
 
-    return;
-  }
-
-  if (!process.env.OPENAI_API_KEY) {
-    console.error("env OPENAI_API_KEY is not set!");
     return;
   }
 
@@ -62,7 +61,36 @@ export async function main() {
   // create gen directory
   await createDir(OUT_GEN_DIR);
 
-  const model = modelOpenAI;
+  let model: AIModel;
+
+  if (options.provider === "openai") {
+    console.log(`🤖  Using OpenAI model ${options.model}`);
+
+    if (!process.env.OPENAI_API_KEY) {
+      console.error("env OPENAI_API_KEY is not set!");
+      process.exit(1);
+    }
+
+    model = getOpenAIModel({
+      model: options.model,
+    });
+  } else if (options.provider === "ollama") {
+    console.log(`🤖  Using Ollama model ${options.model}`);
+
+    if (!options.ollamahost) {
+      console.error("Please specify Ollama host with --ollamahost <OLLAMA_ENDPOINT_URL>");
+      process.exit(1);
+    }
+
+    model = getOllamaModel({
+      host: options.ollamahost,
+      model: options.model,
+    });
+  } else {
+    console.error(`Unknown model provider: ${options.provider}`);
+    process.exit(1);
+  }
+
   const messageBuffer: Array<BaseMessage> = [];
   const webController = new PuppeteerController();
 

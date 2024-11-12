@@ -6,3 +6,12 @@ import { ChatOpenAI, ChatOpenAICallOptions } from "@langchain/openai";
 
 export type AIModel = ChatOllama | ChatOpenAI;
 export type AIWithTools = Runnable<BaseLanguageModelInput, AIMessageChunk, ChatOpenAICallOptions>;
+
+export interface OllamaModelConfig {
+  host: string;
+  model: string;
+}
+
+export interface OpenAIModelConfig {
+  model: string;
+}
