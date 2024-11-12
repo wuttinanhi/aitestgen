@@ -7,11 +7,11 @@ import { WebREPLToolsCollection } from "../tools/defs.ts";
 import { FinalizeParamsType, finalizeTool } from "../tools/finalizer.ts";
 import { StepHistory } from "../stephistory/stephistory.ts";
 import { WebControllerProxy } from "../proxy/webcontroller_proxy.ts";
-import { WebController } from "testgenwebcontroller";
+import { WebController } from "../interfaces/controller.ts";
 
 export class TestStepGenerator {
   private llm: AIModel;
-  private webEngine!: WebController;
+  private webController!: WebController;
   private systemInstructionPrompt: string;
   private systemFinalizePrompt: string;
   private loopHardLimit: number = 30;
@@ -20,11 +20,16 @@ export class TestStepGenerator {
   private finalizedSteps: IStep[] = [];
   private totalTokensUsed: number = 0;
 
-  constructor(llm: AIModel, webEngine: WebController, systemInstructionPrompt: string, systemFinalizePrompt: string) {
+  constructor(
+    llm: AIModel,
+    webController: WebController,
+    systemInstructionPrompt: string,
+    systemFinalizePrompt: string,
+  ) {
     this.llm = llm;
     this.systemInstructionPrompt = systemInstructionPrompt;
     this.systemFinalizePrompt = systemFinalizePrompt;
-    this.webEngine = webEngine;
+    this.webController = webController;
   }
 
   setHardLoopLimit(hardLoopLimit: number) {
@@ -67,7 +72,7 @@ export class TestStepGenerator {
             // const functionArgsValue = Object.values(functionArguments);
             // const argsAny = functionArgsValue as any;
 
-            await this.handleToolCall(this.webEngine, messageBuffer, stepHistory, uniqueVariableNames, toolCall);
+            await this.handleToolCall(this.webController, messageBuffer, stepHistory, uniqueVariableNames, toolCall);
 
             if (functionName === "complete") {
               break loop_hard_limit;
@@ -99,7 +104,7 @@ export class TestStepGenerator {
       console.error("Error TestStepGenerator", error);
       throw error;
     } finally {
-      await this.webEngine.closeBrowser({});
+      await this.webController.closeBrowser({});
     }
   }
 
@@ -114,7 +119,7 @@ export class TestStepGenerator {
   }
 
   protected async handleToolCall(
-    engine: WebController,
+    controller: WebController,
     messageBuffer: any[],
     stepBuffer: StepHistory,
     uniqueVariableNamesBuffer: string[],
@@ -168,9 +173,9 @@ export class TestStepGenerator {
         return;
       }
 
-      // if function name is reset, then reset the engine
+      // if function name is reset, then reset the controller
       if (functionName === "reset") {
-        await engine.reset({});
+        await controller.reset({});
         stepBuffer.reset();
         uniqueVariableNamesBuffer.length = 0; // clear the unique variable names
 
@@ -182,8 +187,8 @@ export class TestStepGenerator {
         return;
       }
 
-      // invoke engine function
-      let result = await WebControllerProxy.callFunction(engine, functionName, functionArgs);
+      // invoke controller function
+      let result = await WebControllerProxy.callFunction(controller, functionName, functionArgs);
 
       // if result is undefined or null, then set it to success
       if (result === undefined || result === null) {

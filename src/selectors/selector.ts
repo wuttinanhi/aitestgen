@@ -22,7 +22,7 @@ export class SelectorStorage {
     return this.selectorValue;
   }
 
-  public getEngineSelector() {
+  public getSelector() {
     return this.puppeteerSelector;
   }
 }

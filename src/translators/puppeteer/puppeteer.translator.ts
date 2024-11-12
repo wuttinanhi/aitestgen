@@ -1,4 +1,4 @@
-import { WebController } from "testgenwebcontroller";
+import { WebController } from "../../interfaces/controller.ts";
 import { writeFileString } from "../../helpers/files.ts";
 import { formatTSCode } from "../../helpers/formatter.ts";
 import { FrameData } from "../../interfaces/framedata.ts";

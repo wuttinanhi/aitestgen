@@ -1,5 +1,5 @@
 import { test } from "vitest";
-import { PuppeteerController } from "testgenwebcontroller";
+import { PuppeteerController } from "../src/controllers/puppeteer.controller.ts";
 import { modelOpenAI } from "../src/models/openai.ts";
 import { BaseMessage } from "@langchain/core/messages";
 import { TestStepGenerator } from "../src/generators/generator.ts";
@@ -21,11 +21,11 @@ test("should generate working test", async () => {
 
   const messageBuffer: Array<BaseMessage> = [];
 
-  const webEngine = new PuppeteerController();
+  const webController = new PuppeteerController();
 
   const testStepGenerator = new TestStepGenerator(
     model,
-    webEngine,
+    webController,
     DEFAULT_SYSTEM_INSTRUCTION_PROMPT,
     DEFAULT_SYSTEM_FINALIZE_PROMPT,
   );
