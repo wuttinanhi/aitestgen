@@ -1,13 +1,17 @@
-# ai_to_testcase (aitestgen)
+# aitestgen
 
-Generate test cases from natural language descriptions
+Generate testcases from natural language descriptions
 
 A command-line tool that leverages AI to automatically generate test cases from natural language prompts. This tool helps developers quickly create comprehensive test suites by describing what they want to test in plain English.
+
+## Requirements
+
+- [Node.js](https://nodejs.org/en)
 
 ## Installation
 
 ```bash
-npm install -g aitestgen
+yarn add -g aitestgen
 ```
 
 ## Usage
@@ -58,7 +62,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/aitestgen.git
+git clone https://github.com/wuttinanhi/aitestgen
 ```
 
 2. Install dependencies
@@ -86,7 +90,6 @@ yarn link
 | `gentest` | Test the generated code |
 | `lint` | Lint codebase |
 | `translate` | Translate test steps only |
-
 
 
 ## License

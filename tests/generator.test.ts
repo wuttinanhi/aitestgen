@@ -1,4 +1,4 @@
-import { expect, test, vitest } from "vitest";
+import { expect, test } from "vitest";
 import { PuppeteerController } from "../src/controllers/puppeteer.controller.ts";
 import { BaseMessage } from "@langchain/core/messages";
 import { TestStepGenerator } from "../src/generators/generator.ts";
@@ -18,9 +18,7 @@ test("should generate working test", async () => {
   const USER_PROMPT = await readFileString(__dirname + "/../src/prompts/example_contact_form.txt");
   console.log("User Prompt\n", USER_PROMPT);
 
-  const model = getOpenAIModel({
-    model: "gpt-4o-mini",
-  });
+  const model = getOpenAIModel({ model: "gpt-4o-mini" });
 
   const messageBuffer: Array<BaseMessage> = [];
 
