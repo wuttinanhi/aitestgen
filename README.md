@@ -1,6 +1,6 @@
 # aitestgen
 
-Generate test cases from natural language descriptions
+Generate testcases from natural language descriptions
 
 A command-line tool that leverages AI to automatically generate test cases from natural language prompts. This tool helps developers quickly create comprehensive test suites by describing what they want to test in plain English.
 
@@ -9,14 +9,6 @@ A command-line tool that leverages AI to automatically generate test cases from 
 - [Node.js](https://nodejs.org/en)
 
 ## Installation
-
-Install Puppeteer and Chrome dependencies:
-
-```bash
-npx @puppeteer/browsers install chrome@stable
-```
-
-Install package:
 
 ```bash
 yarn add -g aitestgen
