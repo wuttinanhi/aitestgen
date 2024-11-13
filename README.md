@@ -26,7 +26,7 @@ aitestgen [options] [prompt]
 
 ```txt
 
-Usage: aitestgen [options]
+Usage: index [options]
 
 Generate test from prompting
 
@@ -36,6 +36,7 @@ Options:
   -p, --provider <provider>  Set model provider "openai" "ollama" (default: "openai")
   -m, --model <model>        Specify model to use (default: "gpt-4o-mini")
   -oh, --ollamahost <url>    Set Ollama endpoint (default: "http://localhost:11434")
+  -hl, --headless <bool>     Set browser headless mode (default: true)
   -t, --test                 Run test only (default: false)
   -v, --verbose              Verbose log (default: false)
   -h, --help                 display help for command
