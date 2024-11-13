@@ -22,6 +22,7 @@ export async function main() {
     .option("-p, --provider <provider>", `Set model provider "openai" "ollama"`, "openai")
     .option("-m, --model <model>", "Specify model to use", "gpt-4o-mini")
     .option("-oh, --ollamahost <url>", "Set Ollama endpoint", "http://localhost:11434")
+    .option("-hl, --headless <bool>", "Set browser headless mode", true)
     .option("-t, --test", "Run test only", false)
     .option("-v, --verbose", "Verbose log", false);
 
@@ -93,6 +94,14 @@ export async function main() {
 
   const messageBuffer: Array<BaseMessage> = [];
   const webController = new PuppeteerController();
+
+  // set webController headless mode from cli options
+  const parsedHeadless = String(options.headless).toLowerCase() === "true";
+
+  if (parsedHeadless === false) {
+    console.log("Running with headless mode:", parsedHeadless);
+  }
+  webController.setHeadless(parsedHeadless);
 
   const spinner = ora({
     // enable ctrl + c for cancel
