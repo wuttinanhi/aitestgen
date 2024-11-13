@@ -1,5 +1,5 @@
 {
-  "name": "ai_to_testcase",
+  "name": "aitestgen",
   "version": "1.0.0",
   "main": "index.ts",
   "types": "index.d.ts",

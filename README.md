@@ -1,4 +1,4 @@
-# ai_to_testcase (aitestgen)
+# aitestgen
 
 Generate test cases from natural language descriptions
 
@@ -70,7 +70,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 1. Clone the repository
 ```bash
-git clone https://github.com/wuttinanhi/ai_to_testcase
+git clone https://github.com/wuttinanhi/aitestgen
 ```
 
 2. Install dependencies
