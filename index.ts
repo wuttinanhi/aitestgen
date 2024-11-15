@@ -1,4 +1,4 @@
-#!/usr/bin/env -S npx --yes tsx --no-deprecation
+#!/usr/bin/env npx tsx
 
 import { main } from "./src/cmds/testgen.ts";
 
