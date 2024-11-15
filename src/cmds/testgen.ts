@@ -9,8 +9,8 @@ import { formatTSCode } from "../helpers/formatter.ts";
 import path from "path";
 import { spawn } from "child_process";
 import ora from "ora";
-import { AIModel } from "src/models/types.ts";
-import { getOllamaModel, getOpenAIModel } from "src/models/wrapper.ts";
+import { AIModel } from "../models/types.ts";
+import { getOllamaModel, getOpenAIModel } from "../models/wrapper.ts";
 
 export async function main() {
   const program = new Command();
