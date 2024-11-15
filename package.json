@@ -6,6 +6,7 @@
   "author": "wuttinanhi",
   "license": "MIT",
   "type": "module",
+  "npm.packageManager": "auto",
   "bin": {
     "aitestgen": "index.ts"
   },
