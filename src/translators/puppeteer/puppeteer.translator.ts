@@ -23,6 +23,7 @@ import {
   TypeIframeSwitchParams,
   TypeLaunchBrowserParams,
   TypeNavigateToParams,
+  TypeQuickSelectorParams,
   TypeResetParams,
   TypeSetInputValueParams,
   TypeSetOptionValueParams,
@@ -45,13 +46,7 @@ export class PuppeteerTranslator implements WebController {
   private iframeVarStack: string[] = [];
   private getIframeVarStack: string[] = [];
 
-  constructor(
-    steps: IStep[],
-    templateCode: string,
-    templateBrowserVar: string,
-    templatePageVar: string,
-    templateGenCodePlaceholder: string,
-  ) {
+  constructor(steps: IStep[], templateCode: string, templateBrowserVar: string, templatePageVar: string, templateGenCodePlaceholder: string) {
     this.steps = steps;
     this.templateCode = templateCode;
     this.browserVar = templateBrowserVar;
@@ -287,5 +282,9 @@ export class PuppeteerTranslator implements WebController {
     }
 
     return result;
+  }
+
+  async quickSelector(params: TypeQuickSelectorParams): Promise<any> {
+    return "";
   }
 }

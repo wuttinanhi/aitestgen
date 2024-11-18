@@ -29,10 +29,12 @@ import {
   TypeIframeSwitchParams,
   TypeLaunchBrowserParams,
   TypeNavigateToParams,
+  TypeQuickSelectorParams,
   TypeSetInputValueParams,
   TypeSetOptionValueParams,
   TypeSetTabParams,
 } from "../tools/defs.ts";
+import { element2selector } from "puppeteer-element2selector";
 
 export class PuppeteerController implements WebController {
   private isHeadless: boolean = true;
@@ -94,10 +96,7 @@ export class PuppeteerController implements WebController {
 
   async waitForPageLoad() {
     try {
-      await Promise.race([
-        this.getActivePage().waitForNavigation({ waitUntil: "load", timeout: 5 * 1000 }),
-        sleep(5 * 1000),
-      ]);
+      await Promise.race([this.getActivePage().waitForNavigation({ waitUntil: "load", timeout: 5 * 1000 }), sleep(5 * 1000)]);
     } catch (_) {
       if (this.verbose) {
         console.log("No navigation detected or wait time exceeded.");
@@ -201,7 +200,7 @@ export class PuppeteerController implements WebController {
       const selectorStorage = await this.getSelectorStorageFromVariableName(params.varSelector)
       const element = selectorStorage.getSelector();
 
-      const elementText = await element.evaluate((el) => el.textContent);
+      const elementText = await element.evaluate((el: any) => el.textContent);
 
       return {
         evaluate_result: elementText === params.expectedText,
@@ -400,4 +399,73 @@ export class PuppeteerController implements WebController {
 
     return;
   }
+
+  async quickSelector(params: TypeQuickSelectorParams): Promise<any> {
+    const tags = [
+      "span",
+      "strong",
+      "em",
+      "b",
+      "i",
+      "u",
+      "mark",
+      "small",
+      "del",
+      "ins",
+      "code",
+      "kbd",
+      "s",
+      "sub",
+      "sup",
+      "blockquote",
+      "q",
+      "cite",
+      "abbr",
+      "address",
+      "pre",
+      "h1",
+      "h2",
+      "h3",
+      "h4",
+      "h5",
+      "h6",
+      "button",
+      "input",
+      // "select",
+      // "option",
+      "textarea",
+      // "label",
+      // "fieldset",
+      // "legend",
+      // "a",
+      // "td",
+    ];
+
+    return getElementsWithSelectors(this.getActivePage() as puppeteer.Page, tags);
+  }
+}
+
+async function getElementsWithSelectors(page: puppeteer.Page, tags: string[]) {
+  const result: any[] = [];
+
+  for (const tag of tags) {
+    // const elements = document.querySelectorAll(tag);
+    const elements = await page.$$(tag);
+
+    for (const element of elements) {
+      let cssSelector = await element2selector(element as any);
+
+      const textContent = await element.evaluate((el) => {
+        return el.textContent ? el.textContent.trim() : "";
+      });
+
+      result.push({
+        type: tag,
+        textElement: textContent,
+        cssSelector: cssSelector,
+      });
+    }
+  }
+
+  return result;
 }

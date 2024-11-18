@@ -219,6 +219,14 @@ export const createSelectorVariableTool: StructuredToolParams = {
   schema: createSelectorVariableParams,
 };
 
+export const quickSelectorParams = z.object({});
+export type TypeQuickSelectorParams = z.infer<typeof quickSelectorParams>;
+export const quickSelectorTool: StructuredToolParams = {
+  name: "quickSelector",
+  description: "Quick tool to get all possible elements in the page and return css selector",
+  schema: quickSelectorParams,
+};
+
 export const WebREPLToolsCollection = [
   launchBrowserTool,
   navigateToTool,
@@ -243,4 +251,5 @@ export const WebREPLToolsCollection = [
   iframeSwitchTool,
   iframeResetTool,
   createSelectorVariableTool,
+  quickSelectorTool,
 ];

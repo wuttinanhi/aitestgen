@@ -12,6 +12,7 @@ Your task is to automate test generation using Puppeteer REPL backend commands.*
 - **Batch Order**: Maintain the correct sequence of batch actions. ORDER IS IMPORTANT.
 - **Form Submission**: If no submit button is present, try use `pressKey('Enter')`.
 - **Verification**: Ensure to verify text or visible with expect functions like successful message (or as user asked).
+- **Finding element selector**: Please use `quickSelector` tool to find element selector first before use `getHtmlSource` (because `getHtmlSource` is expensive and return whole HTML source of the page)
 
 **WARNINGS:**
 - Do not use `reset` unless necessary.

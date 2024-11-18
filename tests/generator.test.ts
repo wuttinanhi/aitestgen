@@ -15,7 +15,7 @@ test("should generate working test", async () => {
   const OUT_STEP_ALL = ".test/out.steps.json";
   const OUT_STEP_SELECTED = ".test/out.steps.selected.json";
 
-  const USER_PROMPT = await readFileString(__dirname + "/../src/prompts/example_contact_form.txt");
+  const USER_PROMPT = await readFileString(__dirname + "/../src/prompts/example_todo_2.txt");
   console.log("User Prompt\n", USER_PROMPT);
 
   const model = getOpenAIModel({ model: "gpt-4o-mini" });
@@ -23,8 +23,10 @@ test("should generate working test", async () => {
   const messageBuffer: Array<BaseMessage> = [];
 
   const webController = new PuppeteerController();
+  webController.setHeadless(false);
 
   const testStepGenerator = new TestStepGenerator(model, webController, DEFAULT_SYSTEM_INSTRUCTION_PROMPT, DEFAULT_SYSTEM_FINALIZE_PROMPT);
+  testStepGenerator.setVerbose(true);
 
   const finalizedSteps = await testStepGenerator.generate(USER_PROMPT, messageBuffer);
 
