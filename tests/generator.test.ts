@@ -11,9 +11,9 @@ import { getOpenAIModel } from "../src/models/wrapper.ts";
 import { runVitest } from "../src/helpers/tester.ts";
 
 test("should generate working test", async () => {
-  const OUT_GENTEST_PATH = ".test/app.test.ts";
-  const OUT_STEP_ALL = ".test/out.steps.json";
-  const OUT_STEP_SELECTED = ".test/out.steps.selected.json";
+  const TEST_OUT_GENTEST_PATH = ".test/app.test.ts";
+  const TEST_OUT_STEP_ALL = ".test/out.steps.json";
+  const TEST_OUT_STEP_SELECTED = ".test/out.steps.selected.json";
 
   const USER_PROMPT = await readFileString(__dirname + "/../src/prompts/example_todo_2.txt");
   console.log("User Prompt\n", USER_PROMPT);
@@ -31,31 +31,34 @@ test("should generate working test", async () => {
   const finalizedSteps = await testStepGenerator.generate(USER_PROMPT, messageBuffer);
 
   // write generated steps to file
-  await writeFileString(OUT_STEP_ALL, JSON.stringify(testStepGenerator.getGeneratedSteps()));
+  await writeFileString(TEST_OUT_STEP_ALL, JSON.stringify(testStepGenerator.getGeneratedSteps()));
 
   // write finalize steps to file
-  await writeFileString(OUT_STEP_SELECTED, JSON.stringify(finalizedSteps));
+  await writeFileString(TEST_OUT_STEP_SELECTED, JSON.stringify(finalizedSteps));
 
   // new puppeteer translator
-  const puppeteerTestGen = new PuppeteerTranslator(finalizedSteps, DEFAULT_PUPPETEER_TEMPLATE, "browser", "page", "// {{GENERATED_CODE}}");
+  const puppeteerTestGen = new PuppeteerTranslator("browser", "page");
 
   console.log("Total Tokens used:", testStepGenerator.getTotalTokens());
-  console.log("Generated test code at", OUT_GENTEST_PATH);
+  console.log("Generated test code at", TEST_OUT_GENTEST_PATH);
 
   // generate the test code
-  let generatedTestCode = await puppeteerTestGen.generate();
+  let generatedTestCode = await puppeteerTestGen.generate(finalizedSteps);
+
+  // replace template with generated code
+  let replacedCode = DEFAULT_PUPPETEER_TEMPLATE.replace("// {{TESTCASE_GENERATED_CODE}}", generatedTestCode);
 
   // try formatting the generated code
-  let formattedCode = await formatTSCode(generatedTestCode);
+  let formattedCode = await formatTSCode(replacedCode);
 
   // save formatted generated test code to file
-  await writeFileString(OUT_GENTEST_PATH, formattedCode);
+  await writeFileString(TEST_OUT_GENTEST_PATH, formattedCode);
 
   // write message buffer to file
   await writeFileString(".test/messageBuffer.json", JSON.stringify(messageBuffer));
 
   // run vitest test on generated test file
-  const vitestResult = await runVitest(OUT_GENTEST_PATH);
+  const vitestResult = await runVitest(TEST_OUT_GENTEST_PATH);
 
   if (vitestResult.exitCode !== 0) {
     console.log("vitestResult.exitCode", vitestResult.exitCode);
