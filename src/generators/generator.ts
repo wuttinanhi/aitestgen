@@ -273,12 +273,12 @@ export class TestStepGenerator {
 
       const selectedStepIDs = functionArguments.steps;
 
-      this.log(`Invoking tools: ${functionName}`);
+      this.log(`FINALIZING (tool: ${functionName})`);
 
       // send complete message to llm
       this.appendToolResult(messageBuffer, toolCall, { status: "success" });
 
-      // convert ids to steps
+      // pick best steps
       const selectedSteps = stepHistory.pickStepByIds(selectedStepIDs);
 
       return selectedSteps;

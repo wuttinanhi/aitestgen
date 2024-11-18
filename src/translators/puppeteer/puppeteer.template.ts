@@ -1,7 +1,7 @@
 import puppeteer, { Browser, Frame, Page } from "puppeteer";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-describe("TESTSUITE", () => {
+describe("// {{TESTSUITE_NAME}}", () => {
   let browser: Browser;
 
   beforeEach(async () => {
@@ -18,9 +18,15 @@ describe("TESTSUITE", () => {
     await browser.close();
   });
 
-  it("TESTCASE_1", async () => {
+  // --- START TESTCASE ---
+
+  it("// {{TESTCASE_NAME}}", async () => {
     let page = await browser.newPage();
 
-    // {{GENERATED_CODE}}
+    // {{TESTCASE_GENERATED_CODE}}
   });
+
+  // --- END TESTCASE ---
+
+  // {{TESTCASES}}
 });

@@ -135,3 +135,4 @@ screenshot.png
 .gen/**
 app.test.ts
 gen.test.ts
+*.test.ts
