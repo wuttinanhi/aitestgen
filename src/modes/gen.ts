@@ -9,7 +9,7 @@ import { BaseMessage } from "@langchain/core/messages";
 import { PuppeteerController } from "../controllers/puppeteer.controller.ts";
 import { parseModel } from "../models/wrapper.ts";
 import { AIModel } from "../models/types.ts";
-import { PuppeteerTestsuiteGenerator, TestsuiteTestcaseObject } from "../translators/puppeteer/puppeteer.testsuite.ts";
+import { PuppeteerTestsuiteGenerator, TestsuiteTestcaseObject } from "../testsuites/puppeteer.testsuite.ts";
 import { Testcase } from "../testprompt/types.ts";
 
 export async function runGenMode(args: string[], options: any) {
@@ -40,7 +40,7 @@ export async function runGenMode(args: string[], options: any) {
   if (Array.isArray(testPrompt.testsuite.testcases.testcase)) {
     let i = 0;
     for (const testcase of testPrompt.testsuite.testcases.testcase) {
-      console.log("Testcase name:", testcase.name);
+      console.log("\n\nTestcase name:", testcase.name);
 
       const genSteps = await testGenWorker(model, testcase.name, testcase.prompt);
 

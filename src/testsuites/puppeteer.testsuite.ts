@@ -1,16 +1,5 @@
-import { IStep } from "../../interfaces/step.ts";
-import { PuppeteerTranslator } from "./puppeteer.translator.ts";
-
-function extractTestcase(startMarker: string, endMarker: string, template: string) {
-  const startIndex = template.indexOf(startMarker) + startMarker.length;
-  const endIndex = template.indexOf(endMarker);
-
-  if (startIndex > -1 && endIndex > startIndex) {
-    return template.slice(startIndex, endIndex).trim();
-  }
-
-  return null; // Return null if markers are not found or invalid.
-}
+import { IStep } from "../interfaces/step.ts";
+import { PuppeteerTranslator } from "../translators/puppeteer/puppeteer.translator.ts";
 
 export interface PuppeteerTestsuiteGeneratorOptions {
   placeolderTestsuiteName: string; // {{TESTSUITE_NAME}}
@@ -35,12 +24,13 @@ export class PuppeteerTestsuiteGenerator {
     this.templateTestsuite = template;
     this.options = options;
 
-    const extractedTestcaseTemplate = extractTestcase(options.templateTestcaseStart, options.templateTestcaseEnd, template);
+    const extractedTestcaseTemplate = this.extractedTestcaseTemplate(options.templateTestcaseStart, options.templateTestcaseEnd, template);
     if (!extractedTestcaseTemplate) {
       throw new Error(`Can't extract testcase template got: ${extractedTestcaseTemplate}`);
     }
 
-    this.templateTestcase = extractedTestcaseTemplate;
+    this.templateTestcase = extractedTestcaseTemplate.extracted;
+    this.templateTestsuite = extractedTestcaseTemplate.modifiedTemplate;
   }
 
   public async generate(testsuiteName: string, testcases: TestsuiteTestcaseObject[]) {
@@ -69,5 +59,23 @@ export class PuppeteerTestsuiteGenerator {
     testsuiteCode = testsuiteCode.replace(this.options.placeholderTestcasesCode, generatedTestcasesCode);
 
     return testsuiteCode;
+  }
+
+  protected extractedTestcaseTemplate(
+    startMarker: string,
+    endMarker: string,
+    template: string,
+  ): { extracted: string; modifiedTemplate: string } | null {
+    const startIndex = template.indexOf(startMarker) + startMarker.length;
+    const endIndex = template.indexOf(endMarker);
+
+    if (startIndex > -1 && endIndex > startIndex) {
+      const extracted = template.slice(startIndex, endIndex).trim();
+      const modifiedTemplate = template.slice(0, startIndex - startMarker.length).trim() + "\n" + template.slice(endIndex + endMarker.length).trim();
+
+      return { extracted, modifiedTemplate };
+    }
+
+    return null;
   }
 }
