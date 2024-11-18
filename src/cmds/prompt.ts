@@ -9,6 +9,14 @@ import { AIModel } from "../models/types.ts";
 import { getOllamaModel, getOpenAIModel, parseModel } from "../models/wrapper.ts";
 import { DEFAULT_SYSTEM_FINALIZE_PROMPT, DEFAULT_SYSTEM_INSTRUCTION_PROMPT } from "../prompts/index.ts";
 import { DEFAULT_PUPPETEER_TEMPLATE, PuppeteerTranslator } from "../translators/index.ts";
+import { createCommand } from "commander";
+import { addGenericOptions } from "./options.ts";
+
+export function makePromptCommand() {
+  const promptCommand = createCommand("prompt").description("Generate test from prompting");
+  addGenericOptions(promptCommand);
+  return promptCommand;
+}
 
 export async function runPromptMode(args: string[], options: any) {
   const OUT_GEN_DIR = options.gendir;

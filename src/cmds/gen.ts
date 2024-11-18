@@ -11,6 +11,18 @@ import { parseModel } from "../models/wrapper.ts";
 import { AIModel } from "../models/types.ts";
 import { PuppeteerTestsuiteGenerator, TestsuiteTestcaseObject } from "../testsuites/puppeteer.testsuite.ts";
 import { Testcase } from "../testprompt/types.ts";
+import { createCommand } from "commander";
+import { addGenericOptions } from "./options.ts";
+
+export function makeGenCommand() {
+  const genCommand = createCommand("gen")
+    .description("Generate test from test prompt file")
+    .option("-f, --file <path>", "Specify test prompt file path", "");
+
+  addGenericOptions(genCommand);
+
+  return genCommand;
+}
 
 export async function runGenMode(args: string[], options: any) {
   const testPromptPath = options.file;

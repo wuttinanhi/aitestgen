@@ -59,6 +59,10 @@ importers:
       zod:
         specifier: ^3.23.8
         version: 3.23.8
+    devDependencies:
+      '@types/node':
+        specifier: ^22.9.0
+        version: 22.9.0
 
 packages:
 
@@ -1780,7 +1784,7 @@ snapshots:
 
   '@types/node-fetch@2.6.12':
     dependencies:
-      '@types/node': 18.19.64
+      '@types/node': 22.9.0
       form-data: 4.0.1
 
   '@types/node@18.19.64':
