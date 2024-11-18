@@ -6,6 +6,8 @@
   "author": "wuttinanhi",
   "license": "MIT",
   "type": "module",
+  "homepage": "https://github.com/wuttinanhi/aitestgen",
+  "repository": "https://github.com/wuttinanhi/aitestgen",
   "npm.packageManager": "auto",
   "bin": {
     "aitestgen": "index.ts"
@@ -33,9 +35,7 @@
     "start": "tsx index.ts",
     "test": "vitest tests",
     "gentest": "vitest run app.test.ts",
-    "lint": "tsc --noEmit --skipLibCheck --project tsconfig.json",
-    "translate": "tsx src/cmds/translate.ts",
-    "dev:quick": "tsx index.ts --verbose -- go to http://localhost:3000 and fill the form then expect successful message"
+    "lint": "tsc --noEmit --skipLibCheck --project tsconfig.json"
   },
   "devDependencies": {
     "@types/node": "^22.9.0"
