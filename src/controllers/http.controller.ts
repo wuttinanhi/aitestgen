@@ -20,6 +20,7 @@ import {
   TypeIframeSwitchParams,
   TypeLaunchBrowserParams,
   TypeNavigateToParams,
+  TypeQuickSelectorParams,
   TypeResetParams,
   TypeSetInputValueParams,
   TypeSetOptionValueParams,
@@ -28,6 +29,9 @@ import {
 
 // call browser controller over http
 export class HTTPController implements WebController {
+  quickSelector(params: TypeQuickSelectorParams): Promise<any> {
+    throw new Error("Method not implemented.");
+  }
   launchBrowser(params: TypeLaunchBrowserParams): Promise<any> {
     throw new Error("Method not implemented.");
   }

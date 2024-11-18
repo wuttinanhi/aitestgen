@@ -19,6 +19,7 @@ import {
   TypeIframeSwitchParams,
   TypeLaunchBrowserParams,
   TypeNavigateToParams,
+  TypeQuickSelectorParams,
   TypeResetParams,
   TypeSetInputValueParams,
   TypeSetOptionValueParams,
@@ -57,7 +58,6 @@ export interface WebController {
   iframeSwitch(params: TypeIframeSwitchParams): Promise<any>;
   iframeReset(params: TypeIframeResetParams): Promise<any>;
   // Selector
-  createSelectorVariable(
-    params: TypeCreateSelectorVariableParams,
-  ): Promise<any>;
+  createSelectorVariable(params: TypeCreateSelectorVariableParams): Promise<any>;
+  quickSelector(params: TypeQuickSelectorParams): Promise<any>;
 }
