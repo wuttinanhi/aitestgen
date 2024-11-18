@@ -10,6 +10,8 @@ export interface Testsuite {
   provider: string;
   model: string;
   testcases: Testcases;
+  // Java
+  java_classname: string;
 }
 
 export interface Testcases {

@@ -1,7 +1,7 @@
 import path from "path";
 import { createDir, fileExists, readFileString, writeFileString } from "src/helpers/files.ts";
 import { parseTestPrompt } from "src/testprompt/parser.ts";
-import { DEFAULT_PUPPETEER_TEMPLATE, PuppeteerTranslator } from "../translators/index.ts";
+import { DEFAULT_PUPPETEER_TEMPLATE, DEFAULT_SELENIUM_TEMPLATE, PuppeteerTranslator } from "../translators/index.ts";
 import { formatTSCode } from "../helpers/formatter.ts";
 import { TestStepGenerator } from "../generators/generator.ts";
 import { DEFAULT_SYSTEM_FINALIZE_PROMPT, DEFAULT_SYSTEM_INSTRUCTION_PROMPT } from "../prompts/index.ts";
@@ -10,12 +10,13 @@ import { PuppeteerController } from "../controllers/puppeteer.controller.ts";
 import { createMessageBuffer, parseModel } from "../models/wrapper.ts";
 import { AIModel } from "../models/types.ts";
 import { PuppeteerTestsuiteGenerator, TestsuiteTestcaseObject } from "../testsuites/puppeteer.testsuite.ts";
-import { Testcase } from "../testprompt/types.ts";
+import { Testcase, TestPromptRoot, Testsuite } from "../interfaces/testprompt.ts";
 import { Command, createCommand } from "commander";
 import { addGenericOptions, createTestStepGeneratorWithOptions, createWebControllerWithOptions } from "../helpers/cli.ts";
 import { WebController } from "../interfaces/controller.ts";
 import { IStep } from "../interfaces/step.ts";
 import { write } from "fs";
+import { SeleniumTestsuiteGenerator } from "../testsuites/selenium.testsuite.ts";
 
 export class GenCommand extends Command {
   constructor() {
@@ -23,6 +24,7 @@ export class GenCommand extends Command {
 
     this.description("Generate test from test prompt file");
     this.option("-f, --file <path>", "Specify test prompt file path", "");
+    this.option("-translate, --translate <path>", "Translate from json file only", "");
 
     addGenericOptions(this as any);
   }
@@ -36,7 +38,17 @@ export class GenCommand extends Command {
     let OUT_TESTSUITE_PATH;
     let OUT_TESTSUITE_STEP_PATH;
 
+    let testPrompt: TestPromptRoot;
+
     const testsuiteTestcases: TestsuiteTestcaseObject[] = [];
+
+    if (options.translate) {
+      const translateJsonPath = options.translate;
+      console.log("Translate:", translateJsonPath);
+
+      await this.translateOnly(translateJsonPath);
+      process.exit(0);
+    }
 
     try {
       const testPromptPath = options.file;
@@ -57,16 +69,17 @@ export class GenCommand extends Command {
 
       console.log("Using test prompt file:", testPromptPath);
 
-      const testPromptString = await readFileString(testPromptPath);
-      const testPrompt = parseTestPrompt(testPromptString);
+      const testPromptRaw = await readFileString(testPromptPath);
+      testPrompt = parseTestPrompt(testPromptRaw);
 
       OUT_TESTSUITE_PATH = testPrompt.testsuite.output;
       OUT_TESTSUITE_STEP_PATH = path.join(OUT_GEN_DIR, `${testPrompt.testsuite.output}.steps.json`);
 
-      const testsuiteName = testPrompt.testsuite.name;
+      const TEST_LANGUAGE = testPrompt.testsuite.language;
 
       const model = parseModel(options);
 
+      console.log(`Test language: ${TEST_LANGUAGE}`);
       console.log("Generating...");
 
       if (Array.isArray(testPrompt.testsuite.testcases.testcase)) {
@@ -89,28 +102,17 @@ export class GenCommand extends Command {
         testsuiteTestcases.push({ testcase: testcase, steps: result.finalizedSteps });
       }
 
-      // new puppeteer testsuite generator
-      const testsuiteGen = new PuppeteerTestsuiteGenerator(DEFAULT_PUPPETEER_TEMPLATE, {
-        placeolderTestsuiteName: "// {{TESTSUITE_NAME}}",
-        placeholderTestcasesCode: "// {{TESTCASES}}",
-        templateTestcaseStart: "// --- START TESTCASE ---",
-        templateTestcaseEnd: "// --- END TESTCASE ---",
-        placeholderTestcaseName: "// {{TESTCASE_NAME}}",
-        placeholderTestcaseStepCode: "// {{TESTCASE_GENERATED_CODE}}",
-      });
-
-      // generate complete testsuite code
-      const testsuiteCode = await testsuiteGen.generate(testsuiteName, testsuiteTestcases);
-
-      let formattedCode: string;
-      try {
-        // format testsuite code
-        formattedCode = await formatTSCode(testsuiteCode);
-        await writeFileString(OUT_TESTSUITE_PATH, formattedCode);
-      } catch (_) {
-        // error is okay. save unformatted code
-        console.error("Failed to format testsuite code");
-        await writeFileString(OUT_TESTSUITE_PATH, testsuiteCode);
+      switch (TEST_LANGUAGE) {
+        case "typescript":
+          await this.generatePuppeteerTestsuite(testPrompt, OUT_TESTSUITE_PATH, testsuiteTestcases);
+          break;
+        case "java":
+          await this.generateSeleniumTestsuite(testPrompt, OUT_TESTSUITE_PATH, testsuiteTestcases);
+          break;
+        default:
+          console.error(`Unknown test language ${TEST_LANGUAGE}`);
+          exitCode = 1;
+          return;
       }
 
       console.log("Testsuite output paht:", OUT_TESTSUITE_PATH);
@@ -120,12 +122,16 @@ export class GenCommand extends Command {
     } finally {
       // save steps to file
       if (OUT_TESTSUITE_STEP_PATH) {
-        const TestcaseSteps = testsuiteTestcases.map((tc) => {
+        const testcases = testsuiteTestcases.map((tc) => {
           return { testcaseName: tc.testcase.name, finalizedSteps: tc.steps };
         });
 
         console.log("Testsuite steps saved at:", OUT_TESTSUITE_STEP_PATH);
-        await writeFileString(OUT_TESTSUITE_STEP_PATH, JSON.stringify(TestcaseSteps));
+
+        const outData = testPrompt!;
+        outData.testsuite.testcases = testcases as any;
+
+        await writeFileString(OUT_TESTSUITE_STEP_PATH, JSON.stringify(outData));
       }
 
       process.exit(exitCode);
@@ -152,5 +158,78 @@ export class GenCommand extends Command {
   logTestcase(testcase: Testcase) {
     if (!this.opts().verbose) return;
     console.log("Testcase name:", testcase.name);
+  }
+
+  async generatePuppeteerTestsuite(testprompt: TestPromptRoot, testsuitOutpath: string, testsuiteTestcases: TestsuiteTestcaseObject[]) {
+    // new puppeteer testsuite generator
+    const testsuiteGen = new PuppeteerTestsuiteGenerator(DEFAULT_PUPPETEER_TEMPLATE, {
+      placeolderTestsuiteName: "// {{TESTSUITE_NAME}}",
+      placeholderTestcasesCode: "// {{TESTCASES}}",
+      templateTestcaseStart: "// --- START TESTCASE ---",
+      templateTestcaseEnd: "// --- END TESTCASE ---",
+      placeholderTestcaseName: "// {{TESTCASE_NAME}}",
+      placeholderTestcaseStepCode: "// {{TESTCASE_GENERATED_CODE}}",
+    });
+
+    // generate complete testsuite code
+    const testsuiteName = testprompt.testsuite.name;
+    const generatedCode = await testsuiteGen.generate(testsuiteName, testsuiteTestcases);
+
+    try {
+      // format testsuite code
+      const formattedCode = await formatTSCode(generatedCode);
+      await writeFileString(testsuitOutpath, formattedCode);
+    } catch (_) {
+      // error is okay. save unformatted code
+      console.error("Failed to format testsuite code");
+      await writeFileString(testsuitOutpath, generatedCode);
+    }
+  }
+
+  async generateSeleniumTestsuite(testprompt: TestPromptRoot, testsuitOutpath: string, testsuiteTestcases: TestsuiteTestcaseObject[]) {
+    const testsuiteGenerator = new SeleniumTestsuiteGenerator(DEFAULT_SELENIUM_TEMPLATE, {
+      placeholderTestcasesCode: "// {{TESTCASES}}",
+      templateTestcaseStart: "// --- START TESTCASE ---",
+      templateTestcaseEnd: "// --- END TESTCASE ---",
+      placeholderTestcaseStepCode: "// {{TESTCASE_GENERATED_CODE}}",
+      placeholderJavaMethodName: "TESTCASE_NAME",
+      placeholderJavaClassName: "CLASS_NAME_HERE",
+    });
+
+    // generate complete testsuite code
+    const javaClassName = testprompt.testsuite.java_classname;
+    const generatedCode = await testsuiteGenerator.generate(javaClassName, testsuiteTestcases);
+
+    await writeFileString(testsuitOutpath, generatedCode);
+  }
+
+  async translateOnly(jsonPath: string) {
+    const fileData = await readFileString(jsonPath);
+    const testprompt = JSON.parse(fileData) as TestPromptRoot;
+
+    console.log(`language: ${testprompt.testsuite.language}`);
+
+    const testsuite_Testcases: TestsuiteTestcaseObject[] = [];
+
+    for (const t of testprompt.testsuite.testcases as any as Testcase[]) {
+      const testcase = t as any as {
+        testcaseName: string;
+        finalizedSteps: IStep[];
+      };
+
+      console.log(testcase);
+
+      testsuite_Testcases.push({
+        testcase: {
+          name: testcase.testcaseName,
+          prompt: "",
+        },
+        steps: testcase.finalizedSteps,
+      });
+    }
+
+    await this.generateSeleniumTestsuite(testprompt, testprompt.testsuite.output, testsuite_Testcases);
+
+    console.log("Saved at:", testprompt.testsuite.output);
   }
 }

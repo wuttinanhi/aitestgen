@@ -1,5 +1,5 @@
 import { XMLParser } from "fast-xml-parser";
-import { TestPromptRoot } from "./types.ts";
+import { TestPromptRoot } from "../interfaces/testprompt.ts";
 
 export function parseTestPrompt(xmlString: string) {
   const parser = new XMLParser();

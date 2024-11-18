@@ -1,0 +1,24 @@
+<testsuite>
+    <name>Selenium Test</name>
+    <output>BasicTest.java</output>
+    
+    <language>java</language>
+    <translator>selenium</translator>
+
+    <provider>openai</provider>
+    <model>gpt-4o-mini</model>
+
+    <java_classname>BasicTest</java_classname>
+
+    <testcases>
+        <testcase>
+            <name>SimpleTest</name>
+            <prompt>
+                1. go to https://www.selenium.dev/selenium/web/web-form.html
+                2. set text input to "hello"
+                3. click submit
+                4. expected received message
+            </prompt>
+        </testcase>
+    </testcases>
+</testsuite>
