@@ -1,0 +1,73 @@
+import { IStep } from "../../interfaces/step.ts";
+import { PuppeteerTranslator } from "./puppeteer.translator.ts";
+
+function extractTestcase(startMarker: string, endMarker: string, template: string) {
+  const startIndex = template.indexOf(startMarker) + startMarker.length;
+  const endIndex = template.indexOf(endMarker);
+
+  if (startIndex > -1 && endIndex > startIndex) {
+    return template.slice(startIndex, endIndex).trim();
+  }
+
+  return null; // Return null if markers are not found or invalid.
+}
+
+export interface PuppeteerTestsuiteGeneratorOptions {
+  placeolderTestsuiteName: string; // {{TESTSUITE_NAME}}
+  placeholderTestcasesCode: string; // {{TESTCASES}}
+  templateTestcaseStart: string; // --- START TESTCASE ---
+  templateTestcaseEnd: string; // --- END TESTCASE ---
+  placeholderTestcaseName: string; // {{TESTCASE_NAME}}
+  placeholderTestcaseStepCode: string; // {{TESTCASE_GENERATED_CODE}}
+}
+
+export interface TestsuiteTestcaseObject {
+  testcaseName: string;
+  steps: IStep[];
+}
+
+export class PuppeteerTestsuiteGenerator {
+  private templateTestsuite: string;
+  private templateTestcase: string;
+  private options: PuppeteerTestsuiteGeneratorOptions;
+
+  constructor(template: string, options: PuppeteerTestsuiteGeneratorOptions) {
+    this.templateTestsuite = template;
+    this.options = options;
+
+    const extractedTestcaseTemplate = extractTestcase(options.templateTestcaseStart, options.templateTestcaseEnd, template);
+    if (!extractedTestcaseTemplate) {
+      throw new Error(`Can't extract testcase template got: ${extractedTestcaseTemplate}`);
+    }
+
+    this.templateTestcase = extractedTestcaseTemplate;
+  }
+
+  public async generate(testsuiteName: string, testcases: TestsuiteTestcaseObject[]) {
+    let generatedTestcasesCode = "";
+
+    const testcaseTranslator = new PuppeteerTranslator("browser", "page");
+
+    for (const testcase of testcases) {
+      // generate test code from steps
+      const generatedCode = await testcaseTranslator.generate(testcase.steps);
+
+      // replace `// {{TESTCASE_NAME}}` with testcase name
+      let buffer = this.templateTestcase.replace(this.options.placeholderTestcaseName, testcase.testcaseName);
+
+      // replace `// {{TESTCASE_GENERATED_CODE}}` with generated code
+      buffer = buffer.replace(this.options.placeholderTestcaseStepCode, generatedCode);
+
+      // add code to buffer
+      generatedTestcasesCode += buffer;
+    }
+
+    // replace `// {{TESTSUITE_NAME}}` with testsuite name
+    let testsuiteCode = this.templateTestsuite.replace(this.options.placeolderTestsuiteName, testsuiteName);
+
+    // replace `// {{TESTCASES}}` with generated testcases code
+    testsuiteCode = testsuiteCode.replace(this.options.placeholderTestcasesCode, generatedTestcasesCode);
+
+    return testsuiteCode;
+  }
+}

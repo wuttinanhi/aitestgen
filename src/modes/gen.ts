@@ -9,6 +9,8 @@ import { BaseMessage } from "@langchain/core/messages";
 import { PuppeteerController } from "../controllers/puppeteer.controller.ts";
 import { parseModel } from "../models/wrapper.ts";
 import { AIModel } from "../models/types.ts";
+import { PuppeteerTestsuiteGenerator, TestsuiteTestcaseObject } from "../translators/puppeteer/puppeteer.testsuite.ts";
+import { Testcase } from "../testprompt/types.ts";
 
 export async function runGenMode(args: string[], options: any) {
   const testPromptPath = options.file;
@@ -27,22 +29,68 @@ export async function runGenMode(args: string[], options: any) {
   console.log("Using test prompt file:", testPromptPath);
 
   const testPromptString = await readFileString(testPromptPath);
-
   const testPrompt = parseTestPrompt(testPromptString);
+
+  const testsuiteName = testPrompt.testsuite.name;
 
   const model = parseModel(options);
 
-  let i = 0;
-  for (const testcase of testPrompt.testsuite.testcases.testcase) {
-    console.log("\t", testcase.name);
-    console.log("\t", testcase.prompt);
+  const testsuiteTestcases: TestsuiteTestcaseObject[] = [];
 
-    const generatedCode = await testGenWorker(model, testcase.name, testcase.prompt);
+  if (Array.isArray(testPrompt.testsuite.testcases.testcase)) {
+    let i = 0;
+    for (const testcase of testPrompt.testsuite.testcases.testcase) {
+      console.log("Testcase name:", testcase.name);
 
-    await writeFileString(`gen${i}.test.ts`, generatedCode);
+      const genSteps = await testGenWorker(model, testcase.name, testcase.prompt);
 
-    i++;
+      // append result to array
+      testsuiteTestcases.push({
+        testcaseName: testcase.name,
+        steps: genSteps,
+      });
+
+      i++;
+    }
+  } else {
+    // single object
+    const testcaseName = (testPrompt.testsuite.testcases.testcase as unknown as Testcase).name;
+    const testcasePrompt = (testPrompt.testsuite.testcases.testcase as unknown as Testcase).prompt;
+    const genSteps = await testGenWorker(model, testcaseName, testcasePrompt);
+
+    // append result to array
+    testsuiteTestcases.push({
+      testcaseName: testcaseName,
+      steps: genSteps,
+    });
   }
+
+  // new puppeteer testsuite generator
+  const testsuiteGen = new PuppeteerTestsuiteGenerator(DEFAULT_PUPPETEER_TEMPLATE, {
+    placeolderTestsuiteName: "// {{TESTSUITE_NAME}}",
+    placeholderTestcasesCode: "// {{TESTCASES}}",
+    templateTestcaseStart: "// --- START TESTCASE ---",
+    templateTestcaseEnd: "// --- END TESTCASE ---",
+    placeholderTestcaseName: "// {{TESTCASE_NAME}}",
+    placeholderTestcaseStepCode: "// {{TESTCASE_GENERATED_CODE}}",
+  });
+
+  // generate complete testsuite code
+  const testsuiteCode = await testsuiteGen.generate(testsuiteName, testsuiteTestcases);
+
+  const outputPath = testPrompt.testsuite.output;
+
+  let formattedCode: string;
+  try {
+    // format testsuite code
+    formattedCode = await formatTSCode(testsuiteCode);
+    await writeFileString(outputPath, formattedCode);
+  } catch (_) {
+    console.error("Failed to format testsuite code");
+    await writeFileString(outputPath, testsuiteCode);
+  }
+
+  console.log("Testsuite output paht:", outputPath);
 
   process.exit(0);
 }
@@ -55,19 +103,11 @@ async function testGenWorker(model: AIModel, name: string, prompt: string) {
   webController.setHeadless(false);
 
   // new test step generator
-  const testStepGenerator = new TestStepGenerator(model, webController, DEFAULT_SYSTEM_INSTRUCTION_PROMPT, DEFAULT_SYSTEM_FINALIZE_PROMPT);
-  testStepGenerator.setVerbose(true);
+  const stepGen = new TestStepGenerator(model, webController, DEFAULT_SYSTEM_INSTRUCTION_PROMPT, DEFAULT_SYSTEM_FINALIZE_PROMPT);
+  stepGen.setVerbose(true);
 
   // generate steps
-  const finalizedSteps = await testStepGenerator.generate(prompt, messageBuffer);
+  const finalizedSteps = await stepGen.generate(prompt, messageBuffer);
 
-  // new puppeteer translator
-  const puppeteerTestGen = new PuppeteerTranslator(finalizedSteps, DEFAULT_PUPPETEER_TEMPLATE, "browser", "page", "// {{GENERATED_CODE}}");
-
-  // generate the test code
-  let generatedTestCode = await puppeteerTestGen.generate();
-
-  const formattedCode = formatTSCode(generatedTestCode);
-
-  return formattedCode;
+  return finalizedSteps;
 }

@@ -1,6 +1,6 @@
 <testsuite>
     <name>Todo Website Test</name>
-    <output>app.test.ts</output>
+    <output>todo.testsuite.test.ts</output>
     <language>typescript</language>
     <translator>puppeteer</translator>
     <provider>openai</provider>
@@ -16,7 +16,6 @@
                 5. expected empty to do list
             </prompt>
         </testcase>
-
         <testcase>
             <name>Should add a todo</name>
             <prompt>
@@ -25,6 +24,5 @@
                 3. expected added todo "Cook Dinner" in the list
             </prompt>
         </testcase>
-
     </testcases>
 </testsuite>

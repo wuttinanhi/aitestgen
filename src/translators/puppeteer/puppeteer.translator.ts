@@ -31,49 +31,41 @@ import {
 } from "../../tools/defs.ts";
 
 export class PuppeteerTranslator implements WebController {
-  private steps: IStep[];
-
   private browserVar: string;
   private defaultPageVar: string = "page";
   private currentPageVar: string = "page";
-
-  private templateCode: string;
-  private templatePlaceholder: string = "{{GENERATED_CODE}}";
-  private generatedCode: string = ``;
 
   private lastGetIframeData: FrameData[] = [];
   private iframeDepth: number = 0;
   private iframeVarStack: string[] = [];
   private getIframeVarStack: string[] = [];
 
-  constructor(steps: IStep[], templateCode: string, templateBrowserVar: string, templatePageVar: string, templateGenCodePlaceholder: string) {
-    this.steps = steps;
-    this.templateCode = templateCode;
+  constructor(templateBrowserVar: string, templatePageVar: string) {
     this.browserVar = templateBrowserVar;
     this.defaultPageVar = templatePageVar;
     this.currentPageVar = templatePageVar;
-    this.templatePlaceholder = templateGenCodePlaceholder;
   }
 
-  public async generate() {
+  public async generate(steps: IStep[]) {
     let generatedCode = "";
 
-    for (const step of this.steps) {
+    for (const step of steps) {
       const line = await this.generateStep(step);
       generatedCode += line + "\n";
     }
 
-    this.generatedCode = generatedCode;
-
-    return this.templateCode.replace(this.templatePlaceholder, this.generatedCode);
+    return generatedCode;
   }
 
-  public async generateToFile(outFilePath: string) {
+  public async generateToFile(steps: IStep[], templateCode: string, templateGenCodePlaceholder: string, outFilePath: string) {
     // generate the test code
-    let generatedTestCode = await this.generate();
+    let generatedTestCode = await this.generate(steps);
+
+    // replace template code
+    const replaceTemplateCode = templateCode.replace(templateGenCodePlaceholder, generatedTestCode);
 
     // try formatting the generated code
-    let formattedCode = await formatTSCode(generatedTestCode);
+    let formattedCode = await formatTSCode(replaceTemplateCode);
 
     // save to file
     await writeFileString(outFilePath, formattedCode);

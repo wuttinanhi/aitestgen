@@ -67,18 +67,20 @@ export async function runPromptMode(args: string[], options: any) {
   await writeFileString(OUT_STEP_FINALIZED, JSON.stringify(finalizedSteps));
 
   // new puppeteer translator
-  const puppeteerTestGen = new PuppeteerTranslator(finalizedSteps, DEFAULT_PUPPETEER_TEMPLATE, "browser", "page", "// {{GENERATED_CODE}}");
+  const puppeteerTestGen = new PuppeteerTranslator("browser", "page");
   // generate the test code
-  let generatedTestCode = await puppeteerTestGen.generate();
+  let generatedTestCode = await puppeteerTestGen.generate(finalizedSteps);
+
+  let replacedCode = DEFAULT_PUPPETEER_TEMPLATE.replace("// {{TESTCASE_GENERATED_CODE}}", generatedTestCode);
 
   try {
     // try formatting the generated test code
-    let formattedCode = await formatTSCode(generatedTestCode);
-
+    let formattedCode = await formatTSCode(replacedCode);
     // save formatted generated test code to file
     await writeFileString(OUT_GENTEST_PATH, formattedCode);
   } catch (error) {
-    console.error("failed to format generated test code", error);
+    console.error("failed to format generated test code");
+    await writeFileString(OUT_GENTEST_PATH, replacedCode);
   }
 
   // write message buffer to file
@@ -87,7 +89,7 @@ export async function runPromptMode(args: string[], options: any) {
   spinner.text = "Completed!\n";
   spinner.stop();
 
-  console.log("🪙  Total Tokens used:", testStepGenerator.getTotalTokens());
+  console.log("Total Tokens used:", testStepGenerator.getTotalTokens());
   console.log("💾  Generated test code saved at:", OUT_GENTEST_PATH);
 
   process.exit(0);
