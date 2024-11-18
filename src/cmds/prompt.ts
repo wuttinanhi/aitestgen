@@ -32,7 +32,7 @@ export class PromptCommand extends Command {
   }
 
   public async run() {
-    const exitcode = 0;
+    let exitcode = 0;
 
     const options = this.opts();
 
@@ -82,8 +82,8 @@ export class PromptCommand extends Command {
         let formattedCode = await formatTSCode(replacedCode);
         // save formatted generated test code to file
         await writeFileString(OUT_GENTEST_PATH, formattedCode);
-      } catch (error) {
-        // error is okay. save as unformatted code
+      } catch (_) {
+        // error is okay. save unformatted code
         console.error("failed to format generated test code");
         await writeFileString(OUT_GENTEST_PATH, replacedCode);
       }
@@ -92,6 +92,7 @@ export class PromptCommand extends Command {
       console.log("💾  Generated test code saved at:", OUT_GENTEST_PATH);
     } catch (error) {
       console.error("prompt command error", error);
+      exitcode = 1;
     } finally {
       // write generated steps to file
       await writeFileString(OUT_STEP_ALL, JSON.stringify(generatedStep));

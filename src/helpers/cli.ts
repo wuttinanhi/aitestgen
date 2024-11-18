@@ -15,6 +15,7 @@ export function addGenericOptions(command: Command) {
     .option("-hl, --headless <bool>", "Set browser headless mode", true)
     .option("-v, --verbose", "Verbose log", false);
 }
+
 export function createWebControllerWithOptions(options: any) {
   const webController = new PuppeteerController();
 
