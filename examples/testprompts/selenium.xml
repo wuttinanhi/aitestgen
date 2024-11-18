@@ -1,15 +1,11 @@
 <testsuite>
     <name>Selenium Test</name>
-    <output>BasicTest.java</output>
-    
+    <output>examples/java_selenium/src/test/java/BasicTest.java</output>
     <language>java</language>
     <translator>selenium</translator>
-
     <provider>openai</provider>
     <model>gpt-4o-mini</model>
-
     <java_classname>BasicTest</java_classname>
-
     <testcases>
         <testcase>
             <name>SimpleTest</name>

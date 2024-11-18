@@ -1,0 +1,10 @@
+{
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "[xml]": {
+        "editor.defaultFormatter": "redhat.vscode-xml",
+        "editor.formatOnSave": true,
+        "editor.autoClosingBrackets": "never",
+        "files.trimFinalNewlines": true
+    },
+    "java.compile.nullAnalysis.mode": "automatic"
+}

@@ -37,7 +37,7 @@ export class SeleniumTestsuiteGenerator {
   public async generate(javaClassName: string, testcases: TestsuiteTestcaseObject[]) {
     let generatedTestcasesCode = "";
 
-    const testcaseTranslator = new SeleniumTranslator("browser");
+    const testcaseTranslator = new SeleniumTranslator("driver");
 
     for (const testcase of testcases) {
       // generate test code from steps

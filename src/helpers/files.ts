@@ -36,3 +36,7 @@ export async function createDir(dirPath: string) {
 export async function fileExists(filePath: string) {
   return existsSync(filePath);
 }
+
+export function fileBaseName(filepath: string) {
+  return path.basename(filepath);
+}

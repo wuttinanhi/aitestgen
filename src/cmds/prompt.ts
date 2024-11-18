@@ -4,7 +4,7 @@ import path from "path";
 import { PuppeteerController } from "../controllers/puppeteer.controller.ts";
 import { TestStepGenerator } from "../generators/generator.ts";
 import { createDir, writeFileString } from "../helpers/files.ts";
-import { formatTSCode } from "../helpers/formatter.ts";
+import { formatTypescriptCode } from "../helpers/formatter.ts";
 import { AIModel } from "../models/types.ts";
 import { createMessageBuffer, getOllamaModel, getOpenAIModel, parseModel } from "../models/wrapper.ts";
 import { DEFAULT_SYSTEM_FINALIZE_PROMPT, DEFAULT_SYSTEM_INSTRUCTION_PROMPT } from "../prompts/index.ts";
@@ -79,7 +79,7 @@ export class PromptCommand extends Command {
 
       // try formatting the generated test code
       try {
-        let formattedCode = await formatTSCode(replacedCode);
+        let formattedCode = await formatTypescriptCode(replacedCode);
         // save formatted generated test code to file
         await writeFileString(OUT_GENTEST_PATH, formattedCode);
       } catch (_) {

@@ -1,6 +1,6 @@
 import { WebController } from "../../interfaces/controller.ts";
 import { writeFileString } from "../../helpers/files.ts";
-import { formatTSCode } from "../../helpers/formatter.ts";
+import { formatTypescriptCode } from "../../helpers/formatter.ts";
 import { FrameData } from "../../interfaces/framedata.ts";
 import { IStep } from "../../interfaces/step.ts";
 import {
@@ -32,8 +32,8 @@ import {
 
 export class SeleniumTranslator implements WebController {
   private driverVar: string;
-  private defaultDriverVar: string = "page";
-  private currentPageVar: string = "page";
+  private defaultDriverVar: string = "driver";
+  private currentPageVar: string = "driver";
 
   private lastGetIframeData: FrameData[] = [];
   private iframeDepth: number = 0;
@@ -43,6 +43,7 @@ export class SeleniumTranslator implements WebController {
   constructor(tDriverVar: string) {
     this.driverVar = tDriverVar;
     this.defaultDriverVar = tDriverVar;
+    this.currentPageVar = tDriverVar;
   }
 
   public async generate(steps: IStep[]) {
@@ -122,8 +123,8 @@ export class SeleniumTranslator implements WebController {
     const varSelector = params.varSelector;
     const expectedText = params.expectedText;
 
-    return `String ${varSelector}_text = ${varSelector}.getText();
-assertEquals("${expectedText}", ${varSelector}_text);
+    return `String text${varSelector} = ${varSelector}.getText();
+assertEquals("${expectedText}", text${varSelector});
 `;
   }
 
@@ -135,7 +136,8 @@ webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.rea
   }
 
   async launchBrowser(params: TypeLaunchBrowserParams): Promise<any> {
-    return "driver = new ChromeDriver();";
+    // return "driver = new ChromeDriver();";
+    return "";
   }
 
   async closeBrowser(params: TypeCloseBrowserParams): Promise<any> {

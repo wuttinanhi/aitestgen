@@ -1,6 +1,6 @@
 import { WebController } from "../../interfaces/controller.ts";
 import { writeFileString } from "../../helpers/files.ts";
-import { formatTSCode } from "../../helpers/formatter.ts";
+import { formatTypescriptCode } from "../../helpers/formatter.ts";
 import { FrameData } from "../../interfaces/framedata.ts";
 import { IStep } from "../../interfaces/step.ts";
 import {
@@ -65,7 +65,7 @@ export class PuppeteerTranslator implements WebController {
     const replaceTemplateCode = templateCode.replace(templateGenCodePlaceholder, generatedTestCode);
 
     // try formatting the generated code
-    let formattedCode = await formatTSCode(replaceTemplateCode);
+    let formattedCode = await formatTypescriptCode(replaceTemplateCode);
 
     // save to file
     await writeFileString(outFilePath, formattedCode);

@@ -1,8 +1,8 @@
 import path from "path";
-import { createDir, fileExists, readFileString, writeFileString } from "src/helpers/files.ts";
+import { createDir, fileBaseName, fileExists, readFileString, writeFileString } from "src/helpers/files.ts";
 import { parseTestPrompt } from "src/testprompt/parser.ts";
 import { DEFAULT_PUPPETEER_TEMPLATE, DEFAULT_SELENIUM_TEMPLATE, PuppeteerTranslator } from "../translators/index.ts";
-import { formatTSCode } from "../helpers/formatter.ts";
+import { formatJavaCode, formatTypescriptCode } from "../helpers/formatter.ts";
 import { TestStepGenerator } from "../generators/generator.ts";
 import { DEFAULT_SYSTEM_FINALIZE_PROMPT, DEFAULT_SYSTEM_INSTRUCTION_PROMPT } from "../prompts/index.ts";
 import { BaseMessage } from "@langchain/core/messages";
@@ -73,7 +73,7 @@ export class GenCommand extends Command {
       testPrompt = parseTestPrompt(testPromptRaw);
 
       OUT_TESTSUITE_PATH = testPrompt.testsuite.output;
-      OUT_TESTSUITE_STEP_PATH = path.join(OUT_GEN_DIR, `${testPrompt.testsuite.output}.steps.json`);
+      OUT_TESTSUITE_STEP_PATH = path.join(OUT_GEN_DIR, fileBaseName(`${testPrompt.testsuite.output}.steps.json`));
 
       const TEST_LANGUAGE = testPrompt.testsuite.language;
 
@@ -177,7 +177,7 @@ export class GenCommand extends Command {
 
     try {
       // format testsuite code
-      const formattedCode = await formatTSCode(generatedCode);
+      const formattedCode = await formatTypescriptCode(generatedCode);
       await writeFileString(testsuitOutpath, formattedCode);
     } catch (_) {
       // error is okay. save unformatted code
@@ -200,7 +200,15 @@ export class GenCommand extends Command {
     const javaClassName = testprompt.testsuite.java_classname;
     const generatedCode = await testsuiteGenerator.generate(javaClassName, testsuiteTestcases);
 
-    await writeFileString(testsuitOutpath, generatedCode);
+    try {
+      // format testsuite code
+      const formattedCode = await formatJavaCode(generatedCode);
+      await writeFileString(testsuitOutpath, formattedCode);
+    } catch (_) {
+      // error is okay. save unformatted code
+      console.error("Failed to format testsuite code");
+      await writeFileString(testsuitOutpath, generatedCode);
+    }
   }
 
   async translateOnly(jsonPath: string) {
@@ -217,7 +225,7 @@ export class GenCommand extends Command {
         finalizedSteps: IStep[];
       };
 
-      console.log(testcase);
+      // console.log(testcase);
 
       testsuite_Testcases.push({
         testcase: {
