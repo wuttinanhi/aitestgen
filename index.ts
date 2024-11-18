@@ -1,6 +1,6 @@
 #!/usr/bin/env npx tsx
 
-import { main } from "./src/cmds/testgen.ts";
+import { main } from "./src/cmds/cli.ts";
 
 // disable node `module` warning
 // (node:15327) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.

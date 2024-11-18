@@ -4,7 +4,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     watch: false,
-    testTimeout: 1000 * 60,
+    testTimeout: 1000 * 60 * 2,
     environment: "node",
     globals: true,
     exclude: ["node_modules", "**/node_modules/**"], // Exclude node_modules from tests

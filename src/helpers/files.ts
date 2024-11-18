@@ -1,4 +1,4 @@
-import { promises as fs } from "fs";
+import { promises as fs, existsSync } from "fs";
 import path from "path";
 
 export async function readFileString(filePath: string): Promise<string> {
@@ -31,4 +31,8 @@ export async function createDirIgnoreFile(filePath: string) {
 
 export async function createDir(dirPath: string) {
   await fs.mkdir(dirPath, { recursive: true });
+}
+
+export async function fileExists(filePath: string) {
+  return existsSync(filePath);
 }
