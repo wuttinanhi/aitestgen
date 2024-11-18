@@ -111,7 +111,6 @@ export class TestStepGenerator {
       content: JSON.stringify(resultObject),
       tool_call_id: toolCall.id!,
     });
-    // toolCallResponse.tool_call_id = toolCall.id!;
 
     messageBuffer.push(toolCallResponse);
   }
@@ -261,8 +260,7 @@ export class TestStepGenerator {
         console.warn("LLM response with no tool calls found in finalize step", response.content);
 
         // response with no tool calls, continue to next loop
-        messageBuffer.push(new SystemMessage({ content: "Error! No tool calls found. Please use tool calls `finalize` now!" }));
-
+        messageBuffer.push(new SystemMessage({ content: "Error! No tool calls found. Please use tool `finalize` now!" }));
         continue;
       }
 
@@ -270,16 +268,15 @@ export class TestStepGenerator {
 
       const functionName = toolCall.name;
       const functionArguments: FinalizeParamsType = toolCall.args as any;
-
       const selectedStepIDs = functionArguments.steps;
+
+      // pick best steps
+      const selectedSteps = stepHistory.pickStepByIds(selectedStepIDs);
 
       this.log(`FINALIZING (tool: ${functionName})`);
 
       // send complete message to llm
       this.appendToolResult(messageBuffer, toolCall, { status: "success" });
-
-      // pick best steps
-      const selectedSteps = stepHistory.pickStepByIds(selectedStepIDs);
 
       return selectedSteps;
     }

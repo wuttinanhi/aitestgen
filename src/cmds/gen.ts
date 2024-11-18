@@ -1,5 +1,5 @@
 import path from "path";
-import { fileExists, readFileString, writeFileString } from "src/helpers/files.ts";
+import { createDir, fileExists, readFileString, writeFileString } from "src/helpers/files.ts";
 import { parseTestPrompt } from "src/testprompt/parser.ts";
 import { DEFAULT_PUPPETEER_TEMPLATE, PuppeteerTranslator } from "../translators/index.ts";
 import { formatTSCode } from "../helpers/formatter.ts";
@@ -7,119 +7,150 @@ import { TestStepGenerator } from "../generators/generator.ts";
 import { DEFAULT_SYSTEM_FINALIZE_PROMPT, DEFAULT_SYSTEM_INSTRUCTION_PROMPT } from "../prompts/index.ts";
 import { BaseMessage } from "@langchain/core/messages";
 import { PuppeteerController } from "../controllers/puppeteer.controller.ts";
-import { parseModel } from "../models/wrapper.ts";
+import { createMessageBuffer, parseModel } from "../models/wrapper.ts";
 import { AIModel } from "../models/types.ts";
 import { PuppeteerTestsuiteGenerator, TestsuiteTestcaseObject } from "../testsuites/puppeteer.testsuite.ts";
 import { Testcase } from "../testprompt/types.ts";
-import { createCommand } from "commander";
-import { addGenericOptions } from "./options.ts";
+import { Command, createCommand } from "commander";
+import { addGenericOptions, createTestStepGeneratorWithOptions, createWebControllerWithOptions } from "../helpers/cli.ts";
+import { WebController } from "../interfaces/controller.ts";
+import { IStep } from "../interfaces/step.ts";
+import { write } from "fs";
 
-export function makeGenCommand() {
-  const genCommand = createCommand("gen")
-    .description("Generate test from test prompt file")
-    .option("-f, --file <path>", "Specify test prompt file path", "");
+export class GenCommand extends Command {
+  constructor() {
+    super("gen");
 
-  addGenericOptions(genCommand);
+    this.description("Generate test from test prompt file");
+    this.option("-f, --file <path>", "Specify test prompt file path", "");
 
-  return genCommand;
-}
-
-export async function runGenMode(args: string[], options: any) {
-  const testPromptPath = options.file;
-
-  if (testPromptPath === "") {
-    console.log(`No test prompt file specified use "-f, --file" to specify`);
-    process.exit(1);
+    addGenericOptions(this as any);
   }
 
-  const fileFound = await fileExists(testPromptPath);
-  if (!fileFound) {
-    console.error("File not found", testPromptPath);
-    process.exit(1);
-  }
+  async run() {
+    let exitCode = 0;
 
-  console.log("Using test prompt file:", testPromptPath);
+    const options = this.opts();
 
-  const testPromptString = await readFileString(testPromptPath);
-  const testPrompt = parseTestPrompt(testPromptString);
+    let OUT_GEN_DIR = options.gendir;
+    let OUT_TESTSUITE_PATH;
+    let OUT_TESTSUITE_STEP_PATH;
 
-  const testsuiteName = testPrompt.testsuite.name;
+    const testsuiteTestcases: TestsuiteTestcaseObject[] = [];
 
-  const model = parseModel(options);
+    try {
+      const testPromptPath = options.file;
 
-  const testsuiteTestcases: TestsuiteTestcaseObject[] = [];
+      if (testPromptPath === "") {
+        console.log(`No test prompt file specified use "-f, --file" to specify`);
+        process.exit(1);
+      }
 
-  if (Array.isArray(testPrompt.testsuite.testcases.testcase)) {
-    let i = 0;
-    for (const testcase of testPrompt.testsuite.testcases.testcase) {
-      console.log("\n\nTestcase name:", testcase.name);
+      const fileFound = await fileExists(testPromptPath);
+      if (!fileFound) {
+        console.error("File not found", testPromptPath);
+        process.exit(1);
+      }
 
-      const genSteps = await testGenWorker(model, testcase.name, testcase.prompt);
+      // create gen dir
+      await createDir(OUT_GEN_DIR);
 
-      // append result to array
-      testsuiteTestcases.push({
-        testcaseName: testcase.name,
-        steps: genSteps,
+      console.log("Using test prompt file:", testPromptPath);
+
+      const testPromptString = await readFileString(testPromptPath);
+      const testPrompt = parseTestPrompt(testPromptString);
+
+      OUT_TESTSUITE_PATH = testPrompt.testsuite.output;
+      OUT_TESTSUITE_STEP_PATH = path.join(OUT_GEN_DIR, `${testPrompt.testsuite.output}.steps.json`);
+
+      const testsuiteName = testPrompt.testsuite.name;
+
+      const model = parseModel(options);
+
+      console.log("Generating...");
+
+      if (Array.isArray(testPrompt.testsuite.testcases.testcase)) {
+        for (const testcase of testPrompt.testsuite.testcases.testcase) {
+          const result = await this.testGenWorker(model, options, testcase);
+
+          // append result to array
+          testsuiteTestcases.push({ testcase: testcase, steps: result.finalizedSteps });
+        }
+      } else {
+        // single object
+        const testcase: Testcase = {
+          name: (testPrompt.testsuite.testcases.testcase as unknown as Testcase).name,
+          prompt: (testPrompt.testsuite.testcases.testcase as unknown as Testcase).prompt,
+        };
+
+        const result = await this.testGenWorker(model, options, testcase);
+
+        // append result to array
+        testsuiteTestcases.push({ testcase: testcase, steps: result.finalizedSteps });
+      }
+
+      // new puppeteer testsuite generator
+      const testsuiteGen = new PuppeteerTestsuiteGenerator(DEFAULT_PUPPETEER_TEMPLATE, {
+        placeolderTestsuiteName: "// {{TESTSUITE_NAME}}",
+        placeholderTestcasesCode: "// {{TESTCASES}}",
+        templateTestcaseStart: "// --- START TESTCASE ---",
+        templateTestcaseEnd: "// --- END TESTCASE ---",
+        placeholderTestcaseName: "// {{TESTCASE_NAME}}",
+        placeholderTestcaseStepCode: "// {{TESTCASE_GENERATED_CODE}}",
       });
 
-      i++;
+      // generate complete testsuite code
+      const testsuiteCode = await testsuiteGen.generate(testsuiteName, testsuiteTestcases);
+
+      let formattedCode: string;
+      try {
+        // format testsuite code
+        formattedCode = await formatTSCode(testsuiteCode);
+        await writeFileString(OUT_TESTSUITE_PATH, formattedCode);
+      } catch (_) {
+        // error is okay. save unformatted code
+        console.error("Failed to format testsuite code");
+        await writeFileString(OUT_TESTSUITE_PATH, testsuiteCode);
+      }
+
+      console.log("Testsuite output paht:", OUT_TESTSUITE_PATH);
+    } catch (error) {
+      console.error("gen command error", error);
+      exitCode = 1;
+    } finally {
+      // save steps to file
+      if (OUT_TESTSUITE_STEP_PATH) {
+        const TestcaseSteps = testsuiteTestcases.map((tc) => {
+          return { testcaseName: tc.testcase.name, finalizedSteps: tc.steps };
+        });
+
+        console.log("Testsuite steps saved at:", OUT_TESTSUITE_STEP_PATH);
+        await writeFileString(OUT_TESTSUITE_STEP_PATH, JSON.stringify(TestcaseSteps));
+      }
+
+      process.exit(exitCode);
     }
-  } else {
-    // single object
-    const testcaseName = (testPrompt.testsuite.testcases.testcase as unknown as Testcase).name;
-    const testcasePrompt = (testPrompt.testsuite.testcases.testcase as unknown as Testcase).prompt;
-    const genSteps = await testGenWorker(model, testcaseName, testcasePrompt);
-
-    // append result to array
-    testsuiteTestcases.push({
-      testcaseName: testcaseName,
-      steps: genSteps,
-    });
   }
 
-  // new puppeteer testsuite generator
-  const testsuiteGen = new PuppeteerTestsuiteGenerator(DEFAULT_PUPPETEER_TEMPLATE, {
-    placeolderTestsuiteName: "// {{TESTSUITE_NAME}}",
-    placeholderTestcasesCode: "// {{TESTCASES}}",
-    templateTestcaseStart: "// --- START TESTCASE ---",
-    templateTestcaseEnd: "// --- END TESTCASE ---",
-    placeholderTestcaseName: "// {{TESTCASE_NAME}}",
-    placeholderTestcaseStepCode: "// {{TESTCASE_GENERATED_CODE}}",
-  });
+  async testGenWorker(model: AIModel, options: any, testcase: Testcase) {
+    this.logTestcase(testcase);
 
-  // generate complete testsuite code
-  const testsuiteCode = await testsuiteGen.generate(testsuiteName, testsuiteTestcases);
+    const messageBuffer = createMessageBuffer();
 
-  const outputPath = testPrompt.testsuite.output;
+    const webController = createWebControllerWithOptions(options);
 
-  let formattedCode: string;
-  try {
-    // format testsuite code
-    formattedCode = await formatTSCode(testsuiteCode);
-    await writeFileString(outputPath, formattedCode);
-  } catch (_) {
-    console.error("Failed to format testsuite code");
-    await writeFileString(outputPath, testsuiteCode);
+    const testStepGenerator = createTestStepGeneratorWithOptions(model, webController, options);
+
+    // generate steps
+    const finalizedSteps = await testStepGenerator.generate(testcase.prompt, messageBuffer);
+
+    const generatedStep = testStepGenerator.getGeneratedSteps();
+
+    return { finalizedSteps, generatedStep };
   }
 
-  console.log("Testsuite output paht:", outputPath);
-
-  process.exit(0);
-}
-
-async function testGenWorker(model: AIModel, name: string, prompt: string) {
-  const messageBuffer: Array<BaseMessage> = [];
-
-  // new web controller
-  const webController = new PuppeteerController();
-  webController.setHeadless(false);
-
-  // new test step generator
-  const stepGen = new TestStepGenerator(model, webController, DEFAULT_SYSTEM_INSTRUCTION_PROMPT, DEFAULT_SYSTEM_FINALIZE_PROMPT);
-  stepGen.setVerbose(true);
-
-  // generate steps
-  const finalizedSteps = await stepGen.generate(prompt, messageBuffer);
-
-  return finalizedSteps;
+  logTestcase(testcase: Testcase) {
+    if (!this.opts().verbose) return;
+    console.log("Testcase name:", testcase.name);
+  }
 }

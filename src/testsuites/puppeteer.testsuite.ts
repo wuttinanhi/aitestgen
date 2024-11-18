@@ -1,4 +1,5 @@
 import { IStep } from "../interfaces/step.ts";
+import { Testcase } from "../testprompt/types.ts";
 import { PuppeteerTranslator } from "../translators/puppeteer/puppeteer.translator.ts";
 
 export interface PuppeteerTestsuiteGeneratorOptions {
@@ -11,7 +12,7 @@ export interface PuppeteerTestsuiteGeneratorOptions {
 }
 
 export interface TestsuiteTestcaseObject {
-  testcaseName: string;
+  testcase: Testcase;
   steps: IStep[];
 }
 
@@ -43,7 +44,7 @@ export class PuppeteerTestsuiteGenerator {
       const generatedCode = await testcaseTranslator.generate(testcase.steps);
 
       // replace `// {{TESTCASE_NAME}}` with testcase name
-      let buffer = this.templateTestcase.replace(this.options.placeholderTestcaseName, testcase.testcaseName);
+      let buffer = this.templateTestcase.replace(this.options.placeholderTestcaseName, testcase.testcase.name);
 
       // replace `// {{TESTCASE_GENERATED_CODE}}` with generated code
       buffer = buffer.replace(this.options.placeholderTestcaseStepCode, generatedCode);

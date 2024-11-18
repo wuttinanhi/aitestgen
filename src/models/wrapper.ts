@@ -1,6 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { AIModel, OllamaModelConfig, OpenAIModelConfig } from "./types.ts";
 import { ChatOllama, Ollama } from "@langchain/ollama";
+import { BaseMessage } from "@langchain/core/messages";
 
 export function getOllamaModel(config: OllamaModelConfig): AIModel {
   return new ChatOllama({
@@ -53,4 +54,9 @@ export function parseModel(options: any) {
   }
 
   return model;
+}
+
+export function createMessageBuffer() {
+  const messageBuffer: Array<BaseMessage> = [];
+  return messageBuffer;
 }

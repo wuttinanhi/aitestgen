@@ -1,8 +1,8 @@
 import { Command, createCommand } from "commander";
-import { makeGenCommand, runGenMode } from "./gen.ts";
-import { makePromptCommand, runPromptMode } from "./prompt.ts";
-import { makeTestCommand, runTestMode } from "./test.ts";
-import { addGenericOptions } from "./options.ts";
+import { GenCommand } from "./gen.ts";
+import { addGenericOptions } from "../helpers/cli.ts";
+import { PromptCommand } from "./prompt.ts";
+import { TestCommand } from "./test.ts";
 
 export async function main() {
   const program = new Command();
@@ -12,13 +12,13 @@ export async function main() {
 This tool helps developers quickly create comprehensive test suites by describing what they want to test in plain English.`,
   );
 
-  const promptCommand = makePromptCommand();
+  const promptCommand = new PromptCommand();
   program.addCommand(promptCommand);
 
-  const genCommand = makeGenCommand();
+  const genCommand = new GenCommand();
   program.addCommand(genCommand);
 
-  const testCommand = makeTestCommand();
+  const testCommand = new TestCommand();
   program.addCommand(testCommand);
 
   program.parse();
@@ -26,14 +26,14 @@ This tool helps developers quickly create comprehensive test suites by describin
   switch (program.args[0]) {
     case "prompt":
       promptCommand.parse();
-      runPromptMode(promptCommand.args, promptCommand.opts());
+      promptCommand.run();
       break;
     case "test":
-      runTestMode();
+      testCommand.run();
       break;
     case "gen":
       genCommand.parse();
-      runGenMode(genCommand.args, genCommand.opts());
+      genCommand.run();
       break;
     default:
       console.log("Unknown args:", program.args[0]);
