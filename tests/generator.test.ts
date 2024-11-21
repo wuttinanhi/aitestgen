@@ -1,19 +1,23 @@
+import { BaseMessage } from "@langchain/core/messages";
+import path from "path";
 import { expect, test } from "vitest";
 import { PuppeteerController } from "../src/controllers/puppeteer.controller.ts";
-import { BaseMessage } from "@langchain/core/messages";
 import { TestStepGenerator } from "../src/generators/generator.ts";
-import { DEFAULT_SYSTEM_FINALIZE_PROMPT, DEFAULT_SYSTEM_INSTRUCTION_PROMPT } from "../src/prompts/index.ts";
-import { readFileString, writeFileString } from "../src/helpers/files.ts";
-import { PuppeteerTranslator } from "../src/translators/puppeteer/puppeteer.translator.ts";
-import { DEFAULT_PUPPETEER_TEMPLATE } from "../src/translators/index.ts";
+import { createDir, readFileString, writeFileString } from "../src/helpers/files.ts";
 import { formatTSCode } from "../src/helpers/formatter.ts";
-import { getOpenAIModel } from "../src/models/wrapper.ts";
 import { runVitest } from "../src/helpers/tester.ts";
+import { getOpenAIModel } from "../src/models/wrapper.ts";
+import { DEFAULT_SYSTEM_FINALIZE_PROMPT, DEFAULT_SYSTEM_INSTRUCTION_PROMPT } from "../src/prompts/index.ts";
+import { DEFAULT_PUPPETEER_TEMPLATE } from "../src/translators/index.ts";
+import { PuppeteerTranslator } from "../src/translators/puppeteer/puppeteer.translator.ts";
 
 test("should generate working test", async () => {
-  const TEST_OUT_GENTEST_PATH = ".test/app.test.ts";
-  const TEST_OUT_STEP_ALL = ".test/out.steps.json";
-  const TEST_OUT_STEP_SELECTED = ".test/out.steps.selected.json";
+  const TEST_GEN_DIR = ".test";
+  const TEST_OUT_GENTEST_PATH = path.join(TEST_GEN_DIR, "app.test.ts");
+  const TEST_OUT_STEP_ALL = path.join(TEST_GEN_DIR, "out.steps.json");
+  const TEST_OUT_STEP_SELECTED = path.join(TEST_GEN_DIR, "out.steps.selected.json");
+
+  await createDir(TEST_GEN_DIR);
 
   const USER_PROMPT = await readFileString(__dirname + "/../src/prompts/example_todo_2.txt");
   console.log("User Prompt\n", USER_PROMPT);
