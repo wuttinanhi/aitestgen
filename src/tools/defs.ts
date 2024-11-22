@@ -223,7 +223,8 @@ export const quickSelectorParams = z.object({});
 export type TypeQuickSelectorParams = z.infer<typeof quickSelectorParams>;
 export const quickSelectorTool: StructuredToolParams = {
   name: "quickSelector",
-  description: "Quick tool to get all possible elements in the page and return css selector",
+  description:
+    "Quick tool to get all possible elements in the page and return css selector. after call this you should call create selector variable",
   schema: quickSelectorParams,
 };
 
