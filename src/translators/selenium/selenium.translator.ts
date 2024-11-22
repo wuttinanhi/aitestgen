@@ -32,8 +32,6 @@ import {
 
 export class SeleniumTranslator implements WebController, TestTranslator {
   private driverVar: string = "driver";
-  private defaultDriverVar: string = "driver";
-  private currentPageVar: string = "driver";
 
   private lastGetIframeData: FrameData[] = [];
   private iframeDepth: number = 0;
@@ -45,7 +43,13 @@ export class SeleniumTranslator implements WebController, TestTranslator {
   public async generate(steps: Step[]) {
     let generatedCode = "";
 
-    for (const step of steps) {
+    for (const [index, step] of steps.entries()) {
+      // if step 0 is launchBrowser then ignore it
+      // because we already launch browser in BeforeEach
+      if (index === 0 && step.methodName === "launchBrowser") {
+        continue;
+      }
+
       const line = await this.generateStep(step);
       generatedCode += line + "\n";
     }
@@ -132,8 +136,7 @@ webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.rea
   }
 
   async launchBrowser(params: TypeLaunchBrowserParams): Promise<any> {
-    // return "driver = new ChromeDriver();";
-    return "";
+    return "driver = new ChromeDriver();";
   }
 
   async closeBrowser(params: TypeCloseBrowserParams): Promise<any> {
@@ -169,7 +172,8 @@ webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.rea
     const varSelector = params.varSelector;
     const value = params.value;
 
-    return `await ${varSelector}.setOptionValue(${value});`;
+    return `Select select${varSelector} = new Select(dropdown);
+select${varSelector}.selectByValue(value);`;
   }
 
   async getOptionValue(params: TypeGetOptionValueParams): Promise<any> {
@@ -177,84 +181,69 @@ webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.rea
   }
 
   async goBackHistory(params: TypeGoBackHistoryParams): Promise<any> {
-    return `await ${this.currentPageVar}.goBack();`;
+    return `${this.driverVar}.navigate().back();`;
   }
 
   async goForwardHistory(params: TypeGoForwardHistoryParams): Promise<any> {
-    return `await ${this.currentPageVar}.goForward();`;
+    return `${this.driverVar}.navigate().forward();`;
   }
 
   async getTabs(params: TypeGetTabsParams): Promise<any> {
     return "";
   }
 
+  protected haveDeclaredTabsVariable = false;
+
+  protected createTabVariable() {
+    if (this.haveDeclaredTabsVariable) {
+      return `tabs = new ArrayList<>(${this.driverVar}.getWindowHandles());`;
+    } else {
+      return `List<String> tabs = new ArrayList<>(${this.driverVar}.getWindowHandles());`;
+    }
+  }
+
   async setTab(params: TypeSetTabParams): Promise<any> {
     const tabId = params.tabId;
-    return `await ${this.driverVar}.switchTab(${tabId});`;
+    let out = this.createTabVariable();
+
+    out += `${this.driverVar}.switchTo().window(tabs.get(${tabId}));`;
+
+    return out;
   }
 
   async closeTab(params: TypeCloseTabParams): Promise<any> {
     const tabId = params.tabId;
-    return `// CLOSE TAB ${tabId}`;
+
+    let out = this.createTabVariable();
+
+    out += `${this.driverVar}.switchTo().window(tabs.get(${tabId}));
+${this.driverVar}.close();
+${this.driverVar}.switchTo().window(tabs.get(tabs.size() - 1)); // switch to latest tab
+`;
+
+    return out;
   }
 
   async iframeGetData(params: TypeIframeGetDataParams): Promise<any> {
-    this.iframeDepth += 1;
-
-    let getMainframeFromVar = "";
-    let new_Get_Iframe_Var = "";
-    let getFrames_code = "";
-
-    if (this.iframeVarStack.length === 0) {
-      getMainframeFromVar = this.defaultDriverVar;
-      new_Get_Iframe_Var = "baseFrame";
-      getFrames_code = `var rootFrame = ${getMainframeFromVar}.mainFrame();
-      var ${new_Get_Iframe_Var} = rootFrame.childFrames();`;
-    } else {
-      // prettier-ignore
-      getMainframeFromVar = this.iframeVarStack[this.iframeVarStack.length - 1];
-      new_Get_Iframe_Var = `${getMainframeFromVar}_childFrames`;
-      getFrames_code = `var ${new_Get_Iframe_Var} = ${getMainframeFromVar}.childFrames();`;
-    }
-
-    this.getIframeVarStack.push(new_Get_Iframe_Var);
-
-    return getFrames_code;
+    return "// TODO: implements iframeGetData";
   }
 
   async iframeSwitch(params: TypeIframeSwitchParams): Promise<any> {
-    const iframeIndex = Number(params.index);
-
-    let iframeSwitch_code = ``;
-
-    let latestGetIframeVar = this.getIframeVarStack.at(-1);
-
-    let last_iframeVar = this.iframeVarStack.at(-1);
-    if (last_iframeVar === undefined) {
-      last_iframeVar = this.defaultDriverVar;
-    }
-
-    const newIframeVar = `${last_iframeVar}_iframe${iframeIndex}`;
-
-    iframeSwitch_code += `var ${newIframeVar} = ${latestGetIframeVar}[${iframeIndex}]\n`;
-
-    this.iframeVarStack.push(newIframeVar);
-    this.currentPageVar = newIframeVar;
-
-    return iframeSwitch_code;
+    return "// TODO: implements iframeSwitch";
   }
 
   async iframeReset(params: TypeIframeResetParams): Promise<any> {
-    this.currentPageVar = this.defaultDriverVar;
-
-    return `${this.currentPageVar} = ${this.defaultDriverVar};`;
+    return "// TODO: implements iframeReset";
   }
 
   async quickSelector(params: TypeQuickSelectorParams): Promise<any> {
     return "";
   }
 
-  pressKey(params: TypePressKeyParams): Promise<any> {
-    throw new Error("Method not implemented.");
+  async pressKey(params: TypePressKeyParams): Promise<any> {
+    const keyboardKey = String(params.key).toUpperCase();
+
+    return `Actions actions = new Actions(driver);
+actions.sendKeys(Keys.${keyboardKey}).perform();`;
   }
 }
