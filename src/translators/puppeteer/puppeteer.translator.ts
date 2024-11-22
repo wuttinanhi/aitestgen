@@ -23,6 +23,7 @@ import {
   TypeIframeSwitchParams,
   TypeLaunchBrowserParams,
   TypeNavigateToParams,
+  TypePressKeyParams,
   TypeQuickSelectorParams,
   TypeResetParams,
   TypeSetInputValueParams,
@@ -278,5 +279,9 @@ export class PuppeteerTranslator implements WebController {
 
   async quickSelector(params: TypeQuickSelectorParams): Promise<any> {
     return "";
+  }
+
+  async pressKey(params: TypePressKeyParams): Promise<any> {
+    return `await ${this.currentPageVar}.keyboard.press("${params.key}");`;
   }
 }

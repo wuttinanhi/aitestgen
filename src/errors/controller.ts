@@ -24,6 +24,6 @@ export class ElementBySelectorNotFoundError extends Error {
 
 export class BrowserNotLaunchedError extends Error {
   constructor() {
-    super("Browser not launched");
+    super("Browser not launched. you need to launch it.");
   }
 }

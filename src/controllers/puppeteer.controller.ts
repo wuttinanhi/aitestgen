@@ -29,6 +29,7 @@ import {
   TypeIframeSwitchParams,
   TypeLaunchBrowserParams,
   TypeNavigateToParams,
+  TypePressKeyParams,
   TypeQuickSelectorParams,
   TypeSetInputValueParams,
   TypeSetOptionValueParams,
@@ -112,8 +113,8 @@ export class PuppeteerController implements WebController {
     this.browser = await puppeteer.launch({
       headless: this.isHeadless,
       defaultViewport: {
-        width: 1280,
-        height: 720,
+        width: 800,
+        height: 600,
       },
       // start in maximized window
       // defaultViewport: null,
@@ -195,19 +196,14 @@ export class PuppeteerController implements WebController {
   }
 
   async expectElementText(params: TypeExpectElementTextParams) {
-    try {
-      // prettier-ignore
-      const selectorStorage = await this.getSelectorStorageFromVariableName(params.varSelector)
-      const element = selectorStorage.getSelector();
+    const selectorStorage = await this.getSelectorStorageFromVariableName(params.varSelector);
+    const element = selectorStorage.getSelector();
 
-      const elementText = await element.evaluate((el: any) => el.textContent);
+    const elementText = await element.evaluate((el: any) => el.textContent);
 
-      return {
-        evaluate_result: elementText === params.expectedText,
-      };
-    } catch (error) {
-      console.error(error);
-    }
+    return {
+      evaluate_result: elementText === params.expectedText,
+    };
   }
 
   async getCurrentUrl(_: TypeGetCurrentUrlParams): Promise<string> {
@@ -397,7 +393,7 @@ export class PuppeteerController implements WebController {
     const storage = new SelectorStorage(selectorType, selectorValue, selectorResult);
     this.varNameToSelectorMap[varNameInTest] = storage;
 
-    return;
+    return { created_variable: varNameInTest };
   }
 
   async quickSelector(params: TypeQuickSelectorParams): Promise<any> {
@@ -442,6 +438,11 @@ export class PuppeteerController implements WebController {
     ];
 
     return getElementsWithSelectors(this.getActivePage() as puppeteer.Page, tags);
+  }
+
+  async pressKey(params: TypePressKeyParams): Promise<any> {
+    const page = this.getActivePage() as puppeteer.Page;
+    await page.keyboard.press(params.key as any);
   }
 }
 
