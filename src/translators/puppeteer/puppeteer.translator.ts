@@ -2,7 +2,7 @@ import { WebController } from "../../interfaces/controller.ts";
 import { writeFileString } from "../../helpers/files.ts";
 import { formatTypescriptCode } from "../../helpers/formatter.ts";
 import { FrameData } from "../../interfaces/framedata.ts";
-import { IStep } from "../../interfaces/step.ts";
+import { Step } from "../../interfaces/step.ts";
 import {
   TypeClickElementParams,
   TypeCloseBrowserParams,
@@ -48,7 +48,7 @@ export class PuppeteerTranslator implements WebController, TestTranslator {
     this.currentPageVar = templatePageVar;
   }
 
-  public async generate(steps: IStep[]) {
+  public async generate(steps: Step[]) {
     let generatedCode = "";
 
     for (const step of steps) {
@@ -59,7 +59,7 @@ export class PuppeteerTranslator implements WebController, TestTranslator {
     return generatedCode;
   }
 
-  public async generateToFile(steps: IStep[], templateCode: string, templateGenCodePlaceholder: string, outFilePath: string) {
+  public async generateToFile(steps: Step[], templateCode: string, templateGenCodePlaceholder: string, outFilePath: string) {
     // generate the test code
     let generatedTestCode = await this.generate(steps);
 
@@ -73,7 +73,7 @@ export class PuppeteerTranslator implements WebController, TestTranslator {
     await writeFileString(outFilePath, formattedCode);
   }
 
-  protected async generateStep(step: IStep) {
+  protected async generateStep(step: Step) {
     const stepName = step.methodName;
     const stepArgs = step.functionArgs;
 

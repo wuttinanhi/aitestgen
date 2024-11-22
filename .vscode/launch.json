@@ -73,7 +73,7 @@
         // Ignore all dependencies (optional)
         "${workspaceFolder}/node_modules/**"
       ],
-      "args": ["gen", "--headless", "false", "--verbose", "-f", "examples/testprompts/ollama.xml"]
+      "args": ["gen", "--headless", "false", "--verbose", "-f", "examples/testprompts/todo.xml"]
     },
     {
       "type": "node",

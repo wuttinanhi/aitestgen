@@ -9,12 +9,11 @@ export async function formatTypescriptCode(code: string): Promise<string> {
   });
 }
 
-export async function formatJavaCode(code: string): Promise<string> {
-  return await prettier.format(code, {
-    parser: "java",
-    plugins: ["prettier-plugin-java"],
-    // plugins: [prettierPluginJava],
-    // semi: true,
-    printWidth: 300,
-  });
+export async function formatCodeByLanguage(lang: string, code: string) {
+  switch (lang) {
+    case "typescript":
+      return formatTypescriptCode(code);
+    default:
+      throw new Error(`formatter unknown language: ${lang}`);
+  }
 }

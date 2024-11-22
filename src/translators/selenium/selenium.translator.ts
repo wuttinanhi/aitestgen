@@ -1,8 +1,7 @@
 import { WebController } from "../../interfaces/controller.ts";
-import { writeFileString } from "../../helpers/files.ts";
-import { formatTypescriptCode } from "../../helpers/formatter.ts";
 import { FrameData } from "../../interfaces/framedata.ts";
-import { IStep } from "../../interfaces/step.ts";
+import { Step } from "../../interfaces/step.ts";
+import { TestTranslator } from "../../interfaces/translator.ts";
 import {
   TypeClickElementParams,
   TypeCloseBrowserParams,
@@ -30,7 +29,6 @@ import {
   TypeSetOptionValueParams,
   TypeSetTabParams,
 } from "../../tools/defs.ts";
-import { TestTranslator } from "../../interfaces/translator.ts";
 
 export class SeleniumTranslator implements WebController, TestTranslator {
   private driverVar: string;
@@ -48,7 +46,7 @@ export class SeleniumTranslator implements WebController, TestTranslator {
     this.currentPageVar = tDriverVar;
   }
 
-  public async generate(steps: IStep[]) {
+  public async generate(steps: Step[]) {
     let generatedCode = "";
 
     for (const step of steps) {
@@ -59,7 +57,7 @@ export class SeleniumTranslator implements WebController, TestTranslator {
     return generatedCode;
   }
 
-  protected async generateStep(step: IStep) {
+  protected async generateStep(step: Step) {
     const stepName = step.methodName;
     const stepArgs = step.functionArgs;
 

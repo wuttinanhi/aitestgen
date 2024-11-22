@@ -11,12 +11,14 @@ export function addGenericOptions(command: Command) {
     .option("-gd, --gendir <path>", "Directory to save generated cache", ".gen/")
     .option("-pv, --provider <provider>", `Set model provider "openai" "ollama"`, "openai")
     .option("-m, --model <model>", "Specify model to use", "gpt-4o-mini")
-    .option("-oh, --ollamahost <url>", "Set Ollama endpoint", "http://localhost:11434")
+    .option("-ollamahost, --ollamahost <url>", "Set Ollama endpoint", "http://localhost:11434")
     .option("-hl, --headless <bool>", "Set browser headless mode", true)
-    .option("-v, --verbose", "Verbose log", false);
+    .option("-v, --verbose", "Verbose log", false)
+    .option("-translator, --translator", "Set test translator", "puppeteer")
+    .option("-language, --language", "Set test language", "typescript");
 }
 
-export function createWebControllerWithOptions(options: any) {
+export function createWebControllerWithOptions(options: { headless: boolean }) {
   const webController = new PuppeteerController();
 
   // set webController headless mode from cli options
@@ -30,7 +32,7 @@ export function createWebControllerWithOptions(options: any) {
   return webController;
 }
 
-export function createTestStepGeneratorWithOptions(model: AIModel, webController: WebController, options: any) {
+export function createTestStepGeneratorWithOptions(model: AIModel, webController: WebController, options: { verbose: boolean }) {
   // create new test step generator
   const testStepGenerator = new TestStepGenerator(model, webController, DEFAULT_SYSTEM_INSTRUCTION_PROMPT, DEFAULT_SYSTEM_FINALIZE_PROMPT);
   testStepGenerator.setVerbose(options.verbose);

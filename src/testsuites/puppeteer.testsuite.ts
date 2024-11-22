@@ -1,4 +1,4 @@
-import { IStep } from "../interfaces/step.ts";
+import { Step } from "../interfaces/step.ts";
 import { Testcase } from "../interfaces/testprompt.ts";
 import { PuppeteerTranslator } from "../translators/puppeteer/puppeteer.translator.ts";
 
@@ -13,7 +13,7 @@ export interface PuppeteerTestsuiteGeneratorOptions {
 
 export interface TestsuiteTestcaseObject {
   testcase: Testcase;
-  steps: IStep[];
+  steps: Step[];
 }
 
 export class PuppeteerTestsuiteGenerator {

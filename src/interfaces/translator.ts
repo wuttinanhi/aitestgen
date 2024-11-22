@@ -1,5 +1,5 @@
-import { IStep } from "./step.ts";
+import { Step } from "./step.ts";
 
 export interface TestTranslator {
-  generate(steps: IStep[]): Promise<string>;
+  generate(steps: Step[]): Promise<string>;
 }

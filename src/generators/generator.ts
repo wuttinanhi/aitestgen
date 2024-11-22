@@ -1,7 +1,7 @@
 import { AIMessage, BaseMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { ToolCall, ToolMessage } from "@langchain/core/messages/tool";
 import { FrameData } from "../interfaces/framedata.ts";
-import { IStep } from "../interfaces/step.ts";
+import { Step } from "../interfaces/step.ts";
 import { AIModel } from "../models/types.ts";
 import { WebREPLToolsCollection } from "../tools/defs.ts";
 import { FinalizeParamsType, finalizeTool } from "../tools/finalizer.ts";
@@ -17,8 +17,8 @@ export class TestStepGenerator {
   private loopHardLimit: number = 30;
   private verbose: boolean = false;
 
-  private generatedSteps: IStep[] = [];
-  private finalizedSteps: IStep[] = [];
+  private generatedSteps: Step[] = [];
+  private finalizedSteps: Step[] = [];
   private totalTokensUsed: number = 0;
 
   constructor(llm: AIModel, webController: WebController, systemInstructionPrompt: string, systemFinalizePrompt: string) {
@@ -37,9 +37,6 @@ export class TestStepGenerator {
   }
 
   async generate(userPrompt: string, messageBuffer: Array<BaseMessage>) {
-    const stepHistory = new StepHistory();
-    let uniqueVariableNames: string[] = [];
-
     messageBuffer.push(
       new SystemMessage({
         content: this.systemInstructionPrompt,
@@ -52,8 +49,28 @@ export class TestStepGenerator {
       }),
     );
 
+    const stepHistory = await this.internalGenerate(messageBuffer);
+
+    // store all generated steps
+    this.generatedSteps = stepHistory.getAll();
+
+    const finalizedStep = await this.handleFinalize(this.systemFinalizePrompt, messageBuffer, stepHistory);
+
+    // store all finalized steps
+    this.finalizedSteps = finalizedStep;
+
+    return this.finalizedSteps;
+  }
+
+  private async internalGenerate(messageBuffer: Array<BaseMessage>) {
+    const stepHistory = new StepHistory();
+    let uniqueVariableNames: string[] = [];
+
     try {
       const aiWithTools = this.llm.bindTools(WebREPLToolsCollection);
+
+      // auto open browser
+      await this.webController.launchBrowser({});
 
       loop_hard_limit: for (let i = 0; i < this.loopHardLimit; i++) {
         const response = await aiWithTools.invoke(messageBuffer);
@@ -72,7 +89,7 @@ export class TestStepGenerator {
             this.log(`\tInvoking tool name: ${functionName}`);
             this.log(`\tInvoking tool args: ${JSON.stringify(functionArguments)}`);
 
-            const result = await this.handleToolCall(this.webController, messageBuffer, stepHistory, uniqueVariableNames, toolCall);
+            const result = await this.handleToolCall(this.webController, messageBuffer, stepHistory, toolCall);
 
             this.log(`\tInvoking result: ${JSON.stringify(result)}`);
 
@@ -89,86 +106,60 @@ export class TestStepGenerator {
         }
       }
 
-      // store all generated steps
-      this.generatedSteps = stepHistory.getAll();
-
-      const finalizedStep = await this.handleFinalize(this.systemFinalizePrompt, messageBuffer, stepHistory);
-
-      // store all finalized steps
-      this.finalizedSteps = finalizedStep;
-
-      return finalizedStep;
+      return stepHistory;
     } catch (error) {
-      console.error("Error TestStepGenerator", error);
+      console.error("Error in generation", error);
       throw error;
     } finally {
+      // force close browser
       await this.webController.closeBrowser({});
     }
   }
 
-  protected appendToolResult(messageBuffer: Array<BaseMessage>, toolCall: ToolCall, resultObject: any) {
-    const toolCallResponse = new ToolMessage({
-      content: JSON.stringify(resultObject),
-      tool_call_id: toolCall.id!,
-    });
-
-    messageBuffer.push(toolCallResponse);
-  }
-
-  protected async handleToolCall(
-    controller: WebController,
-    messageBuffer: any[],
-    stepBuffer: StepHistory,
-    uniqueVariableNamesBuffer: string[],
-    toolCall: ToolCall,
-  ) {
+  protected async handleToolCall(controller: WebController, messageBuffer: any[], stepHistory: StepHistory, toolCall: ToolCall) {
     const functionName = toolCall.name;
     const functionArgs = toolCall.args;
 
     try {
-      // check variable name duplication
-      // loop each variable name and check if it has been declared before
-      for (const varName of uniqueVariableNamesBuffer) {
-        if (uniqueVariableNamesBuffer.includes(varName)) {
-          throw new Error(`Variable ${varName} already declared. please use a different variable name`);
-        } else {
-          uniqueVariableNamesBuffer.push(varName);
-        }
-      }
-
       // if function name is complete, then break the loop
       if (functionName === "complete") {
         // if the last step is not closeBrowser, add it
-        if (stepBuffer.latestStep().methodName !== "closeBrowser") {
-          const closeBrowserStep: IStep = {
+        if (stepHistory.latestStep().methodName !== "closeBrowser") {
+          const closeBrowserStep: Step = {
             stepId: 0,
             methodName: "closeBrowser",
             functionArgs: {},
           };
-          stepBuffer.createStep(closeBrowserStep);
+          stepHistory.createStep(closeBrowserStep);
         }
 
-        // append the tool call response
-        this.appendToolResult(messageBuffer, toolCall, {
+        const response = {
           status: "success",
           message: "Backend acknowledged completion",
-        });
+        };
 
-        return;
+        // append the tool call response
+        this.appendToolResult(messageBuffer, toolCall, response);
+
+        return response;
       }
 
       // if function name is reset, then reset the controller
       if (functionName === "reset") {
+        // reset browser
         await controller.reset({});
-        stepBuffer.reset();
-        uniqueVariableNamesBuffer.length = 0; // clear the unique variable names
 
-        this.appendToolResult(messageBuffer, toolCall, {
+        // reset step history
+        stepHistory.reset();
+
+        const response = {
           status: "success",
-          message: "Reset browser successfully",
-        });
+          message: "Reset browser successfully. you can start create test from beginning again",
+        };
 
-        return;
+        this.appendToolResult(messageBuffer, toolCall, response);
+
+        return response;
       }
 
       // invoke controller function
@@ -180,7 +171,7 @@ export class TestStepGenerator {
       }
 
       // create new step
-      const step: IStep = {
+      const step: Step = {
         stepId: 0,
         methodName: functionName,
         functionArgs: functionArgs,
@@ -204,17 +195,17 @@ export class TestStepGenerator {
       // if function name contains "expect". the result should always be true to add to the step buffer
       const shouldAddStep = functionName.includes("expect") ? result["evaluate_result"] === true : true;
       if (shouldAddStep) {
-        stepBuffer.createStep(step);
+        stepHistory.createStep(step);
       }
 
       // if result contains pageChanged key then add waitForPageLoad step
       if (result.pageChanged) {
-        const waitForPageLoadStep: IStep = {
+        const waitForPageLoadStep: Step = {
           stepId: 0,
           methodName: "waitForPageLoad",
           functionArgs: {},
         };
-        stepBuffer.createStep(waitForPageLoadStep);
+        stepHistory.createStep(waitForPageLoadStep);
       }
 
       // push the result back to the messages buffer
@@ -232,9 +223,9 @@ export class TestStepGenerator {
       // push the error back to the messages
       this.appendToolResult(messageBuffer, toolCall, errorObj);
 
-      this.log(`\tError in invoking function: ${JSON.stringify(errorObj)}`);
+      this.log(`\t\t!!! Error in invoking function: ${JSON.stringify(errorObj)}`);
 
-      return;
+      return errorObj;
     }
   }
 
@@ -242,30 +233,39 @@ export class TestStepGenerator {
     // send finalize instruction to llm
     messageBuffer.push(new SystemMessage({ content: SYSTEM_FINALIZE_PROMPT }));
 
-    // loop 5 time before throw error
-    for (let i = 0; i < 5; i++) {
-      // send all step to llm
-      const stepJSON = JSON.stringify(stepHistory.getAll());
-      messageBuffer.push(new AIMessage({ content: stepJSON }));
+    // send all step to llm
+    const allSteps = stepHistory.getAll();
+    const stepJSON = JSON.stringify(allSteps);
+    messageBuffer.push(new AIMessage({ content: stepJSON }));
 
+    this.log(`Finalizing (total steps : ${allSteps.length})`);
+    for (const step of allSteps) {
+      this.log("\t" + JSON.stringify(step));
+    }
+    this.log(`\t`);
+
+    // loop 5 time before throw error
+    for (let i = 0; i < 10; i++) {
       // BIND TOOLS finalizer
       const llmWithFinalizeTool = this.llm.bindTools([finalizeTool]);
 
-      const response = await llmWithFinalizeTool.invoke(messageBuffer);
+      const response = await llmWithFinalizeTool.invoke(messageBuffer, {
+        // Tool choice is not supported for ChatOllama.
+        // tool_choice: "finalize",
+      });
 
       messageBuffer.push(response);
       this.totalTokensUsed += response.usage_metadata!.total_tokens;
 
-      if (!response.tool_calls) {
+      if (!response.tool_calls || response.tool_calls.length === 0) {
         console.warn("LLM response with no tool calls found in finalize step", response.content);
 
         // response with no tool calls, continue to next loop
-        messageBuffer.push(new SystemMessage({ content: "Error! No tool calls found. Please use tool `finalize` now!" }));
+        messageBuffer.push(new SystemMessage({ content: `Error! No tool calls found. Please use tool "finalize" now!` }));
         continue;
       }
 
       const toolCall = response.tool_calls[0];
-
       const functionName = toolCall.name;
       const functionArguments: FinalizeParamsType = toolCall.args as any;
       const selectedStepIDs = functionArguments.steps;
@@ -274,6 +274,7 @@ export class TestStepGenerator {
       const selectedSteps = stepHistory.pickStepByIds(selectedStepIDs);
 
       this.log(`FINALIZING (tool: ${functionName})`);
+      this.log(`SELECTED STEPS: ${JSON.stringify(selectedStepIDs)}`);
 
       // send complete message to llm
       this.appendToolResult(messageBuffer, toolCall, { status: "success" });
@@ -282,6 +283,15 @@ export class TestStepGenerator {
     }
 
     throw new Error("Error in finalizing: AI did not respond with finalize steps");
+  }
+
+  protected appendToolResult(messageBuffer: Array<BaseMessage>, toolCall: ToolCall, resultObject: any) {
+    const toolCallResponse = new ToolMessage({
+      content: JSON.stringify(resultObject),
+      tool_call_id: toolCall.id!,
+    });
+
+    messageBuffer.push(toolCallResponse);
   }
 
   public getGeneratedSteps() {
@@ -297,10 +307,8 @@ export class TestStepGenerator {
   }
 
   protected log(text: string) {
-    if (!this.verbose) {
-      return;
+    if (this.verbose) {
+      console.log(text);
     }
-
-    console.log(text);
   }
 }

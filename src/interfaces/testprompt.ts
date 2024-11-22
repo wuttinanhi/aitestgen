@@ -1,4 +1,4 @@
-export interface TestPromptRoot {
+export interface TestPrompt {
   testsuite: Testsuite;
 }
 
