@@ -1,1 +1,1 @@
-Now please pick the important steps to finalize the test generation process. and call `finalize` tool with the selected steps.
+Now please call "finalize" tool to pick the important steps to finalize the test generation process.

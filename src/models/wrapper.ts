@@ -1,11 +1,11 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { AIModel, OllamaModelConfig, OpenAIModelConfig } from "./types.ts";
-import { ChatOllama, Ollama } from "@langchain/ollama";
 import { BaseMessage } from "@langchain/core/messages";
+import { ChatOllama } from "@langchain/ollama";
+import { ChatOpenAI } from "@langchain/openai";
+import { AIModel, OllamaModelConfig, OpenAIModelConfig, ParseModelOptions } from "./types.ts";
 
 export function getOllamaModel(config: OllamaModelConfig): AIModel {
   return new ChatOllama({
-    baseUrl: config.host,
+    baseUrl: config.ollamahost,
     model: config.model,
     temperature: 0,
     streaming: false,
@@ -23,37 +23,42 @@ export function getOpenAIModel(config: OpenAIModelConfig): AIModel {
   });
 }
 
-export function parseModel(options: any) {
+export function parseModel(options: ParseModelOptions) {
   let model: AIModel;
 
-  if (options.provider === "openai") {
-    console.log(`🤖  Using OpenAI model ${options.model}`);
+  switch (options.provider) {
+    case "openai":
+      const openAIConfig = options as OpenAIModelConfig;
 
-    if (!process.env.OPENAI_API_KEY) {
-      console.error("env OPENAI_API_KEY is not set!");
-      process.exit(1);
-    }
+      console.log(`Using OpenAI model ${openAIConfig.model}`);
 
-    model = getOpenAIModel({
-      model: options.model,
-    });
-  } else if (options.provider === "ollama") {
-    console.log(`🤖  Using Ollama model ${options.model}`);
+      if (!process.env.OPENAI_API_KEY) {
+        console.error("env OPENAI_API_KEY is not set!");
+        process.exit(1);
+      }
 
-    if (!options.ollamahost) {
-      console.error("Please specify Ollama host with --ollamahost <OLLAMA_ENDPOINT_URL>");
-      process.exit(1);
-    }
+      model = getOpenAIModel({ model: openAIConfig.model });
 
-    model = getOllamaModel({
-      host: options.ollamahost,
-      model: options.model,
-    });
-  } else {
-    throw new Error(`Unknown model provider: ${options.provider}`);
+      return model;
+    case "ollama":
+      const ollamaConfig = options as OllamaModelConfig;
+
+      console.log(`Using Ollama model ${ollamaConfig.model}`);
+
+      if (!ollamaConfig.ollamahost) {
+        console.error("Please specify Ollama host with --ollamahost <OLLAMA_ENDPOINT_URL>");
+        process.exit(1);
+      }
+
+      model = getOllamaModel({
+        ollamahost: ollamaConfig.ollamahost,
+        model: ollamaConfig.model,
+      });
+
+      return model;
+    default:
+      throw new Error(`Unknown model provider: ${options.provider}`);
   }
-
-  return model;
 }
 
 export function createMessageBuffer() {
