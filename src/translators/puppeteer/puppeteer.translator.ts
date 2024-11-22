@@ -30,8 +30,9 @@ import {
   TypeSetOptionValueParams,
   TypeSetTabParams,
 } from "../../tools/defs.ts";
+import { TestTranslator } from "../../interfaces/translator.ts";
 
-export class PuppeteerTranslator implements WebController {
+export class PuppeteerTranslator implements WebController, TestTranslator {
   private browserVar: string;
   private defaultPageVar: string = "page";
   private currentPageVar: string = "page";

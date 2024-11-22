@@ -23,14 +23,16 @@ import {
   TypeIframeSwitchParams,
   TypeLaunchBrowserParams,
   TypeNavigateToParams,
+  TypePressKeyParams,
   TypeQuickSelectorParams,
   TypeResetParams,
   TypeSetInputValueParams,
   TypeSetOptionValueParams,
   TypeSetTabParams,
 } from "../../tools/defs.ts";
+import { TestTranslator } from "../../interfaces/translator.ts";
 
-export class SeleniumTranslator implements WebController {
+export class SeleniumTranslator implements WebController, TestTranslator {
   private driverVar: string;
   private defaultDriverVar: string = "driver";
   private currentPageVar: string = "driver";
@@ -256,5 +258,9 @@ webDriver -> ((JavascriptExecutor) webDriver).executeScript("return document.rea
 
   async quickSelector(params: TypeQuickSelectorParams): Promise<any> {
     return "";
+  }
+
+  pressKey(params: TypePressKeyParams): Promise<any> {
+    throw new Error("Method not implemented.");
   }
 }
