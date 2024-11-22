@@ -33,7 +33,7 @@ import {
 import { TestTranslator } from "../../interfaces/translator.ts";
 
 export class PuppeteerTranslator implements WebController, TestTranslator {
-  private browserVar: string;
+  private browserVar: string = "page";
   private defaultPageVar: string = "page";
   private currentPageVar: string = "page";
 
@@ -42,11 +42,7 @@ export class PuppeteerTranslator implements WebController, TestTranslator {
   private iframeVarStack: string[] = [];
   private getIframeVarStack: string[] = [];
 
-  constructor(templateBrowserVar: string, templatePageVar: string) {
-    this.browserVar = templateBrowserVar;
-    this.defaultPageVar = templatePageVar;
-    this.currentPageVar = templatePageVar;
-  }
+  constructor() {}
 
   public async generate(steps: Step[]) {
     let generatedCode = "";

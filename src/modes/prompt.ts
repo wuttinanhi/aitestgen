@@ -1,5 +1,6 @@
 import { TestStepGenerator } from "../generators/generator.ts";
 import { WebController } from "../interfaces/controller.ts";
+import { TestTranslator } from "../interfaces/translator.ts";
 import { AIModel } from "../models/types.ts";
 import { createMessageBuffer } from "../models/wrapper.ts";
 import { PuppeteerTranslator } from "../translators/index.ts";
@@ -9,7 +10,7 @@ export interface promptModeOptions {
   model: AIModel;
   webController: WebController;
   testStepGenerator: TestStepGenerator;
-  translator: PuppeteerTranslator;
+  translator: TestTranslator;
   testCodeTemplate: string;
 }
 

@@ -37,7 +37,7 @@ export class PuppeteerTestsuiteGenerator {
   public async generate(testsuiteName: string, testcases: TestsuiteTestcaseObject[]) {
     let generatedTestcasesCode = "";
 
-    const testcaseTranslator = new PuppeteerTranslator("browser", "page");
+    const testcaseTranslator = new PuppeteerTranslator();
 
     for (const testcase of testcases) {
       // generate test code from steps

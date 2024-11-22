@@ -31,7 +31,7 @@ import {
 } from "../../tools/defs.ts";
 
 export class SeleniumTranslator implements WebController, TestTranslator {
-  private driverVar: string;
+  private driverVar: string = "driver";
   private defaultDriverVar: string = "driver";
   private currentPageVar: string = "driver";
 
@@ -40,11 +40,7 @@ export class SeleniumTranslator implements WebController, TestTranslator {
   private iframeVarStack: string[] = [];
   private getIframeVarStack: string[] = [];
 
-  constructor(tDriverVar: string) {
-    this.driverVar = tDriverVar;
-    this.defaultDriverVar = tDriverVar;
-    this.currentPageVar = tDriverVar;
-  }
+  constructor() {}
 
   public async generate(steps: Step[]) {
     let generatedCode = "";
