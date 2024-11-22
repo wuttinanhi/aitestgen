@@ -34,7 +34,7 @@
   },
   "scripts": {
     "start": "tsx index.ts",
-    "test": "vitest tests",
+    "test": "vitest ./tests/**",
     "gentest": "vitest run app.test.ts",
     "lint": "tsc --noEmit --skipLibCheck --project tsconfig.json"
   },
