@@ -1,8 +1,13 @@
 # aitestgen
 
-Generate testcases from natural language descriptions.
+Generate test suites from natural language descriptions.
 
-A command-line tool that leverages AI to automatically generate test cases from natural language prompts. This tool helps developers quickly create comprehensive test suites by describing what they want to test in plain English.
+A command-line tool that leverages AI to generate test cases from natural language prompts automatically. 
+This tool helps developers quickly create comprehensive test suites by describing what they want to test in plain English.
+
+## Features
+- Generate Puppeteer tests
+- Generate Selenium tests
 
 ## Requirements
 
