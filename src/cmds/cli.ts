@@ -1,29 +1,17 @@
 import { Command } from "commander";
 import path from "path";
-import { createTestStepGeneratorWithOptions, createWebControllerWithOptions } from "../helpers/cli.ts";
 import { createDir, fileExists, readFileString, writeFileString } from "../helpers/files.ts";
-import { formatCodeByLanguage } from "../helpers/formatter.ts";
-import { parseModel } from "../models/wrapper.ts";
 import { runGenMode } from "../modes/gen.ts";
-import { runPromptMode } from "../modes/prompt.ts";
 import { runTestMode } from "../modes/test.ts";
 import { parseTestPrompt } from "../testprompt/parser.ts";
 import { GenCommand } from "./gen.ts";
-import { PromptCommand } from "./prompt.ts";
 import { TestCommand } from "./test.ts";
-import { getTranslator } from "../translators/index.ts";
-import { getTemplateByTranslatorName } from "../templates/index.ts";
 
 export async function main() {
   const program = new Command();
 
-  program.description(
-    `A command-line tool that leverages AI to automatically generate test cases from natural language prompts. 
-This tool helps developers quickly create comprehensive test suites by describing what they want to test in plain English.`,
-  );
-
-  const promptCommand = new PromptCommand();
-  program.addCommand(promptCommand);
+  program.description(`A command-line tool that leverages AI to automatically generate test cases from natural language prompts. 
+This tool helps developers quickly create comprehensive test suites by describing what they want to test in plain English.`);
 
   const genCommand = new GenCommand();
   program.addCommand(genCommand);
@@ -34,71 +22,6 @@ This tool helps developers quickly create comprehensive test suites by describin
   program.parse();
 
   switch (program.args[0]) {
-    case "prompt":
-      promptCommand.parse();
-
-      const promptText = promptCommand.opts().prompt;
-      if (!promptText) {
-        console.error("User prompt not found. use `--prompt <YOUR PROMPT HERE>` to set prompt");
-        process.exit(1);
-      }
-      console.log("💬 User Prompt:", promptText);
-
-      const genDirPath = promptCommand.opts().gendir;
-      const testFileOutputPath = promptCommand.opts().out;
-      const generatedStepsOutputPath = path.join(genDirPath, "steps.all.json");
-      const finalizedStepsOutputPath = path.join(genDirPath, "steps.finalized.json");
-      const messageBufferOutputPath = path.join(genDirPath, "message.buffer.json");
-
-      // create gen directory
-      await createDir(genDirPath);
-
-      const model = parseModel(promptCommand.opts() as any);
-
-      const webController = createWebControllerWithOptions({ headless: promptCommand.opts().headless });
-
-      const testStepGenerator = createTestStepGeneratorWithOptions(model, webController, { verbose: promptCommand.opts().verbose });
-
-      const translatorName = promptCommand.opts().translator;
-      const translator = getTranslator(translatorName);
-      const templateCode = getTemplateByTranslatorName(translatorName);
-
-      let promptResult = await runPromptMode({
-        promptText: promptText,
-        testCodeTemplate: templateCode,
-        model,
-        webController,
-        translator,
-        testStepGenerator,
-      });
-
-      let generatedCode = promptResult.generatedTestCode;
-
-      generatedCode = templateCode.replace(`// {{TESTCASE_GENERATED_CODE}}`, generatedCode);
-
-      try {
-        // try formatting the generated test code
-        generatedCode = await formatCodeByLanguage(promptCommand.opts().language, generatedCode);
-        // save formatted generated test code to file
-        await writeFileString(testFileOutputPath, generatedCode);
-      } catch (_) {
-        // error is okay. save unformatted code
-        console.error("failed to format generated test code");
-        await writeFileString(testFileOutputPath, generatedCode);
-      }
-
-      // write generated steps to file
-      await writeFileString(generatedStepsOutputPath, JSON.stringify(promptResult.generatedSteps));
-
-      // write finalize steps to file
-      await writeFileString(finalizedStepsOutputPath, JSON.stringify(promptResult.finalizedSteps));
-
-      // write message buffer to file
-      await writeFileString(messageBufferOutputPath, JSON.stringify(promptResult.messageBuffer));
-
-      console.log("Total Tokens used:", testStepGenerator.getTotalTokens());
-      console.log("💾  Generated test code saved at:", testFileOutputPath);
-      return;
     case "gen":
       genCommand.parse();
 
