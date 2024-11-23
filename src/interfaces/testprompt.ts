@@ -11,7 +11,7 @@ export interface Testsuite {
   model: string;
   testcases: Testcases;
   // Java
-  java_classname: string;
+  java_classname?: string;
 }
 
 export interface Testcases {
