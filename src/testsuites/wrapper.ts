@@ -1,4 +1,5 @@
 import { PuppeteerTestsuiteGenerator } from "./puppeteer.testsuite.ts";
+import { SeleniumTestsuiteGenerator } from "./selenium.testsuite.ts";
 
 export function getTestsuiteGeneratorByTranslator(translatorName: string, templateCode: string) {
   switch (translatorName) {
@@ -13,6 +14,17 @@ export function getTestsuiteGeneratorByTranslator(translatorName: string, templa
       });
 
       return testsuiteGen;
+    case "selenium":
+      const testsutieGen = new SeleniumTestsuiteGenerator(templateCode, {
+        placeholderTestcasesCode: "// {{TESTCASES}}",
+        templateTestcaseStart: "// --- START TESTCASE ---",
+        templateTestcaseEnd: "// --- END TESTCASE ---",
+        placeholderTestcaseStepCode: "// {{TESTCASE_GENERATED_CODE}}",
+        placeholderJavaMethodName: "TESTCASE_NAME",
+        placeholderJavaClassName: "CLASS_NAME_HERE",
+      });
+
+      return testsutieGen;
     default:
       throw new Error(`Testsuite generator unknown translator ${translatorName}`);
   }

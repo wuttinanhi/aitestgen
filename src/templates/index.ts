@@ -14,6 +14,8 @@ export function getTemplateByTranslatorName(translatorName: string) {
   switch (translatorName) {
     case "puppeteer":
       return DEFAULT_PUPPETEER_TEMPLATE;
+    case "selenium":
+      return DEFAULT_SELENIUM_TEMPLATE;
     default:
       throw new Error(`Template unknown translator: ${translatorName}`);
   }
