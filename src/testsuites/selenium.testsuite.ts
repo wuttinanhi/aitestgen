@@ -1,14 +1,14 @@
 import { Step } from "../interfaces/step.ts";
 import { Testcase } from "../interfaces/testprompt.ts";
-import { PuppeteerTranslator } from "../translators/puppeteer/puppeteer.translator.ts";
+import { SeleniumTranslator } from "../translators/selenium/selenium.translator.ts";
 
-export interface PuppeteerTestsuiteGeneratorOptions {
-  placeolderTestsuiteName: string; // {{TESTSUITE_NAME}}
+export interface SeleniumTestsuiteGeneratorOptions {
   placeholderTestcasesCode: string; // {{TESTCASES}}
   templateTestcaseStart: string; // --- START TESTCASE ---
   templateTestcaseEnd: string; // --- END TESTCASE ---
-  placeholderTestcaseName: string; // {{TESTCASE_NAME}}
   placeholderTestcaseStepCode: string; // {{TESTCASE_GENERATED_CODE}}
+  placeholderJavaMethodName: string; // TESTCASE_NAME
+  placeholderJavaClassName: string; // CLASS_NAME_HERE
 }
 
 export interface TestsuiteTestcaseObject {
@@ -16,12 +16,12 @@ export interface TestsuiteTestcaseObject {
   steps: Step[];
 }
 
-export class PuppeteerTestsuiteGenerator {
+export class SeleniumTestsuiteGenerator {
   private templateTestsuite: string;
   private templateTestcase: string;
-  private options: PuppeteerTestsuiteGeneratorOptions;
+  private options: SeleniumTestsuiteGeneratorOptions;
 
-  constructor(template: string, options: PuppeteerTestsuiteGeneratorOptions) {
+  constructor(template: string, options: SeleniumTestsuiteGeneratorOptions) {
     this.templateTestsuite = template;
     this.options = options;
 
@@ -34,17 +34,17 @@ export class PuppeteerTestsuiteGenerator {
     this.templateTestsuite = extractedTestcaseTemplate.modifiedTemplate;
   }
 
-  public async generate(testsuiteName: string, testcases: TestsuiteTestcaseObject[]) {
+  public async generate(javaClassName: string, testcases: TestsuiteTestcaseObject[]) {
     let generatedTestcasesCode = "";
 
-    const testcaseTranslator = new PuppeteerTranslator();
+    const testcaseTranslator = new SeleniumTranslator();
 
     for (const testcase of testcases) {
       // generate test code from steps
       const generatedCode = await testcaseTranslator.generate(testcase.steps);
 
-      // replace `// {{TESTCASE_NAME}}` with testcase name
-      let buffer = this.templateTestcase.replace(this.options.placeholderTestcaseName, testcase.testcase.name);
+      // replace `TESTCASE_NAME` with testcase name
+      let buffer = this.templateTestcase.replace(this.options.placeholderJavaMethodName, testcase.testcase.name);
 
       // replace `// {{TESTCASE_GENERATED_CODE}}` with generated code
       buffer = buffer.replace(this.options.placeholderTestcaseStepCode, generatedCode);
@@ -53,8 +53,8 @@ export class PuppeteerTestsuiteGenerator {
       generatedTestcasesCode += buffer;
     }
 
-    // replace `// {{TESTSUITE_NAME}}` with testsuite name
-    let testsuiteCode = this.templateTestsuite.replace(this.options.placeolderTestsuiteName, testsuiteName);
+    // replace `CLASS_NAME_HERE` with class name
+    let testsuiteCode = this.templateTestsuite.replace(this.options.placeholderJavaClassName, javaClassName);
 
     // replace `// {{TESTCASES}}` with generated testcases code
     testsuiteCode = testsuiteCode.replace(this.options.placeholderTestcasesCode, generatedTestcasesCode);

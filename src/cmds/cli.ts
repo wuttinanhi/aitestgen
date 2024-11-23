@@ -8,10 +8,11 @@ import { runGenMode } from "../modes/gen.ts";
 import { runPromptMode } from "../modes/prompt.ts";
 import { runTestMode } from "../modes/test.ts";
 import { parseTestPrompt } from "../testprompt/parser.ts";
-import { getTemplateByTranslatorName, getTranslator } from "../translators/index.ts";
 import { GenCommand } from "./gen.ts";
 import { PromptCommand } from "./prompt.ts";
 import { TestCommand } from "./test.ts";
+import { getTranslator } from "../translators/index.ts";
+import { getTemplateByTranslatorName } from "../templates/index.ts";
 
 export async function main() {
   const program = new Command();

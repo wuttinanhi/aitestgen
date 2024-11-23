@@ -1,6 +1,7 @@
 import * as prettier from "prettier";
+// import * as prettierPluginJava from "prettier-plugin-java";
 
-export async function formatTSCode(code: string): Promise<string> {
+export async function formatTypescriptCode(code: string): Promise<string> {
   return await prettier.format(code, {
     parser: "typescript",
     semi: true,
@@ -11,7 +12,7 @@ export async function formatTSCode(code: string): Promise<string> {
 export async function formatCodeByLanguage(lang: string, code: string) {
   switch (lang) {
     case "typescript":
-      return formatTSCode(code);
+      return formatTypescriptCode(code);
     default:
       throw new Error(`formatter unknown language: ${lang}`);
   }

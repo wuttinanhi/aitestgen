@@ -1,13 +1,13 @@
 import { BaseMessage } from "@langchain/core/messages";
 import { createTestStepGeneratorWithOptions, createWebControllerWithOptions } from "../helpers/cli.ts";
-import { formatCodeByLanguage, formatTSCode } from "../helpers/formatter.ts";
 import { Step } from "../interfaces/step.ts";
 import { AIModel } from "../models/types.ts";
 import { createMessageBuffer, parseModel } from "../models/wrapper.ts";
-import { Testcase, TestPrompt } from "../testprompt/types.ts";
 import { TestsuiteTestcaseObject } from "../testsuites/puppeteer.testsuite.ts";
 import { getTestsuiteGeneratorByTranslator } from "../testsuites/wrapper.ts";
-import { getTemplateByTranslatorName } from "../translators/index.ts";
+import { Testcase, TestPrompt } from "../interfaces/testprompt.ts";
+import { formatCodeByLanguage } from "../helpers/formatter.ts";
+import { getTemplateByTranslatorName } from "../templates/index.ts";
 
 export interface genModeOptions {
   genDir: string;
