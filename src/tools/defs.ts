@@ -223,8 +223,19 @@ export const quickSelectorParams = z.object({});
 export type TypeQuickSelectorParams = z.infer<typeof quickSelectorParams>;
 export const quickSelectorTool: StructuredToolParams = {
   name: "quickSelector",
-  description: "Quick tool to get all possible elements in the page and return css selector",
+  description:
+    "Quick tool to get all possible elements in the page and return css selector. after call this you should call create selector variable",
   schema: quickSelectorParams,
+};
+
+export const pressKeyParams = z.object({
+  key: z.string().describe("keyboard key to press"),
+});
+export type TypePressKeyParams = z.infer<typeof pressKeyParams>;
+export const pressKeyTool: StructuredToolParams = {
+  name: "pressKey",
+  description: `Press a keyboard key`, // the available key: 'Backspace' | 'Tab' | 'Enter' | 'ShiftLeft' | 'ShiftRight' | 'ControlLeft' | 'ControlRight' | 'AltLeft' | 'AltRight' | 'Escape' | 'Space' | 'PageUp' | 'PageDown' | 'End' | 'ArrowLeft' | 'ArrowUp' | 'ArrowRight' | 'ArrowDown' | 'Select' | 'Open' | 'PrintScreen' | 'Insert' | 'Delete' | 'F1' | 'F2' | 'F3' | 'F4' | 'F5' | 'F6' | 'F7' | 'F8' | 'F9' | 'F10' | 'F11' | 'F12' | 'Shift' | 'Control' | 'Alt'
+  schema: pressKeyParams,
 };
 
 export const WebREPLToolsCollection = [
@@ -252,4 +263,5 @@ export const WebREPLToolsCollection = [
   iframeResetTool,
   createSelectorVariableTool,
   quickSelectorTool,
+  pressKeyTool,
 ];

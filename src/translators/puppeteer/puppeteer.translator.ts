@@ -1,8 +1,8 @@
 import { WebController } from "../../interfaces/controller.ts";
 import { writeFileString } from "../../helpers/files.ts";
-import { formatTSCode } from "../../helpers/formatter.ts";
+import { formatTypescriptCode } from "../../helpers/formatter.ts";
 import { FrameData } from "../../interfaces/framedata.ts";
-import { IStep } from "../../interfaces/step.ts";
+import { Step } from "../../interfaces/step.ts";
 import {
   TypeClickElementParams,
   TypeCloseBrowserParams,
@@ -23,15 +23,17 @@ import {
   TypeIframeSwitchParams,
   TypeLaunchBrowserParams,
   TypeNavigateToParams,
+  TypePressKeyParams,
   TypeQuickSelectorParams,
   TypeResetParams,
   TypeSetInputValueParams,
   TypeSetOptionValueParams,
   TypeSetTabParams,
 } from "../../tools/defs.ts";
+import { TestTranslator } from "../../interfaces/translator.ts";
 
-export class PuppeteerTranslator implements WebController {
-  private browserVar: string;
+export class PuppeteerTranslator implements WebController, TestTranslator {
+  private browserVar: string = "page";
   private defaultPageVar: string = "page";
   private currentPageVar: string = "page";
 
@@ -40,13 +42,9 @@ export class PuppeteerTranslator implements WebController {
   private iframeVarStack: string[] = [];
   private getIframeVarStack: string[] = [];
 
-  constructor(templateBrowserVar: string, templatePageVar: string) {
-    this.browserVar = templateBrowserVar;
-    this.defaultPageVar = templatePageVar;
-    this.currentPageVar = templatePageVar;
-  }
+  constructor() {}
 
-  public async generate(steps: IStep[]) {
+  public async generate(steps: Step[]) {
     let generatedCode = "";
 
     for (const step of steps) {
@@ -57,7 +55,7 @@ export class PuppeteerTranslator implements WebController {
     return generatedCode;
   }
 
-  public async generateToFile(steps: IStep[], templateCode: string, templateGenCodePlaceholder: string, outFilePath: string) {
+  public async generateToFile(steps: Step[], templateCode: string, templateGenCodePlaceholder: string, outFilePath: string) {
     // generate the test code
     let generatedTestCode = await this.generate(steps);
 
@@ -65,13 +63,13 @@ export class PuppeteerTranslator implements WebController {
     const replaceTemplateCode = templateCode.replace(templateGenCodePlaceholder, generatedTestCode);
 
     // try formatting the generated code
-    let formattedCode = await formatTSCode(replaceTemplateCode);
+    let formattedCode = await formatTypescriptCode(replaceTemplateCode);
 
     // save to file
     await writeFileString(outFilePath, formattedCode);
   }
 
-  protected async generateStep(step: IStep) {
+  protected async generateStep(step: Step) {
     const stepName = step.methodName;
     const stepArgs = step.functionArgs;
 
@@ -278,5 +276,9 @@ export class PuppeteerTranslator implements WebController {
 
   async quickSelector(params: TypeQuickSelectorParams): Promise<any> {
     return "";
+  }
+
+  async pressKey(params: TypePressKeyParams): Promise<any> {
+    return `await ${this.currentPageVar}.keyboard.press("${params.key}");`;
   }
 }

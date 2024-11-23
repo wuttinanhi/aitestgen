@@ -1,66 +1,45 @@
-import { expect, test } from "vitest";
-import { PuppeteerController } from "../src/controllers/puppeteer.controller.ts";
 import { BaseMessage } from "@langchain/core/messages";
-import { TestStepGenerator } from "../src/generators/generator.ts";
-import { DEFAULT_SYSTEM_FINALIZE_PROMPT, DEFAULT_SYSTEM_INSTRUCTION_PROMPT } from "../src/prompts/index.ts";
-import { readFileString, writeFileString } from "../src/helpers/files.ts";
-import { PuppeteerTranslator } from "../src/translators/puppeteer/puppeteer.translator.ts";
-import { DEFAULT_PUPPETEER_TEMPLATE } from "../src/translators/index.ts";
-import { formatTSCode } from "../src/helpers/formatter.ts";
-import { getOpenAIModel } from "../src/models/wrapper.ts";
+import path from "path";
+import { expect, test } from "vitest";
+import { createDir, readFileString, writeFileString } from "../src/helpers/files.ts";
 import { runVitest } from "../src/helpers/tester.ts";
+import { createMessageBuffer, getOpenAIModel } from "../src/models/wrapper.ts";
+import { runGenMode } from "../src/modes/gen.ts";
+import { PuppeteerTranslator } from "../src/translators/puppeteer/puppeteer.translator.ts";
+import { TestPrompt } from "../src/interfaces/testprompt.ts";
+import { parseTestPrompt } from "../src/testprompt/parser.ts";
 
 test("should generate working test", async () => {
-  const TEST_OUT_GENTEST_PATH = ".test/app.test.ts";
-  const TEST_OUT_STEP_ALL = ".test/out.steps.json";
-  const TEST_OUT_STEP_SELECTED = ".test/out.steps.selected.json";
+  const TEST_GEN_DIR = ".test";
+  const TEST_OUT_PATH = path.join(TEST_GEN_DIR, "app.test.ts");
+  const TESTCASES_OUT_DATA = path.join(TEST_GEN_DIR, "testcases.json");
+  const TESTPROMPT_FILE = __dirname + "/../examples/testprompts/todo.xml";
 
-  const USER_PROMPT = await readFileString(__dirname + "/../src/prompts/example_todo_2.txt");
-  console.log("User Prompt\n", USER_PROMPT);
+  await createDir(TEST_GEN_DIR);
 
-  const model = getOpenAIModel({ model: "gpt-4o-mini" });
+  const readTestPromptString = await readFileString(TESTPROMPT_FILE);
+  const testPromptData = parseTestPrompt(readTestPromptString);
 
-  const messageBuffer: Array<BaseMessage> = [];
+  console.log("testPromptData", JSON.stringify(testPromptData));
 
-  const webController = new PuppeteerController();
-  webController.setHeadless(false);
+  const genResult = await runGenMode({
+    genDir: TEST_GEN_DIR,
+    headless: true,
+    verbose: true,
+    testPrompt: testPromptData,
+  });
 
-  const testStepGenerator = new TestStepGenerator(model, webController, DEFAULT_SYSTEM_INSTRUCTION_PROMPT, DEFAULT_SYSTEM_FINALIZE_PROMPT);
-  testStepGenerator.setVerbose(true);
+  // write generated testcases to file
+  await writeFileString(TESTCASES_OUT_DATA, JSON.stringify(genResult.testcases));
 
-  const finalizedSteps = await testStepGenerator.generate(USER_PROMPT, messageBuffer);
-
-  // write generated steps to file
-  await writeFileString(TEST_OUT_STEP_ALL, JSON.stringify(testStepGenerator.getGeneratedSteps()));
-
-  // write finalize steps to file
-  await writeFileString(TEST_OUT_STEP_SELECTED, JSON.stringify(finalizedSteps));
-
-  // new puppeteer translator
-  const puppeteerTestGen = new PuppeteerTranslator("browser", "page");
-
-  console.log("Total Tokens used:", testStepGenerator.getTotalTokens());
-  console.log("Generated test code at", TEST_OUT_GENTEST_PATH);
-
-  // generate the test code
-  let generatedTestCode = await puppeteerTestGen.generate(finalizedSteps);
-
-  // replace template with generated code
-  let replacedCode = DEFAULT_PUPPETEER_TEMPLATE.replace("// {{TESTCASE_GENERATED_CODE}}", generatedTestCode);
-
-  // try formatting the generated code
-  let formattedCode = await formatTSCode(replacedCode);
-
-  // save formatted generated test code to file
-  await writeFileString(TEST_OUT_GENTEST_PATH, formattedCode);
-
-  // write message buffer to file
-  await writeFileString(".test/messageBuffer.json", JSON.stringify(messageBuffer));
+  // save generated test code to file
+  await writeFileString(TEST_OUT_PATH, genResult.testsuiteCode);
 
   // run vitest test on generated test file
-  const vitestResult = await runVitest(TEST_OUT_GENTEST_PATH);
+  const vitestResult = await runVitest(TEST_OUT_PATH);
 
   if (vitestResult.exitCode !== 0) {
+    console.log("--- VITEST ERROR ---");
     console.log("vitestResult.exitCode", vitestResult.exitCode);
     console.log("START VITEST STDOUT\n", vitestResult.stdout, "\nEND VITEST STDOUT\n");
     console.log("START VITEST STDERR\n", vitestResult.stderror, "\nEND VITEST STDERR\n");

@@ -1,7 +1,7 @@
-import { IStep } from "../interfaces/step.ts";
+import { Step } from "../interfaces/step.ts";
 
 export class StepHistory {
-  private steps: IStep[] = [];
+  private steps: Step[] = [];
   private STEP_ID = 0;
 
   constructor() {
@@ -11,7 +11,7 @@ export class StepHistory {
   /**
    * createStep
    */
-  public createStep(step: IStep) {
+  public createStep(step: Step) {
     step.stepId = this.STEP_ID++;
     this.steps.push(step);
   }
@@ -23,7 +23,7 @@ export class StepHistory {
   /**
    * updateStep
    */
-  public updateStep(stepId: number, stepData: IStep) {
+  public updateStep(stepId: number, stepData: Step) {
     const step = this.findStepById(stepId);
     stepData.stepId = stepId;
     if (step) {

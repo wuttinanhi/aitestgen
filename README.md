@@ -28,7 +28,12 @@ Generate testsuite from test prompt file ([todo.xml](examples/testprompts/todo.x
 aitestgen gen -f examples/testprompts/todo.xml
 ```
 
-the generated output will be saved at `todo.testsuite.test.ts`
+the generated output will be saved at `todo.test.ts`
+
+## Choosing a Model
+
+Currently, the best-performing model for test generation is **gpt-4o-mini**.  
+We are still searching for the ideal Ollama model for a self-hosted solution.
 
 ## Contributing
 

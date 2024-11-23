@@ -19,6 +19,7 @@ import {
   TypeIframeSwitchParams,
   TypeLaunchBrowserParams,
   TypeNavigateToParams,
+  TypePressKeyParams,
   TypeQuickSelectorParams,
   TypeResetParams,
   TypeSetInputValueParams,
@@ -42,6 +43,7 @@ export interface WebController {
   getInputValue(params: TypeGetInputValueParams): Promise<any>;
   setOptionValue(params: TypeSetOptionValueParams): Promise<any>;
   getOptionValue(params: TypeGetOptionValueParams): Promise<any>;
+  pressKey(params: TypePressKeyParams): Promise<any>;
   // Expect
   expectElementVisible(params: TypeExpectElementVisibleParams): Promise<any>;
   expectElementText(params: TypeExpectElementTextParams): Promise<any>;

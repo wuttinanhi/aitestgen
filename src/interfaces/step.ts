@@ -1,4 +1,4 @@
-export interface IStep {
+export interface Step {
   stepId: number;
   methodName: string;
   iframeGetDataResult?: any;
