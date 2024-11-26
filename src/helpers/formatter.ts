@@ -9,6 +9,14 @@ export async function formatTypescriptCode(code: string): Promise<string> {
   });
 }
 
+export async function formatJSONCode(code: string): Promise<string> {
+  return await prettier.format(code, {
+    parser: "jsonc",
+    trailingComma: "none",
+    semi: false,
+  });
+}
+
 export async function formatCodeByLanguage(lang: string, code: string) {
   switch (lang) {
     case "typescript":
