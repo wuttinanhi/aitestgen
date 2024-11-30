@@ -17,7 +17,6 @@ export function convertLangchainBaseMessageToShareGPT(messages: BaseMessage[]): 
           const callObj = {
             name: call.name,
             arguments: argumentsOBJ,
-            tool_call_request_id: call.id,
           };
 
           const callJSON = JSON.stringify(callObj);
@@ -25,6 +24,7 @@ export function convertLangchainBaseMessageToShareGPT(messages: BaseMessage[]): 
           results.push({
             role: "tool_call",
             content: `<functioncall> ${callJSON} </functioncall>`,
+            tool_call_request_id: call.id,
           } as ShareGPTMessage);
         }
 
