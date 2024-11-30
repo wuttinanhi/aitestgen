@@ -1,12 +1,8 @@
-import { BaseMessage } from "@langchain/core/messages";
 import path from "path";
 import { expect, test } from "vitest";
 import { createDir, readFileString, writeFileString } from "../src/helpers/files.ts";
 import { runVitest } from "../src/helpers/tester.ts";
-import { createMessageBuffer, getOpenAIModel } from "../src/models/wrapper.ts";
 import { runGenMode } from "../src/modes/gen.ts";
-import { PuppeteerTranslator } from "../src/translators/puppeteer/puppeteer.translator.ts";
-import { TestPrompt } from "../src/interfaces/testprompt.ts";
 import { parseTestPrompt } from "../src/testprompt/parser.ts";
 
 test("should generate working test", async () => {
@@ -30,7 +26,7 @@ test("should generate working test", async () => {
   });
 
   // write generated testcases to file
-  await writeFileString(TESTCASES_OUT_DATA, JSON.stringify(genResult.testcases));
+  await writeFileString(TESTCASES_OUT_DATA, JSON.stringify(genResult.testcasesResult));
 
   // save generated test code to file
   await writeFileString(TEST_OUT_PATH, genResult.testsuiteCode);

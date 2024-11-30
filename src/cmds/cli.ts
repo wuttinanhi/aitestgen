@@ -1,6 +1,7 @@
 import { Command } from "commander";
 import path from "path";
-import { createDir, fileExists, readFileString, writeFileString } from "../helpers/files.ts";
+import { convertLangchainBaseMessageToShareGPT } from "../helpers/converter.ts";
+import { createDir, fileBaseName, fileExists, readFileString, writeFileString } from "../helpers/files.ts";
 import { runGenMode } from "../modes/gen.ts";
 import { runTestMode } from "../modes/test.ts";
 import { parseTestPrompt } from "../testprompt/parser.ts";
@@ -36,10 +37,14 @@ This tool helps developers quickly create comprehensive test suites by describin
         throw new Error("Test prompt file not found");
       }
 
-      const genDir = genCommand.opts().gendir;
-      if (!genDir) {
+      const genDirOpts = genCommand.opts().gendir;
+      if (!genDirOpts) {
         throw new Error("gendir not set");
       }
+
+      // save in directory `<DATEUNIX>_<TEST PROMPT FILE BASENAME>`
+      const testPromptFileBaseName = fileBaseName(testPromptPath);
+      const genDir = path.join(genDirOpts, `${String(Date.now())}_${testPromptFileBaseName}`);
 
       // create gen dir
       await createDir(genDir);
@@ -58,16 +63,29 @@ This tool helps developers quickly create comprehensive test suites by describin
         testPrompt: testPromptData,
       });
 
-      // save testcases steps to file
-      for (const testcase of genResult.testcases) {
-        const filename = String(testcase.testcase.name).replace(" ", "_").toLowerCase();
-        let testcaseStepOutputPath = path.join(genDir, `${filename}.steps.json`);
-        await writeFileString(testcaseStepOutputPath, JSON.stringify(testcase.steps));
-        console.log("Testsuite steps saved at:", testcaseStepOutputPath);
-      }
+      // write gen data to json
+      let testGenDataSavePath = path.join(genDir, `${testPromptFileBaseName}.json`);
+      console.log("Testsuite gen data saved at:", testGenDataSavePath);
+      await writeFileString(testGenDataSavePath, JSON.stringify(genResult.testcasesResult));
 
+      // write generated code to output path
       await writeFileString(testsuiteOutputPath, genResult.testsuiteCode);
       console.log("Testsuite output paht:", testsuiteOutputPath);
+
+      // convert to sharegpt
+      const shareGPTData = genResult.testcasesResult.map((v) => {
+        const messageBuffer = v.messageBuffer;
+        const shareGPTMessages = convertLangchainBaseMessageToShareGPT(messageBuffer);
+        return {
+          testcase: v.testcase,
+          sharegpt: shareGPTMessages,
+        };
+      });
+
+      // write sharegpt to file
+      let shareGPTSavePath = path.join(genDir, `${testPromptFileBaseName}.sharegpt.json`);
+      console.log("Testsuite ShareGPT data saved at:", shareGPTSavePath);
+      await writeFileString(shareGPTSavePath, JSON.stringify(shareGPTData));
       return;
     case "test":
       await runTestMode();

@@ -137,3 +137,5 @@ app.test.ts
 gen.test.ts
 *.test.ts
 examples/java_selenium/src/test/java/BasicTest.java
+
+log.txt

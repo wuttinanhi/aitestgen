@@ -1,0 +1,20 @@
+<testsuite>
+    <name>Todo Website Test</name>
+    <output>todo.test.ts</output>
+    <language>typescript</language>
+    <translator>puppeteer</translator>
+    <provider>openai</provider>
+    <model>gpt-4o-mini</model>
+    <testcases>
+        <testcase>
+            <name>Should remove a todo</name>
+            <prompt>
+                1. go to https://microsoftedge.github.io/Demos/demo-to-do/
+                2. add a todo "Cook Dinner"
+                3. expected added todo "Cook Dinner" in the list
+                4. remove added to do
+                5. expected empty to do list
+            </prompt>
+        </testcase>
+    </testcases>
+</testsuite>

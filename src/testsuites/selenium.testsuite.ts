@@ -1,5 +1,6 @@
 import { Step } from "../interfaces/step.ts";
 import { Testcase } from "../interfaces/testprompt.ts";
+import { TestsuiteTestcaseObject } from "../interfaces/testsuite.ts";
 import { SeleniumTranslator } from "../translators/selenium/selenium.translator.ts";
 
 export interface SeleniumTestsuiteGeneratorOptions {
@@ -9,11 +10,6 @@ export interface SeleniumTestsuiteGeneratorOptions {
   placeholderTestcaseStepCode: string; // {{TESTCASE_GENERATED_CODE}}
   placeholderJavaMethodName: string; // TESTCASE_NAME
   placeholderJavaClassName: string; // CLASS_NAME_HERE
-}
-
-export interface TestsuiteTestcaseObject {
-  testcase: Testcase;
-  steps: Step[];
 }
 
 export class SeleniumTestsuiteGenerator {
@@ -41,7 +37,7 @@ export class SeleniumTestsuiteGenerator {
 
     for (const testcase of testcases) {
       // generate test code from steps
-      const generatedCode = await testcaseTranslator.generate(testcase.steps);
+      const generatedCode = await testcaseTranslator.generate(testcase.finalizedSteps);
 
       // replace `TESTCASE_NAME` with testcase name
       let buffer = this.templateTestcase.replace(this.options.placeholderJavaMethodName, testcase.testcase.name);

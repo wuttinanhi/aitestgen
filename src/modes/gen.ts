@@ -1,13 +1,13 @@
 import { BaseMessage } from "@langchain/core/messages";
 import { createTestStepGeneratorWithOptions, createWebControllerWithOptions } from "../helpers/cli.ts";
+import { formatCodeByLanguage } from "../helpers/formatter.ts";
 import { Step } from "../interfaces/step.ts";
+import { Testcase, TestPrompt } from "../interfaces/testprompt.ts";
+import { TestsuiteTestcaseObject } from "../interfaces/testsuite.ts";
 import { AIModel } from "../models/types.ts";
 import { createMessageBuffer, parseModel } from "../models/wrapper.ts";
-import { TestsuiteTestcaseObject } from "../testsuites/puppeteer.testsuite.ts";
-import { getTestsuiteGeneratorByTranslator } from "../testsuites/wrapper.ts";
-import { Testcase, TestPrompt } from "../interfaces/testprompt.ts";
-import { formatCodeByLanguage } from "../helpers/formatter.ts";
 import { getTemplateByTranslatorName } from "../templates/index.ts";
+import { getTestsuiteGeneratorByTranslator } from "../testsuites/wrapper.ts";
 
 export interface genModeOptions {
   genDir: string;
@@ -43,7 +43,7 @@ export async function runGenMode(options: genModeOptions) {
 
   console.log("Generating...");
 
-  const workerResultBuffer: TestGenWorkerResult[] = [];
+  const testcasesResult: TestGenWorkerResult[] = [];
 
   // xml parser may parse array or single object here
   if (Array.isArray(options.testPrompt.testsuite.testcases.testcase)) {
@@ -56,7 +56,7 @@ export async function runGenMode(options: genModeOptions) {
           testcase,
           verbose: options.verbose,
           headless: options.headless,
-          saveBuffer: workerResultBuffer,
+          saveBuffer: testcasesResult,
         }),
       );
     }
@@ -74,7 +74,7 @@ export async function runGenMode(options: genModeOptions) {
       testcase,
       verbose: options.verbose,
       headless: options.headless,
-      saveBuffer: workerResultBuffer,
+      saveBuffer: testcasesResult,
     });
   }
 
@@ -85,16 +85,8 @@ export async function runGenMode(options: genModeOptions) {
   // new testsuite generator
   const testsuiteGenerator = getTestsuiteGeneratorByTranslator(translatorName, templateCode);
 
-  // map worker result to TestsuiteTestcaseObject
-  const testcases: TestsuiteTestcaseObject[] = workerResultBuffer.map((result) => {
-    return {
-      testcase: result.testcase,
-      steps: result.finalizedSteps,
-    } as TestsuiteTestcaseObject;
-  });
-
   // generate complete testsuite code
-  let testsuiteCode = await testsuiteGenerator.generate(testsuiteName, testcases);
+  let testsuiteCode = await testsuiteGenerator.generate(testsuiteName, testcasesResult);
 
   try {
     // try format testsuite code
@@ -104,7 +96,7 @@ export async function runGenMode(options: genModeOptions) {
     console.error("Failed to format testsuite code");
   }
 
-  return { testsuiteCode, testcases };
+  return { testsuiteCode, testcasesResult };
 }
 
 async function testGenWorker(options: TestGenWorkerOptions) {
@@ -125,5 +117,5 @@ async function testGenWorker(options: TestGenWorkerOptions) {
     generatedSteps,
     finalizedSteps,
     messageBuffer,
-  });
+  } as TestsuiteTestcaseObject);
 }
