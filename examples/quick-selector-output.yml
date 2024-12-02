@@ -1,0 +1,65 @@
+- tag: h1
+  textElement: 📋 My tasks
+  cssSelector: h1
+  childs: []
+- tag: input
+  textElement: ""
+  cssSelector: "#new-task"
+  childs: []
+- tag: input
+  textElement: ""
+  cssSelector: input:nth-child(3)
+  childs: []
+- tag: label
+  textElement: ➕ Add a task
+  cssSelector: label
+  childs: []
+- tag: div
+  textElement: ➕ Add a task
+  cssSelector: .new-task-form
+  childs:
+    - tag: label
+      textElement: ➕ Add a task
+      cssSelector: label
+      childs: []
+    - tag: input
+      textElement: ""
+      cssSelector: "#new-task"
+      childs: []
+    - tag: input
+      textElement: ""
+      cssSelector: input:nth-child(3)
+      childs: []
+- tag: form
+  textElement: |-
+    ➕ Add a task
+            
+            
+          
+          No tasks defined
+  cssSelector: form
+  childs:
+    - tag: div
+      textElement: ➕ Add a task
+      cssSelector: .new-task-form
+      childs:
+        - tag: label
+          textElement: ➕ Add a task
+          cssSelector: label
+          childs: []
+        - tag: input
+          textElement: ""
+          cssSelector: "#new-task"
+          childs: []
+        - tag: input
+          textElement: ""
+          cssSelector: input:nth-child(3)
+          childs: []
+    - tag: ul
+      textElement: No tasks defined
+      cssSelector: "#tasks"
+      childs:
+        - tag: li
+          textElement: No tasks defined
+          cssSelector: .divider
+          childs: []

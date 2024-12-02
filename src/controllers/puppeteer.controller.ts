@@ -10,7 +10,8 @@ import {
 } from "../errors/controller.ts";
 import { HTMLStripNonDisplayTags } from "../helpers/html.ts";
 import { sleep } from "../helpers/utils.ts";
-import { WebController } from "../interfaces/controller.ts";
+import { JSONtoYAML } from "../helpers/yaml.ts";
+import { QuickSelectorElement, WebController } from "../interfaces/controller.ts";
 import { FrameData } from "../interfaces/framedata.ts";
 import { SelectorStorage } from "../selectors/selector.ts";
 import {
@@ -424,9 +425,24 @@ export class PuppeteerController implements WebController {
       // "legend",
       "a",
       // "td",
+      "div",
+      "form",
+      "ui",
     ];
 
-    return getElementsWithSelectors(this.getActivePage() as puppeteer.Page, tags);
+    const page = this.getActivePage();
+
+    const finalResult: QuickSelectorElement[] = [];
+
+    for (const tag of tags) {
+      const elements = await page.$$(tag);
+      const result = await quickSelectorRecursive(elements);
+      finalResult.push(...result);
+    }
+
+    const yamlResult = await JSONtoYAML(finalResult);
+
+    return yamlResult;
   }
 
   public async pressKey(params: TypePressKeyParams): Promise<any> {
@@ -435,26 +451,29 @@ export class PuppeteerController implements WebController {
   }
 }
 
-async function getElementsWithSelectors(page: puppeteer.Page, tags: string[]) {
-  const result = [];
+async function quickSelectorRecursive(elements: puppeteer.ElementHandle<Element>[]) {
+  const result: QuickSelectorElement[] = [];
 
-  for (const tag of tags) {
-    // const elements = document.querySelectorAll(tag);
-    const elements = await page.$$(tag);
+  for (const element of elements) {
+    let cssSelector = await element2selector(element as any);
 
-    for (const element of elements) {
-      let cssSelector = await element2selector(element as any);
+    let tag = await element.evaluate((e) => e.tagName);
+    tag = String(tag).toLowerCase();
 
-      const textContent = await element.evaluate((el) => {
-        return el.textContent ? el.textContent.trim() : "";
-      });
+    const textContent = await element.evaluate((el) => {
+      return el.textContent ? el.textContent.trim() : "";
+    });
 
-      result.push({
-        type: tag,
-        textElement: textContent,
-        cssSelector: cssSelector,
-      });
-    }
+    let childElements = await element.$$(":scope > *");
+
+    const childs = await quickSelectorRecursive(childElements);
+
+    result.push({
+      tag: tag,
+      textElement: textContent,
+      cssSelector: cssSelector,
+      childs: childs,
+    });
   }
 
   return result;

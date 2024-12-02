@@ -63,3 +63,10 @@ export interface WebController {
   createSelectorVariable(params: TypeCreateSelectorVariableParams): Promise<any>;
   quickSelector(params: TypeQuickSelectorParams): Promise<any>;
 }
+
+export interface QuickSelectorElement {
+  tag: string;
+  textElement: string;
+  cssSelector: string;
+  childs: QuickSelectorElement[];
+}

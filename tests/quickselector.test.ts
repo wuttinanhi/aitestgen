@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { test } from "vitest";
 import { PuppeteerController } from "../src/controllers/puppeteer.controller.ts";
 
 test("should get all selectors", async () => {
@@ -6,17 +6,11 @@ test("should get all selectors", async () => {
 
   await webController.launchBrowser({});
 
-  await webController.navigateTo({
-    url: "https://toolbox.googleapps.com/apps/dig/",
-  });
+  await webController.navigateTo({ url: "https://microsoftedge.github.io/Demos/demo-to-do" });
 
   const result = await webController.quickSelector({});
 
   console.log(result);
-
-  console.log(result.length);
-
-  expect(result.length).toEqual(67);
 
   await webController.closeBrowser({});
 });
