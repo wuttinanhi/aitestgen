@@ -1,16 +1,5 @@
-import { Step } from "../interfaces/step.ts";
-import { Testcase } from "../interfaces/testprompt.ts";
-import { TestsuiteTestcaseObject } from "../interfaces/testsuite.ts";
+import { SeleniumTestsuiteGeneratorOptions, TestsuiteTestcaseObject } from "../interfaces/testsuite.ts";
 import { SeleniumTranslator } from "../translators/selenium/selenium.translator.ts";
-
-export interface SeleniumTestsuiteGeneratorOptions {
-  placeholderTestcasesCode: string; // {{TESTCASES}}
-  templateTestcaseStart: string; // --- START TESTCASE ---
-  templateTestcaseEnd: string; // --- END TESTCASE ---
-  placeholderTestcaseStepCode: string; // {{TESTCASE_GENERATED_CODE}}
-  placeholderJavaMethodName: string; // TESTCASE_NAME
-  placeholderJavaClassName: string; // CLASS_NAME_HERE
-}
 
 export class SeleniumTestsuiteGenerator {
   private templateTestsuite: string;
@@ -33,9 +22,10 @@ export class SeleniumTestsuiteGenerator {
   public async generate(javaClassName: string, testcases: TestsuiteTestcaseObject[]) {
     let generatedTestcasesCode = "";
 
-    const testcaseTranslator = new SeleniumTranslator();
-
     for (const testcase of testcases) {
+      // new test translator
+      const testcaseTranslator = new SeleniumTranslator();
+
       // generate test code from steps
       const generatedCode = await testcaseTranslator.generate(testcase.finalizedSteps);
 

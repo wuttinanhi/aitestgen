@@ -1,6 +1,6 @@
 <testsuite>
     <name>Todo Website Test</name>
-    <output>todo.test.ts</output>
+    <output>examples/testprompts/todo.test.ts</output>
     <language>typescript</language>
     <translator>puppeteer</translator>
     <provider>openai</provider>

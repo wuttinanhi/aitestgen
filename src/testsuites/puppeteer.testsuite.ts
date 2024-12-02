@@ -1,17 +1,5 @@
-import { BaseMessage } from "@langchain/core/messages";
-import { Step } from "../interfaces/step.ts";
-import { Testcase } from "../interfaces/testprompt.ts";
+import { PuppeteerTestsuiteGeneratorOptions, TestsuiteTestcaseObject } from "../interfaces/testsuite.ts";
 import { PuppeteerTranslator } from "../translators/puppeteer/puppeteer.translator.ts";
-import { TestsuiteTestcaseObject } from "../interfaces/testsuite.ts";
-
-export interface PuppeteerTestsuiteGeneratorOptions {
-  placeolderTestsuiteName: string; // {{TESTSUITE_NAME}}
-  placeholderTestcasesCode: string; // {{TESTCASES}}
-  templateTestcaseStart: string; // --- START TESTCASE ---
-  templateTestcaseEnd: string; // --- END TESTCASE ---
-  placeholderTestcaseName: string; // {{TESTCASE_NAME}}
-  placeholderTestcaseStepCode: string; // {{TESTCASE_GENERATED_CODE}}
-}
 
 export class PuppeteerTestsuiteGenerator {
   private templateTestsuite: string;
@@ -34,9 +22,10 @@ export class PuppeteerTestsuiteGenerator {
   public async generate(testsuiteName: string, testcases: TestsuiteTestcaseObject[]) {
     let generatedTestcasesCode = "";
 
-    const testcaseTranslator = new PuppeteerTranslator();
-
     for (const testcase of testcases) {
+      // new test translator
+      const testcaseTranslator = new PuppeteerTranslator();
+
       // generate test code from steps
       const generatedCode = await testcaseTranslator.generate(testcase.finalizedSteps);
 

@@ -19,7 +19,7 @@ This tool helps developers quickly create comprehensive test suites by describin
 yarn add -g aitestgen
 ```
 
-## Usage
+## Quickstart
 
 Set OpenAI key
 
@@ -33,7 +33,9 @@ Generate testsuite from test prompt file ([todo.xml](examples/testprompts/todo.x
 aitestgen gen -f examples/testprompts/todo.xml
 ```
 
-the generated output will be saved at `todo.test.ts`
+The generated output will be saved at [examples/testprompts/todo.test.ts](examples/testprompts/todo.test.ts)
+
+Please see more test prompt examples at [examples/testprompts](examples/testprompts)
 
 ## Choosing a Model
 

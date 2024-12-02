@@ -33,7 +33,7 @@ export const clickElementParams = z.object({
 export type TypeClickElementParams = z.infer<typeof clickElementParams>;
 export const clickElementTool: StructuredToolParams = {
   name: "clickElement",
-  description: "Click the element that matches the given selector",
+  description: "Click the element",
   schema: clickElementParams,
 };
 
@@ -44,7 +44,7 @@ export const setInputValueParams = z.object({
 export type TypeSetInputValueParams = z.infer<typeof setInputValueParams>;
 export const setInputValueTool: StructuredToolParams = {
   name: "setInputValue",
-  description: "Set the value of the element that matches the given selector",
+  description: "Set the value of input element",
   schema: setInputValueParams,
 };
 
@@ -54,7 +54,7 @@ export const getInputValueParams = z.object({
 export type TypeGetInputValueParams = z.infer<typeof getInputValueParams>;
 export const getInputValueTool: StructuredToolParams = {
   name: "getInputValue",
-  description: "Get the value of the element that matches the given selector",
+  description: "Get the value of input element",
   schema: getInputValueParams,
 };
 
@@ -65,7 +65,7 @@ export const setOptionValueParams = z.object({
 export type TypeSetOptionValueParams = z.infer<typeof setOptionValueParams>;
 export const setOptionValueTool: StructuredToolParams = {
   name: "setOptionValue",
-  description: "Set the value of the option that matches the given selector",
+  description: "Set the value of the element option",
   schema: setOptionValueParams,
 };
 
@@ -75,7 +75,7 @@ export const getOptionValueParams = z.object({
 export type TypeGetOptionValueParams = z.infer<typeof getOptionValueParams>;
 export const getOptionValueTool: StructuredToolParams = {
   name: "getOptionValue",
-  description: "Get the value of the option that matches the given selector",
+  description: "Get the value of the element option",
   schema: getOptionValueParams,
 };
 
@@ -86,8 +86,7 @@ export const expectElementVisibleParams = z.object({
 export type TypeExpectElementVisibleParams = z.infer<typeof expectElementVisibleParams>;
 export const expectElementVisibleTool: StructuredToolParams = {
   name: "expectElementVisible",
-  description:
-    "Expect the element that matches the given selector to be visible (please use `getHtmlSource` before call this because you need up to date selector)",
+  description: "Expect the element to be visible",
   schema: expectElementVisibleParams,
 };
 
@@ -98,8 +97,7 @@ export const expectElementTextParams = z.object({
 export type TypeExpectElementTextParams = z.infer<typeof expectElementTextParams>;
 export const expectElementTextTool: StructuredToolParams = {
   name: "expectElementText",
-  description:
-    "Expect the element that matches the given selector to have the given text (please use `getHtmlSource` before call this because you need up to date selector)",
+  description: "Expect the element to have equal text",
   schema: expectElementTextParams,
 };
 
@@ -131,7 +129,7 @@ export const getTabsParams = z.object({});
 export type TypeGetTabsParams = z.infer<typeof getTabsParams>;
 export const getTabsTool: StructuredToolParams = {
   name: "getTabs",
-  description: "Get all the tabs data in the browser",
+  description: "Get all the tabs in the browser",
   schema: getTabsParams,
 };
 
@@ -141,7 +139,7 @@ export const setTabParams = z.object({
 export type TypeSetTabParams = z.infer<typeof setTabParams>;
 export const setTabTool: StructuredToolParams = {
   name: "switchTab",
-  description: "Switch to the tab with the given ID",
+  description: "Switch to tab",
   schema: setTabParams,
 };
 
@@ -151,7 +149,7 @@ export const closeTabParams = z.object({
 export type TypeCloseTabParams = z.infer<typeof closeTabParams>;
 export const closeTabTool: StructuredToolParams = {
   name: "closeTab",
-  description: "Close the tab with the given ID",
+  description: "Close the tab",
   schema: closeTabParams,
 };
 
@@ -193,7 +191,7 @@ export const iframeSwitchParams = z.object({
 export type TypeIframeSwitchParams = z.infer<typeof iframeSwitchParams>;
 export const iframeSwitchTool: StructuredToolParams = {
   name: "iframeSwitch",
-  description: "Switch to the iframe at the given index",
+  description: "Switch to iframe",
   schema: iframeSwitchParams,
 };
 
@@ -201,7 +199,7 @@ export const iframeResetParams = z.object({});
 export type TypeIframeResetParams = z.infer<typeof iframeResetParams>;
 export const iframeResetTool: StructuredToolParams = {
   name: "iframeReset",
-  description: "Reset and focus on root page",
+  description: "Reset iframe and focus on root page",
   schema: iframeResetParams,
 };
 
@@ -215,7 +213,7 @@ export const createSelectorVariableParams = z.object({
 export type TypeCreateSelectorVariableParams = z.infer<typeof createSelectorVariableParams>;
 export const createSelectorVariableTool: StructuredToolParams = {
   name: "createSelectorVariable",
-  description: "Create a variable for a selector",
+  description: "Create a variable for a given selector",
   schema: createSelectorVariableParams,
 };
 

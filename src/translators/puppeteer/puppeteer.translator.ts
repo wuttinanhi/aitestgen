@@ -1,8 +1,9 @@
-import { WebController } from "../../interfaces/controller.ts";
 import { writeFileString } from "../../helpers/files.ts";
 import { formatTypescriptCode } from "../../helpers/formatter.ts";
+import { WebController } from "../../interfaces/controller.ts";
 import { FrameData } from "../../interfaces/framedata.ts";
 import { Step } from "../../interfaces/step.ts";
+import { TestTranslator } from "../../interfaces/translator.ts";
 import {
   TypeClickElementParams,
   TypeCloseBrowserParams,
@@ -30,17 +31,18 @@ import {
   TypeSetOptionValueParams,
   TypeSetTabParams,
 } from "../../tools/defs.ts";
-import { TestTranslator } from "../../interfaces/translator.ts";
 
 export class PuppeteerTranslator implements WebController, TestTranslator {
-  private browserVar: string = "page";
-  private defaultPageVar: string = "page";
-  private currentPageVar: string = "page";
+  protected browserVar: string = "page";
+  protected defaultPageVar: string = "page";
+  protected currentPageVar: string = "page";
 
-  private lastGetIframeData: FrameData[] = [];
-  private iframeDepth: number = 0;
-  private iframeVarStack: string[] = [];
-  private getIframeVarStack: string[] = [];
+  protected lastGetIframeData: FrameData[] = [];
+  protected iframeDepth: number = 0;
+  protected iframeVarStack: string[] = [];
+  protected getIframeVarStack: string[] = [];
+
+  protected declaredVarSelector: string[] = [];
 
   constructor() {}
 
@@ -151,8 +153,8 @@ export class PuppeteerTranslator implements WebController, TestTranslator {
     const expectedText = params.expectedText;
 
     return `
-     const ${varSelector}_text = await ${varSelector}!.evaluate((e) => e.textContent);
-     expect(${varSelector}_text).toBe("${expectedText}");
+     var ${varSelector}Text = await ${varSelector}!.evaluate((e) => e.textContent);
+     expect(${varSelector}Text).toBe("${expectedText}");
      `;
   }
 
@@ -254,24 +256,32 @@ export class PuppeteerTranslator implements WebController, TestTranslator {
     const selectorType = params.selectorType;
     const varNameInTest = params.varName;
 
-    let result: string;
+    let code: string;
 
     switch (selectorType) {
       case "css":
-        result = `var ${varNameInTest} = await ${this.currentPageVar}.waitForSelector(\`${selectorValue}\`);`;
+        code = `${varNameInTest} = await ${this.currentPageVar}.waitForSelector(\`${selectorValue}\`);`;
         break;
       case "xpath":
         // prettier-ignore
-        result = `var ${varNameInTest} = await ${this.currentPageVar}.waitForSelector(\`::-p-xpath(${selectorValue})\`);`
+        code = `${varNameInTest} = await ${this.currentPageVar}.waitForSelector(\`::-p-xpath(${selectorValue})\`);`
         break;
       case "id":
-        result = `var ${varNameInTest} = await ${this.currentPageVar}.waitForSelector(\`#${selectorValue}\`);`;
+        code = `${varNameInTest} = await ${this.currentPageVar}.waitForSelector(\`#${selectorValue}\`);`;
         break;
       default:
         throw new Error("Unknown selector type");
     }
 
-    return result;
+    // if first time declare then add "var" prefix
+    if (!this.declaredVarSelector.includes(varNameInTest)) {
+      code = "var " + code;
+    }
+
+    // add variable name to declared variable array
+    this.declaredVarSelector.push(varNameInTest);
+
+    return code;
   }
 
   async quickSelector(params: TypeQuickSelectorParams): Promise<any> {

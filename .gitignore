@@ -135,7 +135,8 @@ screenshot.png
 .gen/**
 app.test.ts
 gen.test.ts
-*.test.ts
+./*.test.ts
+./todo.test.ts
 examples/java_selenium/src/test/java/BasicTest.java
 
 log.txt
