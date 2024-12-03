@@ -23,7 +23,7 @@ export function convertLangchainBaseMessageToShareGPT(messages: BaseMessage[]): 
 
           results.push({
             role: "tool_call",
-            content: `<functioncall> ${callJSON} </functioncall>`,
+            content: callJSON,
             tool_call_request_id: call.id,
           } as ShareGPTMessage);
         }
