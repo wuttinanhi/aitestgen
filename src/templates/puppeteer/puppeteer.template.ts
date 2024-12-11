@@ -19,7 +19,6 @@ describe("// {{TESTSUITE_NAME}}", () => {
   });
 
   // --- START TESTCASE ---
-
   it("// {{TESTCASE_NAME}}", async () => {
     let page = await browser.newPage();
 

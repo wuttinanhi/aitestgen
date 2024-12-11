@@ -5,7 +5,7 @@ import { Testcase, TestPrompt } from "../interfaces/testprompt.ts";
 import { TestsuiteTestcaseObject } from "../interfaces/testsuite.ts";
 import { AIModel } from "../models/types.ts";
 import { createMessageBuffer, parseModel } from "../models/wrapper.ts";
-import { getTemplateByTranslatorName } from "../templates/index.ts";
+import { getTestsuiteTemplateByTranslatorName } from "../templates/index.ts";
 import { getTestsuiteGeneratorByTranslator } from "../testsuites/wrapper.ts";
 
 export interface genModeOptions {
@@ -67,10 +67,10 @@ export async function runGenMode(options: genModeOptions) {
 
   const language = options.testPrompt.testsuite.language;
   const translatorName = options.testPrompt.testsuite.translator;
-  const templateCode = getTemplateByTranslatorName(translatorName);
+  const testsuiteTemplateCode = getTestsuiteTemplateByTranslatorName(translatorName);
 
   // new testsuite generator
-  const testsuiteGenerator = getTestsuiteGeneratorByTranslator(translatorName, templateCode);
+  const testsuiteGenerator = getTestsuiteGeneratorByTranslator(translatorName, testsuiteTemplateCode);
 
   // generate complete testsuite code
   let testsuiteCode = await testsuiteGenerator.generate(testsuiteName, testcasesResult);

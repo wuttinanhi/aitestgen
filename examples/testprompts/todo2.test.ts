@@ -1,4 +1,4 @@
-import puppeteer, { Browser, Frame, Page } from "puppeteer";
+import puppeteer, { Browser } from "puppeteer";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 describe("Todo Website Test", () => {
@@ -17,6 +17,7 @@ describe("Todo Website Test", () => {
   afterEach(async () => {
     await browser.close();
   });
+
   it("Should add a todo", async () => {
     let page = await browser.newPage();
 
@@ -32,6 +33,7 @@ describe("Todo Website Test", () => {
     expect(addedTodo).not.toBeNull();
     await page.close();
   });
+
   it("Should remove a todo", async () => {
     let page = await browser.newPage();
 
@@ -43,8 +45,6 @@ describe("Todo Website Test", () => {
     var firstTask = await page.waitForSelector(`#tasks li`);
     await newTaskInput!.type("Cook Dinner");
     await addTaskButton!.click();
-
-    taskList = await page.waitForSelector(`#tasks`);
 
     taskList = await page.waitForSelector(`#tasks`);
 

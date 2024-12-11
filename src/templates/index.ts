@@ -10,7 +10,7 @@ export const DEFAULT_PUPPETEER_TEMPLATE = readFileSync(`${__dirname}/puppeteer/p
 
 export const DEFAULT_SELENIUM_TEMPLATE = readFileSync(`${__dirname}/selenium/template.java`, "utf-8");
 
-export function getTemplateByTranslatorName(translatorName: string) {
+export function getTestsuiteTemplateByTranslatorName(translatorName: string) {
   switch (translatorName) {
     case "puppeteer":
       return DEFAULT_PUPPETEER_TEMPLATE;
