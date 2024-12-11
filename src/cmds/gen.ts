@@ -1,6 +1,5 @@
 import { Command } from "commander";
 import path from "path";
-import { convertLangchainBaseMessageToShareGPT } from "src/helpers/converter.ts";
 import { createDir, fileBaseName, fileExists, readFileString, writeFileString } from "src/helpers/files.ts";
 import { runGenMode } from "src/modes/gen.ts";
 import { parseTestPrompt } from "src/testprompt/parser.ts";
@@ -65,20 +64,5 @@ export class GenCommand extends Command {
     // write generated code to output path
     await writeFileString(testsuiteOutputPath, genResult.testsuiteCode);
     console.log("Testsuite output paht:", testsuiteOutputPath);
-
-    // convert to sharegpt
-    const shareGPTData = genResult.testcasesResult.map((v) => {
-      const messageBuffer = v.messageBuffer;
-      const shareGPTMessages = convertLangchainBaseMessageToShareGPT(messageBuffer);
-      return {
-        testcase: v.testcase,
-        sharegpt: shareGPTMessages,
-      };
-    });
-
-    // write sharegpt to file
-    let shareGPTSavePath = path.join(genDir, `${testPromptFileBaseName}.sharegpt.json`);
-    console.log("Testsuite ShareGPT data saved at:", shareGPTSavePath);
-    await writeFileString(shareGPTSavePath, JSON.stringify(shareGPTData));
   }
 }

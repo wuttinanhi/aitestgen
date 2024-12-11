@@ -40,16 +40,13 @@ describe("Todo Website Test", () => {
     var newTaskInput = await page.waitForSelector(`#new-task`);
     var addTaskButton = await page.waitForSelector(`label`);
     var taskList = await page.waitForSelector(`#tasks`);
+    var firstTask = await page.waitForSelector(`#tasks li`);
     await newTaskInput!.type("Cook Dinner");
     await addTaskButton!.click();
 
     taskList = await page.waitForSelector(`#tasks`);
-    var taskItem = await page.waitForSelector(`#tasks li`);
-    expect(taskItem).not.toBeNull();
-    await taskItem!.click();
 
     taskList = await page.waitForSelector(`#tasks`);
-    taskItem = await page.waitForSelector(`#tasks li`);
 
     var taskListText = await taskList!.evaluate((e) => e.textContent);
     expect(taskListText).toBe("No tasks defined");

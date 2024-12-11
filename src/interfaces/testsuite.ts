@@ -1,4 +1,5 @@
 import { BaseMessage } from "@langchain/core/messages";
+import { ShareGPTMessage } from "./sharegpt.ts";
 import { Step } from "./step.ts";
 import { Testcase } from "./testprompt.ts";
 
@@ -7,6 +8,7 @@ export interface TestsuiteTestcaseObject {
   generatedSteps: Step[];
   finalizedSteps: Step[];
   messageBuffer: BaseMessage[];
+  shareGPTMessages: ShareGPTMessage[];
 }
 
 export interface PuppeteerTestsuiteGeneratorOptions {

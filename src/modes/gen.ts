@@ -1,7 +1,6 @@
-import { BaseMessage } from "@langchain/core/messages";
+import { convertLangchainBaseMessageToShareGPT } from "src/helpers/converter.ts";
 import { createTestStepGeneratorWithOptions, createWebControllerWithOptions } from "../helpers/cli.ts";
 import { formatCodeByLanguage } from "../helpers/formatter.ts";
-import { Step } from "../interfaces/step.ts";
 import { Testcase, TestPrompt } from "../interfaces/testprompt.ts";
 import { TestsuiteTestcaseObject } from "../interfaces/testsuite.ts";
 import { AIModel } from "../models/types.ts";
@@ -16,21 +15,6 @@ export interface genModeOptions {
   testPrompt: TestPrompt;
 }
 
-export interface TestGenWorkerResult {
-  testcase: Testcase;
-  generatedSteps: Step[];
-  finalizedSteps: Step[];
-  messageBuffer: BaseMessage[];
-}
-
-export interface TestGenWorkerOptions {
-  model: AIModel;
-  testcase: Testcase;
-  verbose: boolean;
-  headless: boolean;
-  saveBuffer: Array<TestGenWorkerResult>;
-}
-
 export async function runGenMode(options: genModeOptions) {
   const testsuiteName = options.testPrompt.testsuite.name;
 
@@ -43,40 +27,43 @@ export async function runGenMode(options: genModeOptions) {
 
   console.log("Generating...");
 
-  const testcasesResult: TestGenWorkerResult[] = [];
+  const testGenerationTasks = [];
 
-  // xml parser may parse array or single object here
+  // xml parser may parse single object here
   if (Array.isArray(options.testPrompt.testsuite.testcases.testcase)) {
-    const waitGroup = [];
-
-    for (const testcase of options.testPrompt.testsuite.testcases.testcase) {
-      waitGroup.push(
-        testGenWorker({
-          model,
-          testcase,
-          verbose: options.verbose,
-          headless: options.headless,
-          saveBuffer: testcasesResult,
-        }),
-      );
-    }
-
-    await Promise.allSettled(waitGroup);
+    // array of testcases
+    testGenerationTasks.push(...options.testPrompt.testsuite.testcases.testcase);
   } else {
-    // single object
-    const testcase: Testcase = {
+    // single testcase object
+    const singleTestcase: Testcase = {
       name: (options.testPrompt.testsuite.testcases.testcase as unknown as Testcase).name,
       prompt: (options.testPrompt.testsuite.testcases.testcase as unknown as Testcase).prompt,
     };
 
-    await testGenWorker({
-      model,
-      testcase,
-      verbose: options.verbose,
-      headless: options.headless,
-      saveBuffer: testcasesResult,
-    });
+    testGenerationTasks.push(singleTestcase);
   }
+
+  const waitGroup = [];
+
+  for (const testcase of testGenerationTasks) {
+    waitGroup.push(
+      testGenWorker({
+        model,
+        testcase,
+        verbose: options.verbose,
+        headless: options.headless,
+      }),
+    );
+  }
+
+  // wait all worker to complete
+  const waitResult = await Promise.allSettled(waitGroup);
+
+  // filter only resolved
+  const filterOnlyResolved = waitResult.filter((result) => result.status === "fulfilled");
+
+  // convert result to TestsuiteTestcaseObject
+  const testcasesResult = filterOnlyResolved.map((result) => result.value);
 
   const language = options.testPrompt.testsuite.language;
   const translatorName = options.testPrompt.testsuite.translator;
@@ -93,10 +80,17 @@ export async function runGenMode(options: genModeOptions) {
     testsuiteCode = await formatCodeByLanguage(language, testsuiteCode);
   } catch (_) {
     // error is okay. save unformatted code
-    console.error("Failed to format testsuite code");
+    console.error("Failed to format testsuite code. testsuite code will save without format code");
   }
 
   return { testsuiteCode, testcasesResult };
+}
+
+export interface TestGenWorkerOptions {
+  model: AIModel;
+  testcase: Testcase;
+  verbose: boolean;
+  headless: boolean;
 }
 
 async function testGenWorker(options: TestGenWorkerOptions) {
@@ -110,12 +104,16 @@ async function testGenWorker(options: TestGenWorkerOptions) {
 
   // finalize steps
   const finalizedSteps = await testStepGenerator.generate(options.testcase.prompt, messageBuffer);
-  const generatedSteps = await testStepGenerator.getGeneratedSteps();
+  const generatedSteps = testStepGenerator.getGeneratedSteps();
 
-  options.saveBuffer.push({
+  // convert message buffer to sharegpt messages
+  const shareGPTMessages = convertLangchainBaseMessageToShareGPT(messageBuffer);
+
+  return {
     testcase: options.testcase,
     generatedSteps,
     finalizedSteps,
     messageBuffer,
-  } as TestsuiteTestcaseObject);
+    shareGPTMessages,
+  } as TestsuiteTestcaseObject;
 }

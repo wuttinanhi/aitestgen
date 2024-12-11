@@ -6,12 +6,12 @@ export function convertLangchainBaseMessageToShareGPT(messages: BaseMessage[]): 
 
   for (const message of messages) {
     if (message instanceof AIMessage) {
-      // convert to tool call
-      // if message have tool calls
+      // if message have tool calls then convert to tool calls
       if (message.tool_calls && message.tool_calls.length > 0) {
         // loop all tool calls
         for (const call of message.tool_calls) {
           const argumentsOBJ = call.args;
+
           // const argumentsJSON = JSON.stringify(argumentsOBJ);
 
           const callObj = {

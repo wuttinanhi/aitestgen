@@ -22,14 +22,15 @@ describe("Todo Website Test", () => {
 
     await page.goto("https://microsoftedge.github.io/Demos/demo-to-do/");
 
-    const newTaskInput = await page.waitForSelector(`#new-task`);
-    const addTaskButton = await page.waitForSelector(`input:nth-child(3)`);
-    const taskList = await page.waitForSelector(`#tasks`);
+    var newTaskInput = await page.waitForSelector(`#new-task`);
+    var addTaskButton = await page.waitForSelector(`input:nth-child(3)`);
+    var taskList = await page.waitForSelector(`#tasks`);
     await newTaskInput!.type("Cook Dinner");
     await addTaskButton!.click();
 
-    const addedTodo = await page.waitForSelector(`.task > label`);
-    const addedTodoText = await page.waitForSelector(`.text`);
+    var addedTodo = await page.waitForSelector(`.task > label`);
+
+    var addedTodoText = await page.waitForSelector(`.text`);
 
     var addedTodoTextText = await addedTodoText!.evaluate((e) => e.textContent);
     expect(addedTodoTextText).toBe("Cook Dinner");
