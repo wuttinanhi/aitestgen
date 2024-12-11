@@ -1,4 +1,4 @@
-import puppeteer, { Browser } from "puppeteer";
+import puppeteer, { Browser, Frame, Page } from "puppeteer";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 describe("Todo Website Test", () => {
@@ -17,25 +17,6 @@ describe("Todo Website Test", () => {
   afterEach(async () => {
     await browser.close();
   });
-  it("Should remove a todo", async () => {
-    let page = await browser.newPage();
-
-    await page.goto("https://microsoftedge.github.io/Demos/demo-to-do/");
-
-    var newTaskInput = await page.waitForSelector(`#new-task`);
-    var addTaskButton = await page.waitForSelector(`label`);
-    var taskList = await page.waitForSelector(`#tasks`);
-    var firstTask = await page.waitForSelector(`#tasks li`);
-    await newTaskInput!.type("Cook Dinner");
-    await addTaskButton!.click();
-
-    taskList = await page.waitForSelector(`#tasks`);
-
-    var taskListText = await taskList!.evaluate((e) => e.textContent);
-    expect(taskListText).toBe("No tasks defined");
-
-    await page.close();
-  });
   it("Should add a todo", async () => {
     let page = await browser.newPage();
 
@@ -48,9 +29,29 @@ describe("Todo Website Test", () => {
     await addTaskButton!.click();
 
     var addedTodo = await page.waitForSelector(`.task > label`);
-    var addedTodoText = await page.waitForSelector(`.text`);
+    expect(addedTodo).not.toBeNull();
+    await page.close();
+  });
+  it("Should remove a todo", async () => {
+    let page = await browser.newPage();
 
-    var addedTodoTextText = await addedTodoText!.evaluate((e) => e.textContent);
-    expect(addedTodoTextText).toBe("Cook Dinner");
+    await page.goto("https://microsoftedge.github.io/Demos/demo-to-do/");
+
+    var newTaskInput = await page.waitForSelector(`#new-task`);
+    var addTaskButton = await page.waitForSelector(`label`);
+    var taskList = await page.waitForSelector(`#tasks`);
+    await newTaskInput!.type("Cook Dinner");
+    await addTaskButton!.click();
+
+    taskList = await page.waitForSelector(`#tasks`);
+    var taskItem = await page.waitForSelector(`#tasks li`);
+    expect(taskItem).not.toBeNull();
+    await taskItem!.click();
+
+    taskList = await page.waitForSelector(`#tasks`);
+    taskItem = await page.waitForSelector(`#tasks li`);
+
+    var taskListText = await taskList!.evaluate((e) => e.textContent);
+    expect(taskListText).toBe("No tasks defined");
   });
 });
