@@ -244,7 +244,7 @@ export class TestStepGenerator {
     }
     this.log(`\t`);
 
-    // loop 5 time before throw error
+    // loop before throw error
     for (let i = 0; i < 10; i++) {
       // BIND TOOLS finalizer
       const llmWithFinalizeTool = this.llm.bindTools([finalizeTool]);

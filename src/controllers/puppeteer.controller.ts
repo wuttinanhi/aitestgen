@@ -1,6 +1,6 @@
 // deno-lint-ignore-file require-await no-unused-vars no-explicit-any no-empty
 import * as puppeteer from "puppeteer";
-import { element2selector } from "puppeteer-element2selector";
+import { QuickSelector } from "src/quickselector/quickselector.ts";
 import {
   BrowserAlreadyLaunchedError,
   BrowserNotLaunchedError,
@@ -10,8 +10,7 @@ import {
 } from "../errors/controller.ts";
 import { HTMLStripNonDisplayTags } from "../helpers/html.ts";
 import { sleep } from "../helpers/utils.ts";
-import { JSONtoYAML } from "../helpers/yaml.ts";
-import { QuickSelectorElement, WebController } from "../interfaces/controller.ts";
+import { WebController } from "../interfaces/controller.ts";
 import { FrameData } from "../interfaces/framedata.ts";
 import { SelectorStorage } from "../selectors/selector.ts";
 import {
@@ -387,94 +386,32 @@ export class PuppeteerController implements WebController {
   }
 
   public async quickSelector(params: TypeQuickSelectorParams) {
-    const tags = [
-      "span",
-      "strong",
-      "em",
-      "b",
-      "i",
-      "u",
-      "mark",
-      "small",
-      "del",
-      "ins",
-      "code",
-      "kbd",
-      "s",
-      "sub",
-      "sup",
-      "blockquote",
-      "q",
-      "cite",
-      "abbr",
-      "address",
-      "pre",
-      "h1",
-      "h2",
-      "h3",
-      "h4",
-      "h5",
-      "h6",
-      "button",
-      "input",
-      "select",
-      "option",
-      "textarea",
-      "label",
-      // "fieldset",
-      // "legend",
-      "a",
-      // "td",
-      "div",
-      "form",
-      "ui",
-    ];
-
     const page = this.getActivePage();
 
-    const finalResult: QuickSelectorElement[] = [];
+    const quickSelectorInstance = new QuickSelector();
+    await quickSelectorInstance.processPage(page as puppeteer.Page);
+    const quickSelectorResult = quickSelectorInstance.getResult();
 
-    for (const tag of tags) {
-      const elements = await page.$$(tag);
-      const result = await quickSelectorRecursive(elements);
-      finalResult.push(...result);
-    }
+    console.log("quickSelectorResult total", quickSelectorResult.length);
 
-    const yamlResult = await JSONtoYAML(finalResult);
+    const jsoned = JSON.stringify(quickSelectorResult);
+    return jsoned;
 
-    return yamlResult;
+    // const finalResult: QuickSelectorElement[] = [];
+
+    // for (const tag of tags) {
+    //   const elements = await page.$$(tag);
+    //   const result = await quickSelectorRecursive(elements);
+    //   finalResult.push(...result);
+    // }
+
+    // const yamlResult = await JSONtoYAML(finalResult);
+
+    // return yamlResult;
   }
 
   public async pressKey(params: TypePressKeyParams): Promise<any> {
     const page = this.getActivePage() as puppeteer.Page;
     await page.keyboard.press(params.key as any);
   }
-}
-
-async function quickSelectorRecursive(elements: puppeteer.ElementHandle<Element>[]) {
-  const result: QuickSelectorElement[] = [];
-
-  for (const element of elements) {
-    let cssSelector = await element2selector(element as any);
-
-    let tag = await element.evaluate((e) => e.tagName);
-    tag = String(tag).toLowerCase();
-
-    const textContent = await element.evaluate((el) => {
-      return el.textContent ? el.textContent.trim() : "";
-    });
-
-    let childElements = await element.$$(":scope > *");
-
-    const childs = await quickSelectorRecursive(childElements);
-
-    result.push({
-      tag: tag,
-      textElement: textContent,
-      cssSelector: cssSelector,
-      childs: childs,
-    });
-  }
-
-  return result;
 }
