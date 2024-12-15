@@ -1,5 +1,6 @@
 // deno-lint-ignore-file require-await no-unused-vars no-explicit-any no-empty
 import * as puppeteer from "puppeteer";
+import { ObjtoYAML } from "src/helpers/yaml.ts";
 import { QuickSelector } from "src/quickselector/quickselector.ts";
 import {
   BrowserAlreadyLaunchedError,
@@ -390,24 +391,10 @@ export class PuppeteerController implements WebController {
 
     const quickSelectorInstance = new QuickSelector();
     await quickSelectorInstance.processPage(page as puppeteer.Page);
-    const quickSelectorResult = quickSelectorInstance.getResult();
+    const quickSelectorResult = await quickSelectorInstance.getResultQuickSelectorElement();
 
-    console.log("quickSelectorResult total", quickSelectorResult.length);
-
-    const jsoned = JSON.stringify(quickSelectorResult);
-    return jsoned;
-
-    // const finalResult: QuickSelectorElement[] = [];
-
-    // for (const tag of tags) {
-    //   const elements = await page.$$(tag);
-    //   const result = await quickSelectorRecursive(elements);
-    //   finalResult.push(...result);
-    // }
-
-    // const yamlResult = await JSONtoYAML(finalResult);
-
-    // return yamlResult;
+    const result = ObjtoYAML(quickSelectorResult);
+    return result;
   }
 
   public async pressKey(params: TypePressKeyParams): Promise<any> {

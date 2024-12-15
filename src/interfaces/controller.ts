@@ -68,5 +68,4 @@ export interface QuickSelectorElement {
   tag: string;
   textElement: string;
   cssSelector: string;
-  childs: QuickSelectorElement[];
 }
